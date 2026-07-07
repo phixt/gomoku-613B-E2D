@@ -1,4 +1,7 @@
-﻿import { LeftPanel } from "./views/LeftPanel";
+import "./style/main.css";
+import { DARK_THEME, LIGHT_THEME } from "./core/Types";
+import type { Theme } from "./core/Types";
+import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
 
 function main(): void {
@@ -9,12 +12,35 @@ function main(): void {
     throw new Error("Missing #left-panel or #right-panel element");
   }
 
-  const leftPanel = new LeftPanel(leftEl);
-  const rightPanel = new RightPanel(rightEl);
+  let currentTheme: Theme = DARK_THEME;
+
+  const leftPanel = new LeftPanel(leftEl, currentTheme);
+  const rightPanel = new RightPanel(rightEl, currentTheme);
+
+  // ── Piece change synchronisation ─────────────────────────
+  rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
+    leftPanel.renderAllPieces(board, z);
+  };
+
+  // Force a correct resize after the first layout frame so CSS has taken effect.
+  const forceCorrectSize = (): void => {
+    const lw = leftEl.clientWidth || window.innerWidth * 0.5;
+    const rw = rightEl.clientWidth || window.innerWidth * 0.5;
+    const h = window.innerHeight;
+    leftPanel.resize(lw, h);
+    rightPanel.resize(rw, h);
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(forceCorrectSize);
+  });
 
   let focusZ = 0;
 
-  // --- Animation loop ---
+  // Initial piece render (board is empty, so this is a no-op for now)
+  leftPanel.renderAllPieces(rightPanel.board, focusZ);
+
+  // ── Animation loop ──────────────────────────────────────
   const animate = (): void => {
     leftPanel.render();
     rightPanel.render();
@@ -22,28 +48,88 @@ function main(): void {
   };
   animate();
 
-  // --- Mouse wheel on right panel -> adjust focusZ ---
-  rightEl.addEventListener("wheel", (e: WheelEvent) => {
+  // ──────────────────────────────────────────────
+  //  Left-panel wheel → Y-axis rotation (like Q/E)
+  // ──────────────────────────────────────────────
+  leftEl.addEventListener("wheel", (e: WheelEvent) => {
     e.preventDefault();
     const dir = e.deltaY > 0 ? 1 : -1;
-    focusZ = Math.max(0, Math.min(5, focusZ + dir));
-    leftPanel.highlightFocusLayer(focusZ);
-    rightPanel.setFocusZ(focusZ);
+    leftPanel.rotateY(dir);
   });
 
-  // --- Q / E keys -> rotate left panel ---
+  // ──────────────────────────────────────────────
+  //  Keyboard
+  // ──────────────────────────────────────────────
   window.addEventListener("keydown", (e: KeyboardEvent) => {
-    if (e.key === "q" || e.key === "Q") {
-      leftPanel.rotateZ(-1);
-    } else if (e.key === "e" || e.key === "E") {
-      leftPanel.rotateZ(1);
+    switch (e.key) {
+      // ---- FocusZ: previous layer ----
+      case "a":
+      case "A":
+      case "ArrowLeft":
+        e.preventDefault();
+        focusZ = Math.max(0, focusZ - 1);
+        leftPanel.highlightFocusLayer(focusZ);
+        leftPanel.renderAllPieces(rightPanel.board, focusZ);
+        rightPanel.setFocusZ(focusZ);
+        break;
+
+      // ---- FocusZ: next layer ----
+      case "d":
+      case "D":
+      case "ArrowRight":
+        e.preventDefault();
+        focusZ = Math.min(5, focusZ + 1);
+        leftPanel.highlightFocusLayer(focusZ);
+        leftPanel.renderAllPieces(rightPanel.board, focusZ);
+        rightPanel.setFocusZ(focusZ);
+        break;
+
+      // ---- Rotate left panel CCW ----
+      case "q":
+      case "Q":
+        leftPanel.rotateY(-1);
+        break;
+
+      // ---- Rotate left panel CW ----
+      case "e":
+      case "E":
+        leftPanel.rotateY(1);
+        break;
+
+      // ---- Zoom in (FOV decreases) ----
+      case "w":
+      case "W":
+        e.preventDefault();
+        leftPanel.zoom(1);
+        break;
+
+      // ---- Zoom out (FOV increases) ----
+      case "s":
+      case "S":
+        e.preventDefault();
+        leftPanel.zoom(-1);
+        break;
+
+      // ---- Toggle theme ----
+      case "t":
+      case "T":
+        currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
+        document.body.classList.toggle("light-theme", currentTheme.name === "light");
+        leftPanel.updateTheme(currentTheme);
+        rightPanel.updateTheme(currentTheme);
+        break;
     }
   });
 
-  // --- Window resize -> sync both panels ---
+  // ──────────────────────────────────────────────
+  //  Window resize
+  // ──────────────────────────────────────────────
   window.addEventListener("resize", () => {
-    leftPanel.resize();
-    rightPanel.resize();
+    const lw = leftEl.clientWidth || window.innerWidth * 0.5;
+    const rw = rightEl.clientWidth || window.innerWidth * 0.5;
+    const h = window.innerHeight;
+    leftPanel.resize(lw, h);
+    rightPanel.resize(rw, h);
   });
 }
 
