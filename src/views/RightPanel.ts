@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { type Theme, type CellState, BLACK, WHITE } from "../core/Types";
+import { type Theme, type CellState, BLACK, WHITE, AuxMode } from "../core/Types";
 import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
-const LAYER_SPACING = 2.5;
+const LAYER_SPACING = 3.5; // ???? LeftPanel.LAYER_SPACING
 const CENTER = (BOARD_SIZE - 1) / 2;
 const FRUSTUM_SIZE = 14;
 const PIECE_RADIUS = 0.42;
@@ -46,8 +46,8 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   if (isGhost) {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#6699AA"); g.addColorStop(0.5, "#2A3A4A"); g.addColorStop(1, "#1A2A3A");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#88AACC"; ctx.lineWidth = 2.5; ctx.stroke();
+      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#222222"); g.addColorStop(1, "#000000");
+      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#000000"; ctx.lineWidth = 2.5; ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
       g.addColorStop(0, "#F0E8E0"); g.addColorStop(0.5, "#D0C8C0"); g.addColorStop(1, "#A09A95");
@@ -56,8 +56,8 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   } else {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#6A8A8E"); g.addColorStop(0.5, "#3A4A4E"); g.addColorStop(1, "#1A2A2E");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#1A2A2E"; ctx.lineWidth = 2; ctx.stroke();
+      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#000000"); g.addColorStop(1, "#000000");
+      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#111111"; ctx.lineWidth = 2; ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
       g.addColorStop(0, "#FFFFFF"); g.addColorStop(0.5, "#C0D0D0"); g.addColorStop(1, "#90A0A0");
@@ -93,6 +93,7 @@ export class RightPanel {
   private focusZ: number = 0;
   private currentPlayer: CellState = BLACK;
   private theme: Theme;
+  private auxMode: AuxMode = AuxMode.ALL;
   private blackTex: THREE.CanvasTexture;
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
@@ -235,6 +236,12 @@ export class RightPanel {
   // 鈹€鈹€ Core overlay computation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
   private computeHoverOverlays(hx: number, hy: number): void {
+    // Skip if aux mode has no tactical bit
+    if (!(this.auxMode & 0b10)) {
+      this.clearAllOverlays();
+      if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
+      return;
+    }
     const z = this.focusZ;
     const pos2D: number[] = [];
     const col2D: number[] = [];
@@ -250,9 +257,12 @@ export class RightPanel {
     }
 
     // 鈹€鈹€ 13 3D directions 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-    for (const [dx, dy, dz] of DIRS_3D) {
-      this.scanDirection3D(hx, hy, z, dx, dy, dz, lines3D, pts3D);
-      this.scanDirection3D(hx, hy, z, -dx, -dy, -dz, lines3D, pts3D);
+    const include3D = !!(this.auxMode & 0b01);
+    if (include3D) {
+      for (const [dx, dy, dz] of DIRS_3D) {
+        this.scanDirection3D(hx, hy, z, dx, dy, dz, lines3D, pts3D);
+        this.scanDirection3D(hx, hy, z, -dx, -dy, -dz, lines3D, pts3D);
+      }
     }
 
     // 鈹€鈹€ Update 2D LineSegments (vertexColors) 鈹€鈹€鈹€鈹€
@@ -428,7 +438,7 @@ export class RightPanel {
     if (winner !== 0) {
       console.log(`[Win] ${winner === BLACK ? "BLACK" : "WHITE"} wins!`);
       setTimeout(() => {
-        alert(winner === BLACK ? "榛戞柟鑳滃埄" : "鐧芥柟鑳滃埄");
+        alert(winner === BLACK ? "黑方胜利" : "白方胜利");
         this.board.reset();
         this.renderPieces();
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
@@ -496,6 +506,15 @@ export class RightPanel {
   setFocusZ(z: number): void {
     this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
     this.applyFocusZ();
+  }
+
+  cycleAuxMode(): AuxMode {
+    this.auxMode = this.auxMode === AuxMode.ALL ? AuxMode.NONE : AuxMode.ALL;
+    return this.auxMode;
+  }
+
+  setAuxMode(mode: AuxMode): void {
+    this.auxMode = mode;
   }
 
   updateTheme(theme: Theme): void {
