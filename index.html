@@ -7,6 +7,53 @@
     <link rel="stylesheet" href="/src/style/main.css" />
 </head>
 <body>
+    <!-- 开始界面覆盖层 -->
+    <div id="start-screen">
+        <div class="start-content">
+            <h1>GOMOKU 613B-E2D</h1>
+            <p class="subtitle">Discrete 3D Tactical Gomoku</p>
+            
+            <div class="controls-section">
+                <h3>视图控制</h3>
+                <div class="controls-grid">
+                    <div class="key-combo"><kbd>Q</kbd> / <kbd>E</kbd></div>
+                    <span>旋转 3D 视角（绕 Y 轴）</span>
+                    
+                    <div class="key-combo"><kbd>W</kbd> / <kbd>S</kbd></div>
+                    <span>缩放 3D 视角（推拉）</span>
+                    
+                    <div class="key-combo"><kbd>A</kbd> / <kbd>D</kbd></div>
+                    <span>切换层级（循环 0-5）</span>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <h3>显示控制</h3>
+                <div class="controls-grid">
+                    <div class="key-combo"><kbd>T</kbd></div>
+                    <span>切换 亮色/暗色 主题</span>
+                    
+                    <div class="key-combo"><kbd>H</kbd></div>
+                    <span>循环辅助线模式（4档）</span>
+                </div>
+                <p class="helper-text">辅助线模式：①全开 → ②仅战术线 → 全关 → ④仅中点线</p>
+            </div>
+            
+            <div class="controls-section">
+                <h3>对弈操作</h3>
+                <div class="controls-grid">
+                    <div class="key-combo"><span>鼠标悬停</span></div>
+                    <span>查看 2D/3D 战术辅助线</span>
+                    
+                    <div class="key-combo"><span>鼠标点击</span></div>
+                    <span>在当前层落子</span>
+                </div>
+            </div>
+            
+            <button id="start-btn">START GAME</button>
+        </div>
+    </div>
+
     <div id="app">
         <div id="left-panel" class="panel"></div>
         <div id="right-panel" class="panel"></div>
