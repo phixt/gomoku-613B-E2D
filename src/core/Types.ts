@@ -1,9 +1,30 @@
-﻿export type CellState = 0 | 1 | 2;
+export type CellState = 0 | 1 | 2;
+
+export const BLACK = 1;
+export const WHITE = 2;
 
 export interface Vector3Int {
   x: number;
   y: number;
   z: number;
+}
+
+/** 3D auxiliary line segment (world coords, Z pre-multiplied by layerSpacing). */
+export interface Line3DData {
+  startX: number; startY: number; startZ: number;
+  endX: number;   endY: number;   endZ: number;
+  color: number;
+}
+
+/** 3D highlight dot (enemy stones, empty-line-ends, etc.). */
+export interface HighlightPoint3D {
+  x: number; y: number; z: number;
+  color: number;
+}
+
+export interface AuxData3D {
+  lines: Line3DData[];
+  points: HighlightPoint3D[];
 }
 
 export interface Theme {
