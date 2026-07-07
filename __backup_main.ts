@@ -44,7 +44,6 @@ function main(): void {
 
   window.addEventListener("keydown", (e: KeyboardEvent) => {
     switch (e.key) {
-      // ── FocusZ cycling (A/D or ArrowLeft/ArrowRight) ──
       case "a": case "A": case "ArrowLeft":
         e.preventDefault();
         focusZ = Math.max(0, focusZ - 1);
@@ -61,40 +60,11 @@ function main(): void {
         rightPanel.setFocusZ(focusZ);
         break;
 
-      // ── Left panel rotation (Q/E) ──
       case "q": case "Q": leftPanel.rotateY(-1); break;
       case "e": case "E": leftPanel.rotateY(1); break;
+      case "w": case "W": e.preventDefault(); leftPanel.zoom(1); break;
+      case "s": case "S": e.preventDefault(); leftPanel.zoom(-1); break;
 
-      // ── Anchor-based zoom (W/S) ──
-      case "w": case "W":
-        e.preventDefault();
-        {
-          const hoverPos = rightPanel.getHoverWorldPos();
-          leftPanel.zoom(1, hoverPos ?? undefined);
-        }
-        break;
-      case "s": case "S":
-        e.preventDefault();
-        {
-          const hoverPos = rightPanel.getHoverWorldPos();
-          leftPanel.zoom(-1, hoverPos ?? undefined);
-        }
-        break;
-
-      // ── Dynamic layer spacing (Z/C) ──
-      case "z": case "Z":
-        e.preventDefault();
-        leftPanel.adjustLayerSpacing(-0.5);
-        // Refresh pieces with new spacing
-        leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        break;
-      case "c": case "C":
-        e.preventDefault();
-        leftPanel.adjustLayerSpacing(0.5);
-        leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        break;
-
-      // ── Theme toggle (T) ──
       case "t": case "T":
         currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
         document.body.classList.toggle("light-theme", currentTheme.name === "light");

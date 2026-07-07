@@ -23,7 +23,7 @@ const DIRS_3D: [number, number, number][] = [
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
 
-// 鈹€鈹€ Grid geometry 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Grid geometry ──────────────────────────────
 
 function buildLayerGridGeometry(): THREE.BufferGeometry {
   const p: number[] = [];
@@ -34,7 +34,7 @@ function buildLayerGridGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-// 鈹€鈹€ Piece texture 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── Piece texture ──────────────────────────────
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64, canvas = document.createElement("canvas");
@@ -67,8 +67,10 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true; return tex;
 }
 
+function safeWidth(el: HTMLElement): number { return el.clientWidth || window.innerWidth * 0.5; }
+function safeHeight(el: HTMLElement): number { return el.clientHeight || window.innerHeight; }
 
-// 鈹€鈹€ RightPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// ── RightPanel ─────────────────────────────────
 
 export class RightPanel {
   public readonly renderer: THREE.WebGLRenderer;
@@ -100,88 +102,71 @@ export class RightPanel {
   private hoverValid: boolean = false;
   private hoverX: number = -1;
   private hoverY: number = -1;
-  private _hoverWorldPos: THREE.Vector3 | null = null;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
-  private boundResize: () => void;
 
   constructor(container: HTMLElement, theme: Theme) {
     this.container = container;
     this.theme = theme;
     this.board = new Board();
+    const w = safeWidth(container), h = safeHeight(container);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setClearColor(theme.bgColor);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(-7, 7, 7, -7, 0.1, 1000);
-    this.camera.position.set(CENTER, CENTER, 50);
-    this.camera.lookAt(CENTER, CENTER, 0);
-
-    this.blackTex = createPieceTexture(true);
-    this.whiteTex = createPieceTexture(false);
+    this.blackTex = createPieceTexture(true, false);
+    this.whiteTex = createPieceTexture(false, false);
     this.blackGhostTex = createPieceTexture(true, true);
     this.whiteGhostTex = createPieceTexture(false, true);
 
-    this.gridGroup = new THREE.Group();
-    const gridGeo = buildLayerGridGeometry();
-    const gridMat = new THREE.LineBasicMaterial({ color: theme.gridColor, transparent: true, opacity: 1 });
-    this.gridSegments = new THREE.LineSegments(gridGeo, gridMat);
-    this.gridGroup.add(this.gridSegments);
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+    this.updateCameraFrustum(w, h);
 
-    const cg = new THREE.CircleGeometry(0.15, 12);
-    const cm = new THREE.MeshBasicMaterial({ color: 0xff8c00 });
-    this.centerMarker = new THREE.Mesh(cg, cm);
-    this.centerMarker.position.set(CENTER, CENTER, 0.02);
-    this.gridGroup.add(this.centerMarker);
-
-    this.scene.add(this.gridGroup);
-    this.pieceGroup = new THREE.Group();
-    this.scene.add(this.pieceGroup);
-    this.ghostMesh = null;
-
-    const auxGeo = new THREE.BufferGeometry();
-    auxGeo.setAttribute("position", new THREE.Float32BufferAttribute([], 3));
-    auxGeo.setAttribute("color", new THREE.Float32BufferAttribute([], 3));
-    const auxMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false });
-    this.hoverAuxLines2D = new THREE.LineSegments(auxGeo, auxMat);
-    this.hoverAuxLines2D.renderOrder = 1;
-    this.scene.add(this.hoverAuxLines2D);
-    this.highlightMarkersGroup = new THREE.Group();
-    this.highlightMarkersGroup.renderOrder = 1;
-    this.scene.add(this.highlightMarkersGroup);
-
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setClearColor(this.theme.bgColor);
+    this.renderer.setSize(w, h);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.renderer.domElement);
 
-    this.boundResize = (): void => { this.resize(); };
-    window.addEventListener("resize", this.boundResize);
+    const gridGeo = buildLayerGridGeometry();
+    this.gridSegments = new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor }));
+    this.gridGroup = new THREE.Group();
+    this.gridGroup.add(this.gridSegments);
 
-    this.boundMouseMove = (e: MouseEvent): void => this.handleMouseMove(e);
-    this.boundClick = (): void => this.handleClick();
+    const markerGeo = new THREE.CircleGeometry(0.15, 16);
+    const markerMat = new THREE.MeshBasicMaterial({ color: 0x8b0000, side: THREE.DoubleSide });
+    this.centerMarker = new THREE.Mesh(markerGeo, markerMat);
+    this.centerMarker.position.set(CENTER, CENTER, 0.01);
+    this.gridGroup.add(this.centerMarker);
+
+    this.pieceGroup = new THREE.Group();
+    this.gridGroup.add(this.pieceGroup);
+    this.ghostMesh = null;
+
+    // 2D hover aux lines (initially empty)
+    this.hoverAuxLines2D = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.9,
+    }));
+    this.gridGroup.add(this.hoverAuxLines2D);
+
+    // 2D highlight markers
+    this.highlightMarkersGroup = new THREE.Group();
+    this.gridGroup.add(this.highlightMarkersGroup);
+
+    this.scene.add(this.gridGroup);
+    this.applyFocusZ();
+
+    this.boundMouseMove = this.handleMouseMove.bind(this);
+    this.boundClick = this.handleClick.bind(this);
     this.renderer.domElement.addEventListener("mousemove", this.boundMouseMove);
     this.renderer.domElement.addEventListener("click", this.boundClick);
-
-    requestAnimationFrame(() => { requestAnimationFrame(() => { this.resize(); }); });
   }
 
-  dispose(): void {
-    window.removeEventListener("resize", this.boundResize);
-    this.renderer.domElement.removeEventListener("mousemove", this.boundMouseMove);
-    this.renderer.domElement.removeEventListener("click", this.boundClick);
-    this.renderer.dispose();
-  }
-
-  /** Returns the 3D world-space hover position (Z pre-multiplied) or null. */
-  getHoverWorldPos(): THREE.Vector3 | null {
-    return this._hoverWorldPos;
-  }
-
-  // 鈹€鈹€ Mouse 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Mouse Interaction ────────────────────────
 
   private handleMouseMove = (e: MouseEvent): void => {
     const rect = this.renderer.domElement.getBoundingClientRect();
-    const w = rect.width || 1, h = rect.height || 1;
+    const w = rect.width, h = rect.height;
+    if (w === 0 || h === 0) return;
+
     const ndcX = ((e.clientX - rect.left) / w) * 2 - 1;
     const ndcY = -((e.clientY - rect.top) / h) * 2 + 1;
     const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
@@ -191,7 +176,6 @@ export class RightPanel {
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) {
       this.hideGhostPiece();
       this.hoverValid = false;
-      this._hoverWorldPos = null;
       this.clearAllOverlays();
       return;
     }
@@ -200,7 +184,6 @@ export class RightPanel {
     this.hoverValid = true;
     this.hoverX = gx;
     this.hoverY = gy;
-    this._hoverWorldPos = new THREE.Vector3(gx, gy, this.focusZ * LAYER_SPACING);
     this.computeHoverOverlays(gx, gy);
   };
 
@@ -214,7 +197,7 @@ export class RightPanel {
     if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
   }
 
-  // 鈹€鈹€ Highlight markers (2D) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Highlight markers (2D) ───────────────────
 
   private clearHighlightMarkers(): void {
     while (this.highlightMarkersGroup.children.length > 0) {
@@ -232,7 +215,7 @@ export class RightPanel {
     this.highlightMarkersGroup.add(mesh);
   }
 
-  // 鈹€鈹€ Core overlay computation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Core overlay computation ────────────────
 
   private computeHoverOverlays(hx: number, hy: number): void {
     const z = this.focusZ;
@@ -243,19 +226,21 @@ export class RightPanel {
 
     this.clearHighlightMarkers();
 
-    // 鈹€鈹€ 4 2D directions 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ── 4 2D directions ───────────────────────────
     for (const [dx, dy] of DIRS_2D) {
+      // Positive side
       this.scanDirection2D(hx, hy, dx, dy, z, pos2D, col2D, pts3D);
+      // Negative side
       this.scanDirection2D(hx, hy, -dx, -dy, z, pos2D, col2D, pts3D);
     }
 
-    // 鈹€鈹€ 13 3D directions 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ── 13 3D directions ─────────────────────────
     for (const [dx, dy, dz] of DIRS_3D) {
       this.scanDirection3D(hx, hy, z, dx, dy, dz, lines3D, pts3D);
       this.scanDirection3D(hx, hy, z, -dx, -dy, -dz, lines3D, pts3D);
     }
 
-    // 鈹€鈹€ Update 2D LineSegments (vertexColors) 鈹€鈹€鈹€鈹€
+    // ── Update 2D LineSegments (vertexColors) ────
     this.hoverAuxLines2D.geometry.dispose();
     if (pos2D.length > 0) {
       const geo = new THREE.BufferGeometry();
@@ -266,126 +251,90 @@ export class RightPanel {
       this.hoverAuxLines2D.geometry = new THREE.BufferGeometry();
     }
 
-    // 鈹€鈹€ Send 3D data to LeftPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    // ── Send 3D data to LeftPanel ─────────────────
     if (this.on3DAuxDataChanged) {
       this.on3DAuxDataChanged({ lines: lines3D, points: pts3D });
     }
   }
 
-  /**
-   * Scan a single 2D direction with noise reduction:
-   * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone 鈫?draw nothing (noise cancelled).
-   * If first non-empty is ally 鈫?green from hover to that stone, continue forward.
-   * If first non-empty is enemy 鈫?red from hover to that stone, stop.
-   */
+  /** Scan a single 2D direction and append vertex & colour data. */
   private scanDirection2D(
     hx: number, hy: number, dx: number, dy: number, z: number,
     pos2D: number[], col2D: number[], pts3D: HighlightPoint3D[],
   ): void {
-    // Phase 1: skip empty cells to find the FIRST non-empty cell
-    let firstStep = 1;
-    while (true) {
-      const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 鈫?draw nothing
-      const s = this.board.get(px, py, z);
-      if (s !== 0) break;
-      firstStep++;
-    }
-
-    // Phase 2: a stone exists at `firstStep`. Draw from hover and continue forward.
-    let step = firstStep;
-    let prevX = hx, prevY = hy;
+    let step = 1;
     while (true) {
       const px = hx + dx * step, py = hy + dy * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) break;
       const s = this.board.get(px, py, z);
-
-      const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
-
-      // Draw segment from previous endpoint to this cell
-      pos2D.push(prevX, prevY, 0.03, px, py, 0.03);
+      if (s === 0) {
+        // Empty: draw green segment and stop
+        pos2D.push(hx, hy, 0.03, px, py, 0.03);
+        for (let i = 0; i < 2; i++) {
+          const r = ((ALLY_COLOR >> 16) & 0xff) / 255;
+          const g = ((ALLY_COLOR >> 8) & 0xff) / 255;
+          const b = (ALLY_COLOR & 0xff) / 255;
+          col2D.push(r, g, b);
+        }
+        this.addHighlightMarker(px, py, ALLY_COLOR);
+        pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color: ALLY_COLOR });
+        break;
+      }
+      const color = s === this.currentPlayer ? ALLY_COLOR : ENEMY_COLOR;
+      pos2D.push(hx, hy, 0.03, px, py, 0.03);
       for (let i = 0; i < 2; i++) {
         const r = ((color >> 16) & 0xff) / 255;
         const g = ((color >> 8) & 0xff) / 255;
         const b = (color & 0xff) / 255;
         col2D.push(r, g, b);
       }
-
-      if (s === 0) {
-        // Empty: green marker at this endpoint, stop
+      if (s !== this.currentPlayer) {
+        // Enemy: add marker and stop
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
         break;
       }
-
-      if (!isAlly) {
-        // Enemy: red marker at this cell, stop
-        this.addHighlightMarker(px, py, color);
-        pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
-        break;
-      }
-
-      // Ally: continue scanning forward
-      prevX = px; prevY = py;
+      // Ally: continue scanning
       step++;
     }
   }
 
-  /**
-   * Scan a single 3D direction with noise reduction.
-   * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone 鈫?draw nothing.
-   */
+  /** Scan a single 3D direction and append line & point data. */
   private scanDirection3D(
     hx: number, hy: number, hz: number,
     dx: number, dy: number, dz: number,
     lines3D: Line3DData[], pts3D: HighlightPoint3D[],
   ): void {
-    // Phase 1: skip empty cells to find the FIRST non-empty cell
-    let firstStep = 1;
-    while (true) {
-      const px = hx + dx * firstStep, py = hy + dy * firstStep, pz = hz + dz * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) return;
-      const s = this.board.get(px, py, pz);
-      if (s !== 0) break;
-      firstStep++;
-    }
-
-    // Phase 2: a stone exists. Draw from hover and continue.
-    let step = firstStep;
-    let prevX = hx, prevY = hy, prevZ = hz;
+    let step = 1;
     while (true) {
       const px = hx + dx * step, py = hy + dy * step, pz = hz + dz * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) break;
       const s = this.board.get(px, py, pz);
-
-      const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
-
+      if (s === 0) {
+        const color = ALLY_COLOR;
+        lines3D.push({
+          startX: hx, startY: hy, startZ: hz * LAYER_SPACING,
+          endX: px, endY: py, endZ: pz * LAYER_SPACING,
+          color,
+        });
+        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
+        break;
+      }
+      const color = s === this.currentPlayer ? ALLY_COLOR : ENEMY_COLOR;
       lines3D.push({
-        startX: prevX, startY: prevY, startZ: prevZ * LAYER_SPACING,
+        startX: hx, startY: hy, startZ: hz * LAYER_SPACING,
         endX: px, endY: py, endZ: pz * LAYER_SPACING,
         color,
       });
-
-      if (s === 0) {
+      if (s !== this.currentPlayer) {
         pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
         break;
       }
-
-      if (!isAlly) {
-        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
-        break;
-      }
-
-      prevX = px; prevY = py; prevZ = pz;
       step++;
     }
   }
 
-  // 鈹€鈹€ Ghost piece 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Ghost piece ──────────────────────────────
 
   private hideGhostPiece(): void { if (this.ghostMesh) this.ghostMesh.visible = false; }
 
@@ -407,7 +356,7 @@ export class RightPanel {
     this.ghostMesh.visible = true;
   }
 
-  // 鈹€鈹€ Click 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Click ────────────────────────────────────
 
   private handleClick = (): void => {
     if (!this.hoverValid) return;
@@ -428,7 +377,7 @@ export class RightPanel {
     if (winner !== 0) {
       console.log(`[Win] ${winner === BLACK ? "BLACK" : "WHITE"} wins!`);
       setTimeout(() => {
-        alert(winner === BLACK ? "榛戞柟鑳滃埄" : "鐧芥柟鑳滃埄");
+        alert(winner === BLACK ? "黑方胜利" : "白方胜利");
         this.board.reset();
         this.renderPieces();
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
@@ -445,7 +394,7 @@ export class RightPanel {
     this.handleMouseMove(new MouseEvent("mousemove", { clientX: midX, clientY: midY }));
   };
 
-  // 鈹€鈹€ Render pieces 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Render pieces ────────────────────────────
 
   private renderPieces(): void {
     while (this.pieceGroup.children.length > 0) {
@@ -471,7 +420,7 @@ export class RightPanel {
     }
   }
 
-  // 鈹€鈹€ Internal 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── Internal ─────────────────────────────────
 
   private updateCameraFrustum(width: number, height: number): void {
     const aspect = width / height;
