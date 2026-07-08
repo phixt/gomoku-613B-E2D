@@ -17,7 +17,6 @@ const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
 
-// 闁冲厜鍋撻柍鍏夊亾 Grid geometry 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾
 
 function buildLayerGridGeometry(): THREE.BufferGeometry {
   const p: number[] = [];
@@ -28,7 +27,6 @@ function buildLayerGridGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-// 闁冲厜鍋撻柍鍏夊亾 Piece texture 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64, canvas = document.createElement("canvas");
@@ -61,8 +59,6 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true; return tex;
 }
 
-
-// 闁冲厜鍋撻柍鍏夊亾 RightPanel 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋?
 
 export class RightPanel {
   public static readonly BOARD_SIZE = 13;
@@ -325,9 +321,9 @@ export class RightPanel {
   /**
    * Scan a single 2D direction with noise reduction:
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone 闁?draw nothing (noise cancelled).
-   * If first non-empty is ally 闁?green from hover to that stone, continue forward.
-   * If first non-empty is enemy 闁?red from hover to that stone, stop.
+   * If board edge is reached without finding a stone 闂?draw nothing (noise cancelled).
+   * If first non-empty is ally 闂?green from hover to that stone, continue forward.
+   * If first non-empty is enemy 闂?red from hover to that stone, stop.
    */
   private scanDirection2D(
     hx: number, hy: number, dx: number, dy: number, z: number,
@@ -338,7 +334,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 闁?draw nothing
+      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; 
       if (firstStep > maxSteps) return; // exceeded search range
             const s = this.board.get(px, py, z);
       if (s !== 0) break;
@@ -397,7 +393,7 @@ export class RightPanel {
   /**
    * Scan a single 3D direction with noise reduction.
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone 闁?draw nothing.
+   * If board edge reached without finding a stone 闂?draw nothing.
    */
   private scanDirection3D(
     hx: number, hy: number, hz: number,
@@ -577,10 +573,10 @@ export class RightPanel {
 
     this.renderer.setSize(containerWidth, containerHeight);
 
-    // 棋盘世界空间大小（0 到 BOARD_SIZE-1）
+    // 妫嬬洏涓栫晫绌洪棿澶у皬锛? 鍒?BOARD_SIZE-1锛?
     const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
 
-    // 包含安全边距的总尺寸
+    // 鍖呭惈瀹夊叏杈硅窛鐨勬€诲昂瀵?
     const totalSize = boardWorldSize + (RightPanel.GRID_PADDING * 2);
 
     const aspect = containerWidth / containerHeight;
@@ -589,11 +585,11 @@ export class RightPanel {
     let frustumHalfHeight: number;
 
     if (aspect > 1) {
-      // 宽屏：高度为基准，宽度自适应
+      // 瀹藉睆锛氶珮搴︿负鍩哄噯锛屽搴﹁嚜閫傚簲
       frustumHalfHeight = totalSize / 2;
       frustumHalfWidth = frustumHalfHeight * aspect;
     } else {
-      // 竖屏或正方形：宽度为基准，高度自适应
+      // 绔栧睆鎴栨鏂瑰舰锛氬搴︿负鍩哄噯锛岄珮搴﹁嚜閫傚簲
       frustumHalfWidth = totalSize / 2;
       frustumHalfHeight = frustumHalfWidth / aspect;
     }
