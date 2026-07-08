@@ -16,9 +16,7 @@
         <div id="right-panel" class="panel"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
-</body>
-
-<!-- 重新开始提示框 (R键触发) -->
+    <!-- 重新开始提示框 (R键触发) -->
     <div id="restart-modal" class="hidden">
         <div class="modal-content">
             <h2>重新开始？</h2>
@@ -29,70 +27,70 @@
             </div>
         </div>
     </div>
+    <!-- 开始界面覆盖层 -->
+    <div id="start-screen">
+        <div class="start-layout">
 
-</html>
-<!-- 开始界面覆盖层 -->
-<div id="start-screen">
-    <div class="start-layout">
+            <!-- 左侧：键盘布局 + 文字说明 -->
+            <div class="start-left">
+                <div class="keyboard-sim">
+                    <!-- 第一行：Q W E  R T -->
+                    <div class="kb-row">
+                        <div class="key active">Q</div>
+                        <div class="key active">W</div>
+                        <div class="key active">E</div>
+                        <div class="key active">R</div> <!-- 修正：R 是有功能的，改为绿色 -->
+                        <div class="key active">T</div>
+                        <div class="key-spacer"></div> <!-- 隐形占位，让 QWE 偏左 -->
+                        <div class="key-spacer"></div>
+                    </div>
 
-        <!-- 左侧：键盘布局 + 文字说明 -->
-        <div class="start-left">
-            <div class="keyboard-sim">
-                <!-- 第一行：Q W E  R T -->
-                <div class="kb-row">
-                    <div class="key active">Q</div>
-                    <div class="key active">W</div>
-                    <div class="key active">E</div>
-                    <div class="key active">R</div> <!-- 修正：R 是有功能的，改为绿色 -->
-                    <div class="key active">T</div>
-                    <div class="key-spacer"></div> <!-- 隐形占位，让 QWE 偏左 -->
-                    <div class="key-spacer"></div>
+                    <!-- 第二行：A S D F G H -->
+                    <div class="kb-row">
+                        <div class="key active">A</div>
+                        <div class="key active">S</div> <!-- 修正：S 是有功能的，改为绿色 -->
+                        <div class="key active">D</div>
+                        <div class="key active">F</div>
+                        <div class="key">G</div>
+                        <div class="key active">H</div>
+                    </div>
+
+                    <!-- 第三行：Z X C V B -->
+                    <div class="kb-row">
+                        <div class="key active">Z</div>
+                        <div class="key active">X</div>
+                        <div class="key active">C</div>
+                        <div class="key">V</div> <!-- 填充无功能键，让 ZXC 偏左 -->
+                        <div class="key">B</div> <!-- 填充无功能键 -->
+                    </div>
                 </div>
 
-                <!-- 第二行：A S D F G H -->
-                <div class="kb-row">
-                    <div class="key active">A</div>
-                    <div class="key active">S</div> <!-- 修正：S 是有功能的，改为绿色 -->
-                    <div class="key active">D</div>
-                    <div class="key active">F</div>
-                    <div class="key">G</div>
-                    <div class="key active">H</div>
-                </div>
-
-                <!-- 第三行：Z X C V B -->
-                <div class="kb-row">
-                    <div class="key active">Z</div>
-                    <div class="key active">X</div>
-                    <div class="key active">C</div>
-                    <div class="key">V</div> <!-- 填充无功能键，让 ZXC 偏左 -->
-                    <div class="key">B</div> <!-- 填充无功能键 -->
+                <div class="key-desc-grid">
+                    <div class="desc-item"><span class="key-tag active">Q / E</span> 旋转 3D 视角</div>
+                    <div class="desc-item"><span class="key-tag active">W / S</span> 推拉 3D 视角</div>
+                    <div class="desc-item"><span class="key-tag active">A / D</span> 切换层级 (循环)</div>
+                    <div class="desc-item"><span class="key-tag active">Z / C</span> 调整层间距</div>
+                    <div class="desc-item"><span class="key-tag active">R</span> 重新开始</div>
+                    <div class="desc-item"><span class="key-tag active">F</span> 翻转 2D 棋盘</div>
+                    <div class="desc-item"><span class="key-tag active">H</span> 开关辅助线</div>
+                    <div class="desc-item"><span class="key-tag active">T</span> 切换 亮/暗 主题</div>
                 </div>
             </div>
 
-            <div class="key-desc-grid">
-                <div class="desc-item"><span class="key-tag active">Q / E</span> 旋转 3D 视角</div>
-                <div class="desc-item"><span class="key-tag active">W / S</span> 推拉 3D 视角</div>
-                <div class="desc-item"><span class="key-tag active">A / D</span> 切换层级 (循环)</div>
-                <div class="desc-item"><span class="key-tag active">Z / C</span> 调整层间距</div>
-                <div class="desc-item"><span class="key-tag active">R</span> 重新开始</div>
-                <div class="desc-item"><span class="key-tag active">F</span> 翻转 2D 棋盘</div>
-                <div class="desc-item"><span class="key-tag active">H</span> 开关辅助线</div>
-                <div class="desc-item"><span class="key-tag active">T</span> 切换 亮/暗 主题</div>
+            <!-- 右侧：标题、鼠标说明、开始按钮 -->
+            <div class="start-right">
+                <h1>GOMOKU 613B-E2D</h1>
+                <p class="subtitle">Discrete 3D Tactical Gomoku</p>
+
+                <div class="mouse-actions">
+                    <p>🖱️ 鼠标悬停：查看辅助线</p>
+                    <p>🖱️ 鼠标点击：当前层落子</p>
+                    <p>🖱️ 鼠标滚轮：旋转3D视角</p>
+                </div>
+
+                <button id="start-btn">START GAME</button>
             </div>
-        </div>
-
-        <!-- 右侧：标题、鼠标说明、开始按钮 -->
-        <div class="start-right">
-            <h1>GOMOKU 613B-E2D</h1>
-            <p class="subtitle">Discrete 3D Tactical Gomoku</p>
-
-            <div class="mouse-actions">
-                <p>🖱️ 鼠标悬停：查看辅助线</p>
-                <p>🖱️ 鼠标点击：当前层落子</p>
-                <p>🖱️ 鼠标滚轮：旋转3D视角</p>
-            </div>
-
-            <button id="start-btn">START GAME</button>
         </div>
     </div>
-</div>
+</body>
+</html>
