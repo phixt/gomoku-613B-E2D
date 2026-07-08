@@ -9,7 +9,6 @@ const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
 const LAYER_SPACING = 3.5; // ???? LeftPanel.LAYER_SPACING
 const CENTER = (BOARD_SIZE - 1) / 2;
-const FRUSTUM_SIZE = 14;
 const PIECE_RADIUS = 0.42;
 const GHOST_OPACITY = 0.35;
 
@@ -18,7 +17,7 @@ const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
 
-// 閳光偓閳光偓 Grid geometry 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
+// 闁冲厜鍋撻柍鍏夊亾 Grid geometry 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾
 
 function buildLayerGridGeometry(): THREE.BufferGeometry {
   const p: number[] = [];
@@ -29,7 +28,7 @@ function buildLayerGridGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-// 閳光偓閳光偓 Piece texture 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
+// 闁冲厜鍋撻柍鍏夊亾 Piece texture 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64, canvas = document.createElement("canvas");
@@ -63,9 +62,12 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
 }
 
 
-// 閳光偓閳光偓 RightPanel 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
+// 闁冲厜鍋撻柍鍏夊亾 RightPanel 闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋撻柍鍏夊亾闁冲厜鍋?
 
 export class RightPanel {
+  public static readonly BOARD_SIZE = 13;
+  public static readonly GRID_PADDING = 0.5;
+
   public readonly renderer: THREE.WebGLRenderer;
   public readonly board: Board;
   public onPieceChanged: ((board: Board, focusZ: number) => void) | null = null;
@@ -317,9 +319,9 @@ export class RightPanel {
   /**
    * Scan a single 2D direction with noise reduction:
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone 閳?draw nothing (noise cancelled).
-   * If first non-empty is ally 閳?green from hover to that stone, continue forward.
-   * If first non-empty is enemy 閳?red from hover to that stone, stop.
+   * If board edge is reached without finding a stone 闁?draw nothing (noise cancelled).
+   * If first non-empty is ally 闁?green from hover to that stone, continue forward.
+   * If first non-empty is enemy 闁?red from hover to that stone, stop.
    */
   private scanDirection2D(
     hx: number, hy: number, dx: number, dy: number, z: number,
@@ -330,7 +332,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 閳?draw nothing
+      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 闁?draw nothing
       if (firstStep > maxSteps) return; // exceeded search range
             const s = this.board.get(px, py, z);
       if (s !== 0) break;
@@ -389,7 +391,7 @@ export class RightPanel {
   /**
    * Scan a single 3D direction with noise reduction.
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone 閳?draw nothing.
+   * If board edge reached without finding a stone 闁?draw nothing.
    */
   private scanDirection3D(
     hx: number, hy: number, hz: number,
@@ -488,7 +490,7 @@ export class RightPanel {
 
     if (winner !== 0) {
       setTimeout(() => {
-        alert(winner === BLACK ? "榛戞柟鑳滃埄" : "鐧芥柟鑳滃埄");
+        alert(winner === BLACK ? "姒涙垶鏌熼懗婊冨焺" : "閻ц姤鏌熼懗婊冨焺");
         this.board.reset();
         this.renderPieces();
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
@@ -525,20 +527,6 @@ export class RightPanel {
 
 
 
-  private updateCameraFrustum(width: number, height: number): void {
-    const aspect = width / height;
-    const half = FRUSTUM_SIZE / 2;
-    if (this.isMirrored) {
-      this.camera.left = half * aspect;
-      this.camera.right = -half * aspect;
-    } else {
-      this.camera.left = -half * aspect;
-      this.camera.right = half * aspect;
-    }
-        this.camera.top = half;
-    this.camera.bottom = -half;
-    this.camera.updateProjectionMatrix();
-  }
 
   private applyFocusZ(): void {
     const zPos = this.focusZ * LAYER_SPACING;
@@ -578,9 +566,44 @@ export class RightPanel {
   render(): void { this.renderer.render(this.scene, this.camera); }
 
   resize(width?: number, height?: number): void {
-    const w = (width ?? this.container.clientWidth) || window.innerWidth * 0.5;
-    const h = (height ?? this.container.clientHeight) || window.innerHeight;
-    this.updateCameraFrustum(w, h);
-    this.renderer.setSize(w, h);
+    const containerWidth = width ?? this.container.clientWidth;
+    const containerHeight = height ?? this.container.clientHeight;
+
+    this.renderer.setSize(containerWidth, containerHeight);
+
+    // 棋盘世界空间大小（0 到 BOARD_SIZE-1）
+    const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
+
+    // 包含安全边距的总尺寸
+    const totalSize = boardWorldSize + (RightPanel.GRID_PADDING * 2);
+
+    const aspect = containerWidth / containerHeight;
+
+    let frustumHalfWidth: number;
+    let frustumHalfHeight: number;
+
+    if (aspect > 1) {
+      // 宽屏：高度为基准，宽度自适应
+      frustumHalfHeight = totalSize / 2;
+      frustumHalfWidth = frustumHalfHeight * aspect;
+    } else {
+      // 竖屏或正方形：宽度为基准，高度自适应
+      frustumHalfWidth = totalSize / 2;
+      frustumHalfHeight = frustumHalfWidth / aspect;
+    }
+
+
+    if (this.isMirrored) {
+      this.camera.left = frustumHalfWidth;
+      this.camera.right = -frustumHalfWidth;
+    } else {
+      this.camera.left = -frustumHalfWidth;
+      this.camera.right = frustumHalfWidth;
+    }
+
+    this.camera.top = frustumHalfHeight;
+    this.camera.bottom = -frustumHalfHeight;
+
+    this.camera.updateProjectionMatrix();
   }
 }
