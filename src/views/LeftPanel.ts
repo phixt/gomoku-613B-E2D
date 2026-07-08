@@ -112,6 +112,7 @@ export class LeftPanel {
   private piecesGroup!: THREE.Group;
   private auxLinesGroup!: THREE.Group;
   private highlightMarkers3DGroup!: THREE.Group;
+  private hoverMarkerGroup!: THREE.Group;
   private container: HTMLElement;
   private focusZ: number = 0;
   private theme: Theme;
@@ -149,7 +150,12 @@ export class LeftPanel {
 
     this.buildAllGeometry();
 
+    this.hoverMarkerGroup = new THREE.Group();
+    this.hoverMarkerGroup.renderOrder = 3;
+    this.scene.add(this.hoverMarkerGroup);
+
     this.checkBoundarySafety();
+    this.rotateY(2);
   }
 
   /** @internal Exposed for cross-panel coordination. */
@@ -404,6 +410,29 @@ export class LeftPanel {
     m[1].color.setHex(theme.focusGridColor);
     (this.auxSegments.material as THREE.LineBasicMaterial).color.setHex(theme.auxLineColor);
     (this.connectorSegments.material as THREE.LineBasicMaterial).color.setHex(theme.gridColor);
+  }
+
+
+  updateHoverMarker(x: number, y: number, z: number): void {
+    while (this.hoverMarkerGroup.children.length > 0) {
+      const c = this.hoverMarkerGroup.children[0];
+      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.hoverMarkerGroup.remove(c);
+    }
+    const marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x0088FF })
+    );
+    marker.position.set(x, y, z * this.layerSpacing + 0.1);
+    this.hoverMarkerGroup.add(marker);
+  }
+
+  clearHoverMarker(): void {
+    while (this.hoverMarkerGroup.children.length > 0) {
+      const c = this.hoverMarkerGroup.children[0];
+      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.hoverMarkerGroup.remove(c);
+    }
   }
 
   render(): void { this.renderer.render(this.scene, this.camera); }

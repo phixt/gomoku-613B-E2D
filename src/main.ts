@@ -29,6 +29,11 @@ function main(): void {
     leftPanel.update3DAuxData(data);
   };
 
+  rightPanel.onHoverChanged = (x, y, z): void => {
+    if (x >= 0) leftPanel.updateHoverMarker(x, y, z);
+    else leftPanel.clearHoverMarker();
+  };
+
   const forceCorrectSize = (): void => {
     const lw = leftEl.clientWidth || window.innerWidth * 0.5;
     const rw = rightEl.clientWidth || window.innerWidth * 0.5;
@@ -92,11 +97,16 @@ function main(): void {
     
       case "q": case "Q":
         e.preventDefault();
-        leftPanel.rotateY(-1);
+        leftPanel.rotateY(1);
         break;
       case "e": case "E":
         e.preventDefault();
-        leftPanel.rotateY(1);
+        leftPanel.rotateY(-1);
+        break;
+
+      case "f": case "F":
+        e.preventDefault();
+        rightPanel.toggleMirror();
         break;
 
     

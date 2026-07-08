@@ -75,6 +75,7 @@ export class RightPanel {
   public readonly board: Board;
   public onPieceChanged: ((board: Board, focusZ: number) => void) | null = null;
   public on3DAuxDataChanged: ((data: AuxData3D) => void) | null = null;
+  public onHoverChanged: ((x: number, y: number, z: number) => void) | null = null;
 
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
@@ -102,6 +103,7 @@ export class RightPanel {
   private hoverX: number = -1;
   private hoverY: number = -1;
   private _hoverWorldPos: THREE.Vector3 | null = null;
+  private isMirrored: boolean = true;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
   private boundResize: () => void;
@@ -203,16 +205,24 @@ export class RightPanel {
     this.hoverY = gy;
     this._hoverWorldPos = new THREE.Vector3(gx, gy, this.focusZ * LAYER_SPACING);
     this.computeHoverOverlays(gx, gy);
+    if (this.onHoverChanged) this.onHoverChanged(gx, gy, this.focusZ);
   };
 
   private clearAllOverlays(): void {
-  
+    this.scene.remove(this.hoverAuxLines2D);
     this.hoverAuxLines2D.geometry.dispose();
-    this.hoverAuxLines2D.geometry = new THREE.BufferGeometry();
-  
+    (this.hoverAuxLines2D.material as THREE.Material).dispose();
+
+    const geo = new THREE.BufferGeometry();
+    const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false });
+    this.hoverAuxLines2D = new THREE.LineSegments(geo, mat);
+    this.hoverAuxLines2D.renderOrder = 1;
+    this.scene.add(this.hoverAuxLines2D);
+
     this.clearHighlightMarkers();
-  
+
     if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
+    if (this.onHoverChanged) this.onHoverChanged(-1, -1, -1);
   }
 
 
@@ -229,7 +239,7 @@ export class RightPanel {
     const geo = new THREE.CircleGeometry(0.10, 12);
     const mat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.8, depthWrite: false });
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, 0.04);
+    mesh.position.set(x, y, this.focusZ * LAYER_SPACING + 0.04);
     this.highlightMarkersGroup.add(mesh);
   }
 
@@ -266,14 +276,25 @@ export class RightPanel {
     }
 
   
+    // Fully recreate LineSegments to avoid WebGL buffer state issues
+    this.scene.remove(this.hoverAuxLines2D);
     this.hoverAuxLines2D.geometry.dispose();
+    (this.hoverAuxLines2D.material as THREE.Material).dispose();
+
     if (pos2D.length > 0) {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.Float32BufferAttribute(pos2D, 3));
       geo.setAttribute("color", new THREE.Float32BufferAttribute(col2D, 3));
-      this.hoverAuxLines2D.geometry = geo;
+      const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false });
+      this.hoverAuxLines2D = new THREE.LineSegments(geo, mat);
+      this.hoverAuxLines2D.renderOrder = 1;
+      this.scene.add(this.hoverAuxLines2D);
     } else {
-      this.hoverAuxLines2D.geometry = new THREE.BufferGeometry();
+      const geo = new THREE.BufferGeometry();
+      const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false });
+      this.hoverAuxLines2D = new THREE.LineSegments(geo, mat);
+      this.hoverAuxLines2D.renderOrder = 1;
+      this.scene.add(this.hoverAuxLines2D);
     }
 
   
@@ -294,11 +315,13 @@ export class RightPanel {
     pos2D: number[], col2D: number[], pts3D: HighlightPoint3D[],
   ): void {
   
+    const maxSteps = 4;
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 鈫?draw nothing
-      const s = this.board.get(px, py, z);
+      if (firstStep > maxSteps) return; // exceeded search range
+            const s = this.board.get(px, py, z);
       if (s !== 0) break;
       firstStep++;
     }
@@ -307,7 +330,8 @@ export class RightPanel {
     let step = firstStep;
     let prevX = hx, prevY = hy;
     while (true) {
-      const px = hx + dx * step, py = hy + dy * step;
+      if (step > maxSteps) break; // exceeded search range
+            const px = hx + dx * step, py = hy + dy * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) break;
       const s = this.board.get(px, py, z);
 
@@ -315,22 +339,26 @@ export class RightPanel {
       const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
 
     
-      pos2D.push(prevX, prevY, 0.03, px, py, 0.03);
-      for (let i = 0; i < 2; i++) {
-        const r = ((color >> 16) & 0xff) / 255;
-        const g = ((color >> 8) & 0xff) / 255;
-        const b = (color & 0xff) / 255;
-        col2D.push(r, g, b);
+      if (s !== 0) {
+        // Enemy lines at Z=0.03 (top), ally lines at Z=0.02
+        const lineZ = z * LAYER_SPACING + (isAlly ? 0.02 : 0.03);
+        pos2D.push(prevX, prevY, lineZ, px, py, lineZ);
+        for (let i = 0; i < 2; i++) {
+          const r = ((color >> 16) & 0xff) / 255;
+          const g = ((color >> 8) & 0xff) / 255;
+          const b = (color & 0xff) / 255;
+          col2D.push(r, g, b);
+        }
       }
 
       if (s === 0) {
-      
-        this.addHighlightMarker(px, py, color);
-        pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
+        this.addHighlightMarker(prevX, prevY, color);
+        pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color });
         break;
       }
 
       if (!isAlly) {
+        console.log("Enemy hit at:", px, py);
       
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
@@ -340,6 +368,11 @@ export class RightPanel {
     
       prevX = px; prevY = py;
       step++;
+    }
+    // Marker at last valid piece when maxSteps terminated the loop
+    if (prevX !== hx || prevY !== hy) {
+      this.addHighlightMarker(prevX, prevY, ALLY_COLOR);
+      pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color: ALLY_COLOR });
     }
   }
 
@@ -354,11 +387,13 @@ export class RightPanel {
     lines3D: Line3DData[], pts3D: HighlightPoint3D[],
   ): void {
   
+    const maxSteps = 4;
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep, pz = hz + dz * firstStep;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) return;
-      const s = this.board.get(px, py, pz);
+      if (firstStep > maxSteps) return; // exceeded search range
+            const s = this.board.get(px, py, pz);
       if (s !== 0) break;
       firstStep++;
     }
@@ -367,18 +402,21 @@ export class RightPanel {
     let step = firstStep;
     let prevX = hx, prevY = hy, prevZ = hz;
     while (true) {
-      const px = hx + dx * step, py = hy + dy * step, pz = hz + dz * step;
+      if (step > maxSteps) break; // exceeded search range
+            const px = hx + dx * step, py = hy + dy * step, pz = hz + dz * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) break;
       const s = this.board.get(px, py, pz);
 
       const isAlly = s === this.currentPlayer;
       const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
 
+      if (s !== 0) {
       lines3D.push({
         startX: prevX, startY: prevY, startZ: prevZ * LAYER_SPACING,
         endX: px, endY: py, endZ: pz * LAYER_SPACING,
         color,
       });
+      }
 
       if (s === 0) {
         pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
@@ -486,9 +524,14 @@ export class RightPanel {
   private updateCameraFrustum(width: number, height: number): void {
     const aspect = width / height;
     const half = FRUSTUM_SIZE / 2;
-    this.camera.left = -half * aspect;
-    this.camera.right = half * aspect;
-    this.camera.top = half;
+    if (this.isMirrored) {
+      this.camera.left = half * aspect;
+      this.camera.right = -half * aspect;
+    } else {
+      this.camera.left = -half * aspect;
+      this.camera.right = half * aspect;
+    }
+        this.camera.top = half;
     this.camera.bottom = -half;
     this.camera.updateProjectionMatrix();
   }
@@ -515,6 +558,11 @@ export class RightPanel {
 
   setAuxMode(mode: AuxMode): void {
     this.auxMode = mode;
+  }
+
+  public toggleMirror(): void {
+    this.isMirrored = !this.isMirrored;
+    this.resize();
   }
 
   updateTheme(theme: Theme): void {
