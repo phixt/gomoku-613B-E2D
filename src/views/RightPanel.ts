@@ -358,7 +358,6 @@ export class RightPanel {
       }
 
       if (!isAlly) {
-        console.log("Enemy hit at:", px, py);
       
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z, color }); // logical Z index
@@ -466,8 +465,6 @@ export class RightPanel {
     if (!this.hoverValid) return;
     const gx = this.hoverX, gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
-
-    console.log(`[Click] Current player before move: ${this.currentPlayer === BLACK ? "BLACK" : "WHITE"}`);
     this.board.set(gx, gy, this.focusZ, this.currentPlayer);
     const actualState = this.board.get(gx, gy, this.focusZ);
     console.log(`[Board] State at (${gx},${gy},${this.focusZ}) is now: ${actualState} (${actualState === BLACK ? "BLACK" : actualState === WHITE ? "WHITE" : "EMPTY"})`);
@@ -479,7 +476,6 @@ export class RightPanel {
     console.log(`[Rules] checkWinner returned: ${winner} (${winner === BLACK ? "BLACK" : winner === WHITE ? "WHITE" : "NONE"})`);
 
     if (winner !== 0) {
-      console.log(`[Win] ${winner === BLACK ? "BLACK" : "WHITE"} wins!`);
       setTimeout(() => {
         alert(winner === BLACK ? "黑方胜利" : "白方胜利");
         this.board.reset();
@@ -490,7 +486,6 @@ export class RightPanel {
     }
 
     this.currentPlayer = this.currentPlayer === BLACK ? WHITE : BLACK;
-    console.log(`[Click] Player switched to: ${this.currentPlayer === BLACK ? "BLACK" : "WHITE"}`);
     this.clearAllOverlays();
 
     const rect = this.renderer.domElement.getBoundingClientRect();

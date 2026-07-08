@@ -83,7 +83,7 @@ export function collectLayerPatterns3D(board: Board, z: number): Pattern3D[] {
   return r;
 }
 
-export function isWin3D(patterns: Pattern3D[]): boolean {
+export function checkWinPatterns(patterns: Pattern3D[]): boolean {
   return patterns.some((p) => p.count >= 5);
 }
 
@@ -91,5 +91,5 @@ export function isWin3D(patterns: Pattern3D[]): boolean {
 export function checkWinner(board: Board, x: number, y: number, z: number): 0 | 1 | 2 {
   const state = board.get(x, y, z);
   if (state === 0) return 0;
-  return isWin3D(checkPatterns3D(board, x, y, z)) ? state : 0;
+  return checkWinPatterns(checkPatterns3D(board, x, y, z)) ? state : 0;
 }
