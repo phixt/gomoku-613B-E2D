@@ -121,7 +121,10 @@ export class LeftPanel {
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
-
+  private focusBlackMat!: THREE.SpriteMaterial;
+  private focusWhiteMat!: THREE.SpriteMaterial;
+  private ghostBlackMat!: THREE.SpriteMaterial;
+  private ghostWhiteMat!: THREE.SpriteMaterial;
 
 
   private _layerSpacing: number = 3.5;
@@ -136,6 +139,11 @@ export class LeftPanel {
     this.whiteTex = createPieceTexture(false, false);
     this.blackGhostTex = createPieceTexture(true, true);
     this.whiteGhostTex = createPieceTexture(false, true);
+
+    this.focusBlackMat = new THREE.SpriteMaterial({ map: this.blackTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
+    this.focusWhiteMat = new THREE.SpriteMaterial({ map: this.whiteTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
+    this.ghostBlackMat = new THREE.SpriteMaterial({ map: this.blackGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
+    this.ghostWhiteMat = new THREE.SpriteMaterial({ map: this.whiteGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(theme.bgColor);
@@ -311,11 +319,7 @@ export class LeftPanel {
   renderAllPieces(board: Board, focusZ: number): void {
     this._board = board;
     const s = this._layerSpacing;
-    while (this.piecesGroup.children.length > 0) {
-      const c = this.piecesGroup.children[0];
-      if (c instanceof THREE.Sprite && c.material instanceof THREE.Material) c.material.dispose();
-      this.piecesGroup.remove(c);
-    }
+    this.piecesGroup.clear();
     const scale = 0.8;
     for (let z = 0; z < LAYER_COUNT; z++) {
       const zPos = z * s;
@@ -324,13 +328,9 @@ export class LeftPanel {
         for (let x = 0; x < BOARD_SIZE; x++) {
           const state = board.get(x, y, z);
           if (state === 0) continue;
-          const tex = isFocus
-            ? (state === 1 ? this.blackTex : this.whiteTex)
-            : (state === 1 ? this.blackGhostTex : this.whiteGhostTex);
-          const mat = new THREE.SpriteMaterial({
-            map: tex, transparent: true, opacity: isFocus ? 1.0 : 0.25,
-            depthWrite: isFocus, depthTest: true,
-          });
+          const mat = isFocus
+            ? (state === 1 ? this.focusBlackMat : this.focusWhiteMat)
+            : (state === 1 ? this.ghostBlackMat : this.ghostWhiteMat);
           const sprite = new THREE.Sprite(mat);
           sprite.renderOrder = isFocus ? 2 : 1;
           sprite.position.set(x, y, zPos);
@@ -404,7 +404,7 @@ export class LeftPanel {
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(pt.x, pt.y, pt.z * this._layerSpacing);
-      mesh.renderOrder = 0;
+      mesh.renderOrder = 10;
       this.highlightMarkers3DGroup.add(mesh);
     }
   }

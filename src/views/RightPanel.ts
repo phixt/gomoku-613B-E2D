@@ -3,6 +3,7 @@ import { type Theme, type CellState, BLACK, WHITE, AuxMode } from "../core/Types
 import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
+import { DIRECTIONS_3D } from "../utils/MathUtils";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
@@ -13,12 +14,6 @@ const PIECE_RADIUS = 0.42;
 const GHOST_OPACITY = 0.35;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
-
-const DIRS_3D: [number, number, number][] = [
-  [1, 0, 0], [0, 1, 0], [0, 0, 1],
-  [1, 1, 0], [1, -1, 0], [1, 0, 1], [1, 0, -1], [0, 1, 1], [0, 1, -1],
-  [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
-];
 
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
@@ -99,6 +94,8 @@ export class RightPanel {
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
+  private blackMat!: THREE.MeshBasicMaterial;
+  private whiteMat!: THREE.MeshBasicMaterial;
   private hoverValid: boolean = false;
   private hoverX: number = -1;
   private hoverY: number = -1;
@@ -126,6 +123,9 @@ export class RightPanel {
     this.whiteTex = createPieceTexture(false);
     this.blackGhostTex = createPieceTexture(true, true);
     this.whiteGhostTex = createPieceTexture(false, true);
+
+    this.blackMat = new THREE.MeshBasicMaterial({ map: this.blackTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
+    this.whiteMat = new THREE.MeshBasicMaterial({ map: this.whiteTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
 
     this.gridGroup = new THREE.Group();
     const gridGeo = buildLayerGridGeometry();
@@ -269,7 +269,7 @@ export class RightPanel {
   
     const include3D = !!(this.auxMode & 0b01);
     if (include3D) {
-      for (const [dx, dy, dz] of DIRS_3D) {
+      for (const [dx, dy, dz] of DIRECTIONS_3D.map((d) => [d.x, d.y, d.z])) {
         this.scanDirection3D(hx, hy, z, dx, dy, dz, lines3D, pts3D);
         this.scanDirection3D(hx, hy, z, -dx, -dy, -dz, lines3D, pts3D);
       }
@@ -501,11 +501,7 @@ export class RightPanel {
 
 
   private renderPieces(): void {
-    while (this.pieceGroup.children.length > 0) {
-      const c = this.pieceGroup.children[0];
-      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
-      this.pieceGroup.remove(c);
-    }
+    this.pieceGroup.clear();
     this.ghostMesh = null;
 
     const geo = new THREE.CircleGeometry(PIECE_RADIUS, 24);
@@ -513,10 +509,7 @@ export class RightPanel {
       for (let x = 0; x < BOARD_SIZE; x++) {
         const state = this.board.get(x, y, this.focusZ);
         if (state === 0) continue;
-        const mat = new THREE.MeshBasicMaterial({
-          map: state === BLACK ? this.blackTex : this.whiteTex,
-          transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true,
-        });
+        const mat = state === BLACK ? this.blackMat : this.whiteMat;
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, 0.01);
         this.pieceGroup.add(mesh);
