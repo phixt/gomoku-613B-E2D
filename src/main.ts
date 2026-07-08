@@ -105,7 +105,103 @@ function main(): void {
   };
 
   const saveGame = (): void => {
-    console.log("[Save] Save feature will be implemented in v0.4.0");
+    // Serialize board state
+    const boardData: number[] = [];
+    rightPanel.board.forEach((_x, _y, _z, state) => { boardData.push(state); });
+
+    const saveData = {
+      version: "0.4.0",
+      timestamp: Date.now(),
+      boardSize: 13,
+      layers: LAYER_COUNT,
+      layerSpacing: leftPanel.layerSpacing,
+      board: boardData,
+      focusZ: focusZ,
+      isDarkTheme: currentTheme.name === "dark",
+      currentPlayer: rightPanel.getCurrentPlayer(),
+    };
+
+    const json = JSON.stringify(saveData);
+    const base64 = btoa(unescape(encodeURIComponent(json)));
+    console.log("[Save] Save data:", base64);
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(base64).then(() => {
+      console.log("[Save] Copied to clipboard");
+    }).catch(() => {
+      console.log("[Save] Clipboard unavailable, save string is in console log above");
+    });
+  };
+
+  const loadGameFromClipboard = async (): Promise<void> => {
+    try {
+      const text = await navigator.clipboard.readText();
+      loadGame(text);
+    } catch (err) {
+      console.error("[Load] Clipboard read failed:", err);
+      // Fallback: prompt for paste
+      const text = prompt("Paste save data below:");
+      if (text) loadGame(text);
+    }
+  };
+
+  const loadGame = (base64String: string): void => {
+    try {
+      const json = decodeURIComponent(escape(atob(base64String)));
+      const data = JSON.parse(json);
+
+      // Validate
+      if (!data.version || !Array.isArray(data.board)) {
+        console.error("[Load] Invalid save data");
+        return;
+      }
+
+      // Restore board state
+      let idx = 0;
+      rightPanel.board.forEach((x, y, z, _state) => {
+        if (idx < data.board.length) {
+          rightPanel.board.set(x, y, z, data.board[idx]);
+        }
+        idx++;
+      });
+
+      // Restore focusZ
+      focusZ = data.focusZ ?? 0;
+      rightPanel.setFocusZ(focusZ);
+
+      // Restore theme
+      if (data.isDarkTheme) {
+        currentTheme = DARK_THEME;
+        document.body.classList.add("dark-theme");
+      } else {
+        currentTheme = LIGHT_THEME;
+        document.body.classList.remove("dark-theme");
+      }
+      leftPanel.updateTheme(currentTheme);
+      rightPanel.updateTheme(currentTheme);
+
+      // Restore layer spacing
+      if (data.layerSpacing != null) {
+        const delta = data.layerSpacing - leftPanel.layerSpacing;
+        leftPanel.adjustLayerSpacing(delta);
+      }
+
+      // Restore current player
+      if (data.currentPlayer != null) {
+        rightPanel.setCurrentPlayer(data.currentPlayer);
+      }
+
+      // Update panels
+      leftPanel.renderAllPieces(rightPanel.board, focusZ);
+      rightPanel.renderPieces();
+
+      // Close esc menu on success
+      closeEscMenu();
+
+      console.log("[Load] Game loaded successfully");
+    } catch (err) {
+      console.error("[Load] Failed to load game:", err);
+    }
   };
 
 
@@ -143,6 +239,7 @@ function main(): void {
         case "Escape": e.preventDefault(); closeEscMenu(); break;
         case "KeyR": e.preventDefault(); closeEscMenu(); confirmRestart(); break;
         case "KeyS": e.preventDefault(); closeEscMenu(); saveGame(); break;
+        case "KeyL": e.preventDefault(); closeEscMenu(); loadGameFromClipboard(); break;
         case "KeyB": e.preventDefault(); closeEscMenu(); returnToTitle(); break;
       }
       e.stopPropagation();

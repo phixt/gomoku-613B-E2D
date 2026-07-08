@@ -240,6 +240,10 @@ export class RightPanel {
     this.setFocusZ(0);
   }
 
+  getCurrentPlayer(): CellState { return this.currentPlayer; }
+
+  setCurrentPlayer(state: CellState): void { this.currentPlayer = state; }
+
 
 
   private clearHighlightMarkers(): void {
@@ -510,7 +514,7 @@ export class RightPanel {
 
 
 
-  private renderPieces(): void {
+  public renderPieces(): void {
     this.pieceGroup.clear();
     this.ghostMesh = null;
 
