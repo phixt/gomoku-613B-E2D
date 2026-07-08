@@ -163,7 +163,7 @@ body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     z-index: 200;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(40, 46, 46, 0.517);
     backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
@@ -205,13 +205,13 @@ body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }
 }
 
 .esc-btn kbd {
-    background: rgba(44, 74, 78, 0.1);
+    background: rgba(116, 132, 134, 0.1);
     border: 1px solid #C5D5C0;
     border-radius: 3px;
     padding: 2px 8px;
     font-size: 0.75em;
     font-family: 'Consolas', monospace;
-    color: #6A8A8E;
+    color: #ebeeef;
 }
 
 .esc-btn:hover {

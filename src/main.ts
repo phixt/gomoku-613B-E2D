@@ -18,10 +18,6 @@ function main(): void {
 
 
   let isGameStarted = false;
-  const restartModal = document.getElementById("restart-modal");
-  const btnYes = document.getElementById("modal-yes");
-  const btnNo = document.getElementById("modal-no");
-  let isModalOpen = false;
   const escMenu = document.getElementById("esc-menu");
   const escResume = document.getElementById("esc-resume");
   const escRestart = document.getElementById("esc-restart");
@@ -76,17 +72,13 @@ function main(): void {
   };
 
 
-  const closeRestartModal = (): void => {
-    isModalOpen = false;
-    if (restartModal) restartModal.classList.add("hidden");
-  };
 
   const confirmRestart = (): void => {
     rightPanel.board.reset();
     focusZ = 0;
     rightPanel.resetGame();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
-    closeRestartModal();
+    closeEscMenu();
   };
 
   const openEscMenu = (): void => {
@@ -117,10 +109,9 @@ function main(): void {
   };
 
 
+
   if (startBtn) startBtn.addEventListener("click", startGame);
 
-  if (btnYes) btnYes.addEventListener("click", confirmRestart);
-  if (btnNo) btnNo.addEventListener("click", closeRestartModal);
 
   escResume?.addEventListener("click", closeEscMenu);
   escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
@@ -129,6 +120,15 @@ function main(): void {
 
 
   window.addEventListener("keydown", (e: KeyboardEvent) => {
+    // Theme toggle works regardless of game state
+    if (e.key === "t" || e.key === "T") {
+      e.preventDefault();
+      currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
+      document.body.classList.toggle("dark-theme", currentTheme.name === "dark");
+      leftPanel.updateTheme(currentTheme);
+      rightPanel.updateTheme(currentTheme);
+      return;
+    }
     if (!isGameStarted) {
       if (e.code === "Space" || e.code === "Enter") {
         e.preventDefault();
@@ -143,30 +143,7 @@ function main(): void {
         case "Escape": e.preventDefault(); closeEscMenu(); break;
         case "KeyR": e.preventDefault(); closeEscMenu(); confirmRestart(); break;
         case "KeyS": e.preventDefault(); closeEscMenu(); saveGame(); break;
-        case "KeyT": e.preventDefault(); closeEscMenu(); returnToTitle(); break;
-      }
-      e.stopPropagation();
-      return;
-    }
-
-    if (isModalOpen) {
-      if (e.code === "Escape") {
-        e.preventDefault();
-        closeRestartModal();
-      } else if (e.code === "Enter") {
-        e.preventDefault();
-        confirmRestart();
-      }
-      e.stopPropagation();
-      return;
-    }
-    if (isModalOpen) {
-      if (e.code === "Escape") {
-        e.preventDefault();
-        closeRestartModal();
-      } else if (e.code === "Enter") {
-        e.preventDefault();
-        confirmRestart();
+        case "KeyB": e.preventDefault(); closeEscMenu(); returnToTitle(); break;
       }
       e.stopPropagation();
       return;
@@ -228,13 +205,6 @@ function main(): void {
         break;
 
 
-      case "t": case "T":
-        e.preventDefault();
-        currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
-        document.body.classList.toggle("dark-theme", currentTheme.name === "dark");
-        leftPanel.updateTheme(currentTheme);
-        rightPanel.updateTheme(currentTheme);
-        break;
 
     
       case "r": case "R":
