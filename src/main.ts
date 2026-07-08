@@ -4,6 +4,9 @@ import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
 
+const LAYER_COUNT = 6;
+const PANEL_RATIO = 0.5;
+
 function main(): void {
   const leftEl = document.getElementById("left-panel");
   const rightEl = document.getElementById("right-panel");
@@ -35,8 +38,8 @@ function main(): void {
   };
 
   const forceCorrectSize = (): void => {
-    const lw = leftEl.clientWidth || window.innerWidth * 0.5;
-    const rw = rightEl.clientWidth || window.innerWidth * 0.5;
+    const lw = leftEl.clientWidth || window.innerWidth * PANEL_RATIO;
+    const rw = rightEl.clientWidth || window.innerWidth * PANEL_RATIO;
     const h = window.innerHeight;
     leftPanel.resize(lw, h);
     rightPanel.resize(rw, h);
@@ -80,7 +83,7 @@ function main(): void {
     
       case "a": case "A":
         e.preventDefault();
-        focusZ = (focusZ - 1 + 6) % 6;
+        focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
         leftPanel.highlightFocusLayer(focusZ);
         leftPanel.renderAllPieces(rightPanel.board, focusZ);
         rightPanel.setFocusZ(focusZ);
@@ -88,7 +91,7 @@ function main(): void {
 
       case "d": case "D":
         e.preventDefault();
-        focusZ = (focusZ + 1) % 6;
+        focusZ = (focusZ + 1) % LAYER_COUNT;
         leftPanel.highlightFocusLayer(focusZ);
         leftPanel.renderAllPieces(rightPanel.board, focusZ);
         rightPanel.setFocusZ(focusZ);
@@ -119,7 +122,19 @@ function main(): void {
         leftPanel.zoom(-1);
         break;
 
-    
+
+      case "z": case "Z":
+        e.preventDefault();
+        console.log("KeyZ pressed");
+        leftPanel.adjustLayerSpacing(-0.5);
+        break;
+      case "c": case "C":
+        e.preventDefault();
+        console.log("KeyC pressed");
+        leftPanel.adjustLayerSpacing(0.5);
+        break;
+
+
       case "t": case "T":
         e.preventDefault();
         currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
@@ -147,8 +162,8 @@ function main(): void {
   });
 
   window.addEventListener("resize", () => {
-    const lw = leftEl.clientWidth || window.innerWidth * 0.5;
-    const rw = rightEl.clientWidth || window.innerWidth * 0.5;
+    const lw = leftEl.clientWidth || window.innerWidth * PANEL_RATIO;
+    const rw = rightEl.clientWidth || window.innerWidth * PANEL_RATIO;
     const h = window.innerHeight;
     leftPanel.resize(lw, h);
     rightPanel.resize(rw, h);

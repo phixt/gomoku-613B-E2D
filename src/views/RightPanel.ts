@@ -3,6 +3,7 @@ import { type Theme, type CellState, BLACK, WHITE, AuxMode } from "../core/Types
 import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
+import { DIRECTIONS_3D } from "../utils/MathUtils";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
@@ -13,12 +14,6 @@ const PIECE_RADIUS = 0.42;
 const GHOST_OPACITY = 0.35;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
-
-const DIRS_3D: [number, number, number][] = [
-  [1, 0, 0], [0, 1, 0], [0, 0, 1],
-  [1, 1, 0], [1, -1, 0], [1, 0, 1], [1, 0, -1], [0, 1, 1], [0, 1, -1],
-  [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
-];
 
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
@@ -99,6 +94,8 @@ export class RightPanel {
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
+  private blackMat!: THREE.MeshBasicMaterial;
+  private whiteMat!: THREE.MeshBasicMaterial;
   private hoverValid: boolean = false;
   private hoverX: number = -1;
   private hoverY: number = -1;
@@ -126,6 +123,9 @@ export class RightPanel {
     this.whiteTex = createPieceTexture(false);
     this.blackGhostTex = createPieceTexture(true, true);
     this.whiteGhostTex = createPieceTexture(false, true);
+
+    this.blackMat = new THREE.MeshBasicMaterial({ map: this.blackTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
+    this.whiteMat = new THREE.MeshBasicMaterial({ map: this.whiteTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
 
     this.gridGroup = new THREE.Group();
     const gridGeo = buildLayerGridGeometry();
@@ -269,7 +269,7 @@ export class RightPanel {
   
     const include3D = !!(this.auxMode & 0b01);
     if (include3D) {
-      for (const [dx, dy, dz] of DIRS_3D) {
+      for (const [dx, dy, dz] of DIRECTIONS_3D.map((d) => [d.x, d.y, d.z])) {
         this.scanDirection3D(hx, hy, z, dx, dy, dz, lines3D, pts3D);
         this.scanDirection3D(hx, hy, z, -dx, -dy, -dz, lines3D, pts3D);
       }
@@ -353,15 +353,14 @@ export class RightPanel {
 
       if (s === 0) {
         this.addHighlightMarker(prevX, prevY, color);
-        pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color });
+        pts3D.push({ x: prevX, y: prevY, z: z, color }); // logical Z index
         break;
       }
 
       if (!isAlly) {
-        console.log("Enemy hit at:", px, py);
       
         this.addHighlightMarker(px, py, color);
-        pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
+        pts3D.push({ x: px, y: py, z: z, color }); // logical Z index
         break;
       }
 
@@ -372,7 +371,7 @@ export class RightPanel {
     // Marker at last valid piece when maxSteps terminated the loop
     if (prevX !== hx || prevY !== hy) {
       this.addHighlightMarker(prevX, prevY, ALLY_COLOR);
-      pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color: ALLY_COLOR });
+      pts3D.push({ x: prevX, y: prevY, z: z, color: ALLY_COLOR }) // logical Z index;
     }
   }
 
@@ -386,7 +385,7 @@ export class RightPanel {
     dx: number, dy: number, dz: number,
     lines3D: Line3DData[], pts3D: HighlightPoint3D[],
   ): void {
-  
+
     const maxSteps = 4;
     let firstStep = 1;
     while (true) {
@@ -398,7 +397,7 @@ export class RightPanel {
       firstStep++;
     }
 
-  
+
     let step = firstStep;
     let prevX = hx, prevY = hy, prevZ = hz;
     while (true) {
@@ -412,24 +411,29 @@ export class RightPanel {
 
       if (s !== 0) {
       lines3D.push({
-        startX: prevX, startY: prevY, startZ: prevZ * LAYER_SPACING,
-        endX: px, endY: py, endZ: pz * LAYER_SPACING,
+        startX: prevX, startY: prevY, startZ: prevZ, // logical Z index
+        endX: px, endY: py, endZ: pz, // logical Z index
         color,
       });
       }
 
       if (s === 0) {
-        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
+        // Green marker at last valid piece, not at empty cell beyond
+        pts3D.push({ x: prevX, y: prevY, z: prevZ, color }); // logical Z index
         break;
       }
 
       if (!isAlly) {
-        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
+        pts3D.push({ x: px, y: py, z: pz, color }); // logical Z index
         break;
       }
 
       prevX = px; prevY = py; prevZ = pz;
       step++;
+    }
+    // Green marker at last valid piece when maxSteps terminated the loop
+    if (prevX !== hx || prevY !== hy || prevZ !== hz) {
+      pts3D.push({ x: prevX, y: prevY, z: prevZ, color: ALLY_COLOR }); // logical Z index
     }
   }
 
@@ -461,8 +465,6 @@ export class RightPanel {
     if (!this.hoverValid) return;
     const gx = this.hoverX, gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
-
-    console.log(`[Click] Current player before move: ${this.currentPlayer === BLACK ? "BLACK" : "WHITE"}`);
     this.board.set(gx, gy, this.focusZ, this.currentPlayer);
     const actualState = this.board.get(gx, gy, this.focusZ);
     console.log(`[Board] State at (${gx},${gy},${this.focusZ}) is now: ${actualState} (${actualState === BLACK ? "BLACK" : actualState === WHITE ? "WHITE" : "EMPTY"})`);
@@ -474,7 +476,6 @@ export class RightPanel {
     console.log(`[Rules] checkWinner returned: ${winner} (${winner === BLACK ? "BLACK" : winner === WHITE ? "WHITE" : "NONE"})`);
 
     if (winner !== 0) {
-      console.log(`[Win] ${winner === BLACK ? "BLACK" : "WHITE"} wins!`);
       setTimeout(() => {
         alert(winner === BLACK ? "黑方胜利" : "白方胜利");
         this.board.reset();
@@ -485,7 +486,6 @@ export class RightPanel {
     }
 
     this.currentPlayer = this.currentPlayer === BLACK ? WHITE : BLACK;
-    console.log(`[Click] Player switched to: ${this.currentPlayer === BLACK ? "BLACK" : "WHITE"}`);
     this.clearAllOverlays();
 
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -496,11 +496,7 @@ export class RightPanel {
 
 
   private renderPieces(): void {
-    while (this.pieceGroup.children.length > 0) {
-      const c = this.pieceGroup.children[0];
-      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
-      this.pieceGroup.remove(c);
-    }
+    this.pieceGroup.clear();
     this.ghostMesh = null;
 
     const geo = new THREE.CircleGeometry(PIECE_RADIUS, 24);
@@ -508,10 +504,7 @@ export class RightPanel {
       for (let x = 0; x < BOARD_SIZE; x++) {
         const state = this.board.get(x, y, this.focusZ);
         if (state === 0) continue;
-        const mat = new THREE.MeshBasicMaterial({
-          map: state === BLACK ? this.blackTex : this.whiteTex,
-          transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true,
-        });
+        const mat = state === BLACK ? this.blackMat : this.whiteMat;
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, 0.01);
         this.pieceGroup.add(mesh);

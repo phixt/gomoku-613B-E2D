@@ -1,4 +1,5 @@
 import type { Board } from "./Board";
+import { DIRECTIONS_3D } from "../utils/MathUtils";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
@@ -26,11 +27,7 @@ export function checkPatterns3D(
   const state = board.get(x, y, z);
   if (state === 0) return [];
 
-  const dirs: [number, number, number][] = [
-    [1, 0, 0], [0, 1, 0], [0, 0, 1],
-    [1, 1, 0], [1, -1, 0], [1, 0, 1], [1, 0, -1], [0, 1, 1], [0, 1, -1],
-    [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
-  ];
+  const dirs: [number, number, number][] = DIRECTIONS_3D.map((d) => [d.x, d.y, d.z]);
 
   const results: Pattern3D[] = [];
 
@@ -60,11 +57,7 @@ export function checkPatterns3D(
 
 /** Collect all unique patterns on a single layer. */
 export function collectLayerPatterns3D(board: Board, z: number): Pattern3D[] {
-  const dirs: [number, number, number][] = [
-    [1, 0, 0], [0, 1, 0], [0, 0, 1],
-    [1, 1, 0], [1, -1, 0], [1, 0, 1], [1, 0, -1], [0, 1, 1], [0, 1, -1],
-    [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
-  ];
+  const dirs: [number, number, number][] = DIRECTIONS_3D.map((d) => [d.x, d.y, d.z]);
   const r: Pattern3D[] = [];
 
   for (let y = 0; y < BOARD_SIZE; y++) {
@@ -90,7 +83,7 @@ export function collectLayerPatterns3D(board: Board, z: number): Pattern3D[] {
   return r;
 }
 
-export function isWin3D(patterns: Pattern3D[]): boolean {
+export function checkWinPatterns(patterns: Pattern3D[]): boolean {
   return patterns.some((p) => p.count >= 5);
 }
 
@@ -98,5 +91,5 @@ export function isWin3D(patterns: Pattern3D[]): boolean {
 export function checkWinner(board: Board, x: number, y: number, z: number): 0 | 1 | 2 {
   const state = board.get(x, y, z);
   if (state === 0) return 0;
-  return isWin3D(checkPatterns3D(board, x, y, z)) ? state : 0;
+  return checkWinPatterns(checkPatterns3D(board, x, y, z)) ? state : 0;
 }

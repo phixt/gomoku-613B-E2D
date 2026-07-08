@@ -111,6 +111,7 @@ export class LeftPanel {
   private piecesGroup!: THREE.Group;
   private auxLinesGroup!: THREE.Group;
   private highlightMarkers3DGroup!: THREE.Group;
+  private bluePathGroup!: THREE.Group;
   private hoverMarkerGroup!: THREE.Group;
   private container: HTMLElement;
   private focusZ: number = 0;
@@ -120,10 +121,14 @@ export class LeftPanel {
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
+  private focusBlackMat!: THREE.SpriteMaterial;
+  private focusWhiteMat!: THREE.SpriteMaterial;
+  private ghostBlackMat!: THREE.SpriteMaterial;
+  private ghostWhiteMat!: THREE.SpriteMaterial;
 
 
-
-  private static readonly LAYER_SPACING = LAYER_SPACING; // ???????
+  private _layerSpacing: number = 3.5;
+  private _board: Board | null = null;
 
   constructor(container: HTMLElement, theme: Theme) {
     this.container = container;
@@ -134,6 +139,11 @@ export class LeftPanel {
     this.whiteTex = createPieceTexture(false, false);
     this.blackGhostTex = createPieceTexture(true, true);
     this.whiteGhostTex = createPieceTexture(false, true);
+
+    this.focusBlackMat = new THREE.SpriteMaterial({ map: this.blackTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
+    this.focusWhiteMat = new THREE.SpriteMaterial({ map: this.whiteTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
+    this.ghostBlackMat = new THREE.SpriteMaterial({ map: this.blackGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
+    this.ghostWhiteMat = new THREE.SpriteMaterial({ map: this.whiteGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(theme.bgColor);
@@ -159,7 +169,7 @@ export class LeftPanel {
   }
 
   /** @internal Exposed for cross-panel coordination. */
-  get layerSpacing(): number { return LeftPanel.LAYER_SPACING; }
+  get layerSpacing(): number { return this._layerSpacing; }
 
 
 
@@ -174,7 +184,7 @@ export class LeftPanel {
 
 
   private buildAllGeometry(): void {
-    const s = LeftPanel.LAYER_SPACING;
+    const s = this._layerSpacing;
 
   
     const geo = buildGridGeometry(this.focusZ, s);
@@ -218,6 +228,9 @@ export class LeftPanel {
   
     this.highlightMarkers3DGroup = new THREE.Group();
     this.scene.add(this.highlightMarkers3DGroup);
+
+    this.bluePathGroup = new THREE.Group();
+    this.scene.add(this.bluePathGroup);
   }
 
   /** Dispose all old geometry/materials and rebuild from scratch. */
@@ -229,7 +242,7 @@ export class LeftPanel {
   highlightFocusLayer(z: number): void {
     this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
     const old = this.gridSegments;
-    const s = LeftPanel.LAYER_SPACING;
+    const s = this._layerSpacing;
     const geo = buildGridGeometry(this.focusZ, s);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
@@ -304,12 +317,9 @@ export class LeftPanel {
 
 
   renderAllPieces(board: Board, focusZ: number): void {
-    const s = LeftPanel.LAYER_SPACING;
-    while (this.piecesGroup.children.length > 0) {
-      const c = this.piecesGroup.children[0];
-      if (c instanceof THREE.Sprite && c.material instanceof THREE.Material) c.material.dispose();
-      this.piecesGroup.remove(c);
-    }
+    this._board = board;
+    const s = this._layerSpacing;
+    this.piecesGroup.clear();
     const scale = 0.8;
     for (let z = 0; z < LAYER_COUNT; z++) {
       const zPos = z * s;
@@ -318,13 +328,9 @@ export class LeftPanel {
         for (let x = 0; x < BOARD_SIZE; x++) {
           const state = board.get(x, y, z);
           if (state === 0) continue;
-          const tex = isFocus
-            ? (state === 1 ? this.blackTex : this.whiteTex)
-            : (state === 1 ? this.blackGhostTex : this.whiteGhostTex);
-          const mat = new THREE.SpriteMaterial({
-            map: tex, transparent: true, opacity: isFocus ? 1.0 : 0.25,
-            depthWrite: isFocus, depthTest: true,
-          });
+          const mat = isFocus
+            ? (state === 1 ? this.focusBlackMat : this.focusWhiteMat)
+            : (state === 1 ? this.ghostBlackMat : this.ghostWhiteMat);
           const sprite = new THREE.Sprite(mat);
           sprite.renderOrder = isFocus ? 2 : 1;
           sprite.position.set(x, y, zPos);
@@ -348,6 +354,11 @@ export class LeftPanel {
       if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
       this.highlightMarkers3DGroup.remove(c);
     }
+    while (this.bluePathGroup.children.length > 0) {
+      const c = this.bluePathGroup.children[0];
+      if (c instanceof THREE.Points) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.bluePathGroup.remove(c);
+    }
   }
 
   /** Render 3D auxiliary lines from hover-computed data (ally=green, enemy=red). */
@@ -364,8 +375,9 @@ export class LeftPanel {
     if (data.lines.length > 0) {
       const pos: number[] = [];
       const col: number[] = [];
+      const ls = this._layerSpacing;
       for (const ln of data.lines) {
-        pos.push(ln.startX, ln.startY, ln.startZ, ln.endX, ln.endY, ln.endZ);
+        pos.push(ln.startX, ln.startY, ln.startZ * ls, ln.endX, ln.endY, ln.endZ * ls);
         const r = ((ln.color >> 16) & 0xff) / 255;
         const g = ((ln.color >> 8) & 0xff) / 255;
         const b = (ln.color & 0xff) / 255;
@@ -391,8 +403,8 @@ export class LeftPanel {
         color: pt.color, transparent: true, opacity: 0.8, depthWrite: false, depthTest: true,
       });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(pt.x, pt.y, pt.z);
-      mesh.renderOrder = 0;
+      mesh.position.set(pt.x, pt.y, pt.z * this._layerSpacing);
+      mesh.renderOrder = 10;
       this.highlightMarkers3DGroup.add(mesh);
     }
   }
@@ -434,6 +446,79 @@ export class LeftPanel {
       if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
       this.hoverMarkerGroup.remove(c);
     }
+  }
+
+  adjustLayerSpacing(delta: number): void {
+    console.log("adjustLayerSpacing called, new spacing:", this._layerSpacing);
+    this._layerSpacing = Math.max(2.0, Math.min(6.0, this._layerSpacing + delta));
+
+    // Rebuild grid segments (same pattern as highlightFocusLayer)
+    const oldGrid = this.gridSegments;
+    const s = this._layerSpacing;
+    const geo = buildGridGeometry(this.focusZ, s);
+    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
+    const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
+    this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
+    this.scene.remove(oldGrid);
+    this.scene.add(this.gridSegments);
+    oldGrid.geometry.dispose();
+    if (Array.isArray(oldGrid.material)) oldGrid.material.forEach((m: THREE.Material) => m.dispose());
+    else oldGrid.material.dispose();
+
+    // Rebuild aux segments
+    const oldAux = this.auxSegments;
+    const auxGeo = buildAuxLinesGeometry(s);
+    this.auxSegments = new THREE.LineSegments(auxGeo, new THREE.LineBasicMaterial({ color: this.theme.auxLineColor }));
+    this.scene.remove(oldAux);
+    this.scene.add(this.auxSegments);
+    oldAux.geometry.dispose();
+    (oldAux.material as THREE.Material).dispose();
+
+    // Rebuild connector segments
+    const oldConn = this.connectorSegments;
+    const connGeo = buildConnectorGeometry(s);
+    this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: 0.35 }));
+    this.scene.remove(oldConn);
+    this.scene.add(this.connectorSegments);
+    oldConn.geometry.dispose();
+    (oldConn.material as THREE.Material).dispose();
+
+    // Rebuild marker group spheres
+    this.scene.remove(this.markerGroup);
+    while (this.markerGroup.children.length > 0) {
+      const c = this.markerGroup.children[0];
+      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.markerGroup.remove(c);
+    }
+    this.markerGroup = new THREE.Group();
+    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0x8b0000 }),
+      );
+      sphere.position.set(6, 6, layer * s);
+      sphere.userData = { layer };
+      this.markerGroup.add(sphere);
+    }
+    this.scene.add(this.markerGroup);
+    this.highlightCenterMarker(this.focusZ);
+
+    // Rebuild pieces at new Z positions
+    if (this._board) this.renderAllPieces(this._board, this.focusZ);
+
+    // Clear 3D tactical overlays (Z coords now invalid)
+    this.clear3DAuxLines();
+    this.clearHoverMarker();
+    while (this.bluePathGroup.children.length > 0) {
+      const c = this.bluePathGroup.children[0];
+      if (c instanceof THREE.Points) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.bluePathGroup.remove(c);
+    }
+
+    // Sync camera lookAt to new Z center
+    const newCenterZ = (LAYER_COUNT - 1) * this._layerSpacing / 2;
+    this.camera.lookAt(6, 6, newCenterZ);
+    this.checkBoundarySafety();
   }
 
   render(): void { this.renderer.render(this.scene, this.camera); }
