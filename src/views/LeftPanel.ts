@@ -128,6 +128,7 @@ export class LeftPanel {
 
 
   private _layerSpacing: number = 3.5;
+  private _previousSpacing: number | null = null;
   private _board: Board | null = null;
 
   constructor(container: HTMLElement, theme: Theme) {
@@ -519,6 +520,18 @@ export class LeftPanel {
     const newCenterZ = (LAYER_COUNT - 1) * this._layerSpacing / 2;
     this.camera.lookAt(6, 6, newCenterZ);
     this.checkBoundarySafety();
+  }
+
+  toggleLayerSpacing(): void {
+    if (this._previousSpacing === null) {
+      this._previousSpacing = this._layerSpacing;
+      const delta = 3.5 - this._layerSpacing;
+      this.adjustLayerSpacing(delta);
+    } else {
+      const delta = this._previousSpacing - this._layerSpacing;
+      this._previousSpacing = null;
+      this.adjustLayerSpacing(delta);
+    }
   }
 
   render(): void { this.renderer.render(this.scene, this.camera); }

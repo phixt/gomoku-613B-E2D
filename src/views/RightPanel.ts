@@ -238,6 +238,12 @@ export class RightPanel {
     if (this.onHoverChanged) this.onHoverChanged(-1, -1, -1);
   }
 
+  resetGame(): void {
+    this.board.reset();
+    this.currentPlayer = BLACK;
+    this.setFocusZ(0);
+  }
+
 
 
   private clearHighlightMarkers(): void {
@@ -490,7 +496,7 @@ export class RightPanel {
 
     if (winner !== 0) {
       setTimeout(() => {
-        alert(winner === BLACK ? "姒涙垶鏌熼懗婊冨焺" : "閻ц姤鏌熼懗婊冨焺");
+        alert(winner === BLACK ? "Black wins!" : "White wins!");
         this.board.reset();
         this.renderPieces();
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);

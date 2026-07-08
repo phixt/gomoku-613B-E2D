@@ -18,6 +18,10 @@ function main(): void {
 
 
   let isGameStarted = false;
+  const restartModal = document.getElementById("restart-modal");
+  const btnYes = document.getElementById("modal-yes");
+  const btnNo = document.getElementById("modal-no");
+  let isModalOpen = false;
   const startScreen = document.getElementById("start-screen");
   const startBtn = document.getElementById("start-btn");
 
@@ -65,8 +69,29 @@ function main(): void {
     setTimeout(forceCorrectSize, 550);
   };
 
+  const openRestartModal = (): void => {
+    isModalOpen = true;
+    if (restartModal) restartModal.classList.remove("hidden");
+  };
+
+  const closeRestartModal = (): void => {
+    isModalOpen = false;
+    if (restartModal) restartModal.classList.add("hidden");
+  };
+
+  const confirmRestart = (): void => {
+    rightPanel.board.reset();
+    focusZ = 0;
+    rightPanel.resetGame();
+    leftPanel.renderAllPieces(rightPanel.board, focusZ);
+    closeRestartModal();
+  };
+
 
   if (startBtn) startBtn.addEventListener("click", startGame);
+
+  if (btnYes) btnYes.addEventListener("click", confirmRestart);
+  if (btnNo) btnNo.addEventListener("click", closeRestartModal);
 
 
   window.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -78,7 +103,19 @@ function main(): void {
       return; // Block all other keys before game starts
     }
 
-  
+    // Modal interceptor
+    if (isModalOpen) {
+      if (e.code === "Escape") {
+        e.preventDefault();
+        closeRestartModal();
+      } else if (e.code === "Enter") {
+        e.preventDefault();
+        confirmRestart();
+      }
+      e.stopPropagation();
+      return;
+    }
+
     switch (e.key) {
     
       case "a": case "A":
@@ -144,6 +181,18 @@ function main(): void {
         break;
 
     
+      case "r": case "R":
+        if (!isGameStarted) return;
+        e.preventDefault();
+        openRestartModal();
+        break;
+
+      case "x": case "X":
+        if (!isGameStarted) return;
+        e.preventDefault();
+        leftPanel.toggleLayerSpacing();
+        break;
+
       case "h": case "H":
         e.preventDefault();
         {
