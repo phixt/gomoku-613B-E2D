@@ -141,16 +141,16 @@ export class RightPanel {
     const starMat = new THREE.MeshBasicMaterial({
         color: 0xCC0000,
         side: THREE.DoubleSide,
-        depthWrite: true,
+        transparent: true,
+        depthWrite: false,
         depthTest: true,
     });
     starPositions.forEach(p => {
         const m = new THREE.Mesh(starGeo, starMat);
-        m.position.set(p.x, p.y, 0.005);
+        m.position.set(p.x, p.y, 0.1);
+        m.renderOrder = 999;
         this.gridGroup.add(m);
     });
-
-
     this.scene.add(this.gridGroup);
     this.pieceGroup = new THREE.Group();
     this.scene.add(this.pieceGroup);
