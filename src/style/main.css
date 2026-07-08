@@ -245,3 +245,108 @@ body.dark-theme .btn-yes { background: #C8E0E4; color: #1A2629; border-color: #C
 body.dark-theme .btn-yes:hover { background: #A0C0C4; }
 body.dark-theme .btn-no { color: #C8E0E4; border-color: #C8E0E4; }
 body.dark-theme .btn-no:hover { background: rgba(200, 224, 228, 0.1); }
+/* =========================================
+   Esc 暂停菜单
+   ========================================= */
+#esc-menu {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.2s ease;
+}
+
+#esc-menu.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.esc-modal {
+    min-width: 360px !important;
+    padding: 35px 45px !important;
+}
+
+.esc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.esc-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px !important;
+    font-size: 1.05em !important;
+    background: transparent;
+    border: 1px solid #C5D5C0 !important;
+    border-radius: 6px !important;
+    color: #2C4A4E;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.esc-btn kbd {
+    background: rgba(44, 74, 78, 0.1);
+    border: 1px solid #C5D5C0;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 0.75em;
+    font-family: 'Consolas', monospace;
+    color: #6A8A8E;
+}
+
+.esc-btn:hover {
+    background: rgba(44, 74, 78, 0.08);
+    border-color: #2C4A4E !important;
+    transform: translateX(4px);
+}
+
+.esc-btn.danger {
+    border-color: #C07070 !important;
+    color: #8B3A3A;
+}
+.esc-btn.danger kbd {
+    background: rgba(192, 112, 112, 0.1);
+    border-color: #C07070;
+    color: #8B3A3A;
+}
+.esc-btn.danger:hover {
+    background: rgba(139, 58, 58, 0.08);
+    border-color: #8B3A3A !important;
+}
+
+/* 暗色主题适配 */
+body.dark-theme .esc-btn {
+    color: #C8E0E4;
+    border-color: #3A4A4E !important;
+}
+body.dark-theme .esc-btn kbd {
+    background: rgba(200, 224, 228, 0.08);
+    border-color: #3A4A4E;
+    color: #8A9A9E;
+}
+body.dark-theme .esc-btn:hover {
+    background: rgba(200, 224, 228, 0.05);
+    border-color: #C8E0E4 !important;
+}
+body.dark-theme .esc-btn.danger {
+    border-color: #7A4A4A !important;
+    color: #D08080;
+}
+body.dark-theme .esc-btn.danger kbd {
+    background: rgba(208, 128, 128, 0.1);
+    border-color: #7A4A4A;
+    color: #D08080;
+}
+body.dark-theme .esc-btn.danger:hover {
+    background: rgba(208, 128, 128, 0.08);
+    border-color: #D08080 !important;
+}
