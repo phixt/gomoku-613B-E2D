@@ -18,6 +18,18 @@
     <script type="module" src="/src/main.ts"></script>
 </body>
 
+<!-- 重新开始提示框 (R键触发) -->
+    <div id="restart-modal" class="hidden">
+        <div class="modal-content">
+            <h2>重新开始？</h2>
+            <p class="modal-sub">当前对局进度将丢失</p>
+            <div class="modal-actions">
+                <button id="modal-yes" class="btn-yes">是 (Enter)</button>
+                <button id="modal-no" class="btn-no">否 (Esc)</button>
+            </div>
+        </div>
+    </div>
+
 </html>
 <!-- 开始界面覆盖层 -->
 <div id="start-screen">
@@ -26,7 +38,7 @@
         <!-- 左侧：键盘布局 + 文字说明 -->
         <div class="start-left">
             <div class="keyboard-sim">
-                <!-- 第一行：Q W E (空) R T -->
+                <!-- 第一行：Q W E  R T -->
                 <div class="kb-row">
                     <div class="key active">Q</div>
                     <div class="key active">W</div>
@@ -81,20 +93,6 @@
             </div>
 
             <button id="start-btn">START GAME</button>
-        </div>
-    </div>
-</div>
-
-<button id="start-btn">START GAME</button>
-</div>
-</div>
-<div id="restart-modal" class="hidden">
-    <div class="modal-content">
-        <h2>重新开始？</h2>
-        <p class="modal-sub">当前对局进度将丢失</p>
-        <div class="modal-actions">
-            <button id="modal-yes" class="btn-yes">是 (Enter)</button>
-            <button id="modal-no" class="btn-no">否 (Esc)</button>
         </div>
     </div>
 </div>

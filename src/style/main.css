@@ -112,7 +112,12 @@ body.dark-theme .key-desc-grid { color: #A0B0B4; }
 }
 body.dark-theme .key-tag { background: #2A3A3E; border-color: #4A5A5E; color: #6A7A7E; }
 body.dark-theme .key-tag.active { background: #3A5A5E; border-color: #C8E0E4; color: #C8E0E4; }
-
+/* 隐形占位符：用于键盘布局的偏移对齐 */
+.key-spacer {
+    width: 45px;  /* 必须与 .key 的宽度完全一致 */
+    height: 45px; /* 必须与 .key 的高度完全一致 */
+    visibility: hidden; /* 占位但不可见 */
+}
 /* 右侧：标题与按钮 */
 .start-right {
     flex: 0.8;
@@ -151,3 +156,92 @@ body.dark-theme #start-btn { border-color: #C8E0E4; color: #C8E0E4; }
     box-shadow: 0 4px 15px rgba(44, 74, 78, 0.2);
 }
 body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }
+
+/* =========================================
+   重新开始提示框 (Restart Modal)
+   ========================================= */
+#restart-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 200; /* 高于开始界面 */
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.2s ease;
+}
+
+#restart-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.modal-content {
+    background: #F4F9F4;
+    border: 1px solid #C5D5C0;
+    border-radius: 8px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    min-width: 300px;
+}
+
+body.dark-theme .modal-content {
+    background: #1A2629;
+    border-color: #3A4A4E;
+}
+
+.modal-content h2 {
+    font-size: 1.8em;
+    color: #2C4A4E;
+    margin-bottom: 10px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+
+body.dark-theme .modal-content h2 { color: #C8E0E4; }
+
+.modal-sub {
+    font-size: 0.9em;
+    color: #6A8A8E;
+    margin-bottom: 25px;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+
+body.dark-theme .modal-sub { color: #8A9A9E; }
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.modal-actions button {
+    padding: 8px 25px;
+    font-size: 1em;
+    border: 1px solid #2C4A4E;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.2s;
+}
+
+.btn-yes {
+    background: #2C4A4E;
+    color: #F4F9F4;
+}
+.btn-yes:hover { background: #1A3A3E; }
+
+.btn-no {
+    background: transparent;
+    color: #2C4A4E;
+}
+.btn-no:hover { background: rgba(44, 74, 78, 0.1); }
+
+body.dark-theme .btn-yes { background: #C8E0E4; color: #1A2629; border-color: #C8E0E4; }
+body.dark-theme .btn-yes:hover { background: #A0C0C4; }
+body.dark-theme .btn-no { color: #C8E0E4; border-color: #C8E0E4; }
+body.dark-theme .btn-no:hover { background: rgba(200, 224, 228, 0.1); }
