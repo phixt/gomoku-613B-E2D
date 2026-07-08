@@ -84,9 +84,9 @@ export class RightPanel {
   private pieceGroup: THREE.Group;
   private ghostMesh: THREE.Mesh | null;
 
-  // 2D hover aux lines (single merged geometry with vertexColors)
+
   private hoverAuxLines2D: THREE.LineSegments;
-  // 2D highlight markers (dots at key cells)
+
   private highlightMarkersGroup: THREE.Group;
 
   private container: HTMLElement;
@@ -178,7 +178,7 @@ export class RightPanel {
     return this._hoverWorldPos;
   }
 
-  // 鈹€鈹€ Mouse 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private handleMouseMove = (e: MouseEvent): void => {
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -206,16 +206,16 @@ export class RightPanel {
   };
 
   private clearAllOverlays(): void {
-    // 2D lines
+  
     this.hoverAuxLines2D.geometry.dispose();
     this.hoverAuxLines2D.geometry = new THREE.BufferGeometry();
-    // 2D markers
+  
     this.clearHighlightMarkers();
-    // 3D data
+  
     if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
   }
 
-  // 鈹€鈹€ Highlight markers (2D) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private clearHighlightMarkers(): void {
     while (this.highlightMarkersGroup.children.length > 0) {
@@ -233,10 +233,10 @@ export class RightPanel {
     this.highlightMarkersGroup.add(mesh);
   }
 
-  // 鈹€鈹€ Core overlay computation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private computeHoverOverlays(hx: number, hy: number): void {
-    // Skip if aux mode has no tactical bit
+  
     if (!(this.auxMode & 0b10)) {
       this.clearAllOverlays();
       if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
@@ -250,13 +250,13 @@ export class RightPanel {
 
     this.clearHighlightMarkers();
 
-    // 鈹€鈹€ 4 2D directions 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
     for (const [dx, dy] of DIRS_2D) {
       this.scanDirection2D(hx, hy, dx, dy, z, pos2D, col2D, pts3D);
       this.scanDirection2D(hx, hy, -dx, -dy, z, pos2D, col2D, pts3D);
     }
 
-    // 鈹€鈹€ 13 3D directions 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
     const include3D = !!(this.auxMode & 0b01);
     if (include3D) {
       for (const [dx, dy, dz] of DIRS_3D) {
@@ -265,7 +265,7 @@ export class RightPanel {
       }
     }
 
-    // 鈹€鈹€ Update 2D LineSegments (vertexColors) 鈹€鈹€鈹€鈹€
+  
     this.hoverAuxLines2D.geometry.dispose();
     if (pos2D.length > 0) {
       const geo = new THREE.BufferGeometry();
@@ -276,7 +276,7 @@ export class RightPanel {
       this.hoverAuxLines2D.geometry = new THREE.BufferGeometry();
     }
 
-    // 鈹€鈹€ Send 3D data to LeftPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
     if (this.on3DAuxDataChanged) {
       this.on3DAuxDataChanged({ lines: lines3D, points: pts3D });
     }
@@ -293,7 +293,7 @@ export class RightPanel {
     hx: number, hy: number, dx: number, dy: number, z: number,
     pos2D: number[], col2D: number[], pts3D: HighlightPoint3D[],
   ): void {
-    // Phase 1: skip empty cells to find the FIRST non-empty cell
+  
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
@@ -303,7 +303,7 @@ export class RightPanel {
       firstStep++;
     }
 
-    // Phase 2: a stone exists at `firstStep`. Draw from hover and continue forward.
+  
     let step = firstStep;
     let prevX = hx, prevY = hy;
     while (true) {
@@ -314,7 +314,7 @@ export class RightPanel {
       const isAlly = s === this.currentPlayer;
       const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
 
-      // Draw segment from previous endpoint to this cell
+    
       pos2D.push(prevX, prevY, 0.03, px, py, 0.03);
       for (let i = 0; i < 2; i++) {
         const r = ((color >> 16) & 0xff) / 255;
@@ -324,20 +324,20 @@ export class RightPanel {
       }
 
       if (s === 0) {
-        // Empty: green marker at this endpoint, stop
+      
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
         break;
       }
 
       if (!isAlly) {
-        // Enemy: red marker at this cell, stop
+      
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
         break;
       }
 
-      // Ally: continue scanning forward
+    
       prevX = px; prevY = py;
       step++;
     }
@@ -353,7 +353,7 @@ export class RightPanel {
     dx: number, dy: number, dz: number,
     lines3D: Line3DData[], pts3D: HighlightPoint3D[],
   ): void {
-    // Phase 1: skip empty cells to find the FIRST non-empty cell
+  
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep, pz = hz + dz * firstStep;
@@ -363,7 +363,7 @@ export class RightPanel {
       firstStep++;
     }
 
-    // Phase 2: a stone exists. Draw from hover and continue.
+  
     let step = firstStep;
     let prevX = hx, prevY = hy, prevZ = hz;
     while (true) {
@@ -395,7 +395,7 @@ export class RightPanel {
     }
   }
 
-  // 鈹€鈹€ Ghost piece 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private hideGhostPiece(): void { if (this.ghostMesh) this.ghostMesh.visible = false; }
 
@@ -417,7 +417,7 @@ export class RightPanel {
     this.ghostMesh.visible = true;
   }
 
-  // 鈹€鈹€ Click 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private handleClick = (): void => {
     if (!this.hoverValid) return;
@@ -455,7 +455,7 @@ export class RightPanel {
     this.handleMouseMove(new MouseEvent("mousemove", { clientX: midX, clientY: midY }));
   };
 
-  // 鈹€鈹€ Render pieces 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private renderPieces(): void {
     while (this.pieceGroup.children.length > 0) {
@@ -481,7 +481,7 @@ export class RightPanel {
     }
   }
 
-  // 鈹€鈹€ Internal 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private updateCameraFrustum(width: number, height: number): void {
     const aspect = width / height;

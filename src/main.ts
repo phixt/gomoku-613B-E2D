@@ -9,11 +9,11 @@ function main(): void {
   const rightEl = document.getElementById("right-panel");
   if (!leftEl || !rightEl) throw new Error("Missing #left-panel or #right-panel element");
 
-  // Default to light theme
+
   let currentTheme: Theme = LIGHT_THEME;
   document.body.classList.remove("dark-theme");
 
-  // Start screen state
+
   let isGameStarted = false;
   const startScreen = document.getElementById("start-screen");
   const startBtn = document.getElementById("start-btn");
@@ -57,10 +57,10 @@ function main(): void {
     setTimeout(forceCorrectSize, 550);
   };
 
-  // Start button click
+
   if (startBtn) startBtn.addEventListener("click", startGame);
 
-  // Allow Space/Enter to start
+
   window.addEventListener("keydown", (e: KeyboardEvent) => {
     if (!isGameStarted) {
       if (e.code === "Space" || e.code === "Enter") {
@@ -70,9 +70,9 @@ function main(): void {
       return; // Block all other keys before game starts
     }
 
-    // === Game keys (only when isGameStarted) ===
+  
     switch (e.key) {
-      // FocusZ cycling (A/D)
+    
       case "a": case "A":
         e.preventDefault();
         focusZ = (focusZ - 1 + 6) % 6;
@@ -89,7 +89,7 @@ function main(): void {
         rightPanel.setFocusZ(focusZ);
         break;
 
-      // Left panel rotation (Q/E)
+    
       case "q": case "Q":
         e.preventDefault();
         leftPanel.rotateY(-1);
@@ -99,7 +99,7 @@ function main(): void {
         leftPanel.rotateY(1);
         break;
 
-      // Dolly zoom (W/S)
+    
       case "w": case "W":
         e.preventDefault();
         leftPanel.zoom(1);
@@ -109,7 +109,7 @@ function main(): void {
         leftPanel.zoom(-1);
         break;
 
-      // Theme toggle (T)
+    
       case "t": case "T":
         e.preventDefault();
         currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
@@ -118,7 +118,7 @@ function main(): void {
         rightPanel.updateTheme(currentTheme);
         break;
 
-      // Aux mode cycling (H)
+    
       case "h": case "H":
         e.preventDefault();
         {
@@ -129,7 +129,7 @@ function main(): void {
     }
   });
 
-  // Left panel wheel -> rotate Y
+
   leftEl.addEventListener("wheel", (e: WheelEvent) => {
     if (!isGameStarted) return;
     e.preventDefault();

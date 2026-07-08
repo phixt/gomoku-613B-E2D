@@ -121,7 +121,7 @@ export class LeftPanel {
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
 
-  // ====== ????????????======
+
   private static readonly LAYER_SPACING = LAYER_SPACING; // ???????
 
   constructor(container: HTMLElement, theme: Theme) {
@@ -155,7 +155,7 @@ export class LeftPanel {
   /** @internal Exposed for cross-panel coordination. */
   get layerSpacing(): number { return LeftPanel.LAYER_SPACING; }
 
-  // 鈹€鈹€ Boundary safety 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private checkBoundarySafety(): void {
     const target = new THREE.Vector3(6, 6, CENTER_Z);
@@ -164,29 +164,29 @@ export class LeftPanel {
     if (vh < BOARD_SIZE) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${BOARD_SIZE}.`);
   }
 
-  // 鈹€鈹€ Geometry build / rebuild 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private buildAllGeometry(): void {
     const s = LeftPanel.LAYER_SPACING;
 
-    // 鈹€鈹€ Grid 鈹€鈹€
+  
     const geo = buildGridGeometry(this.focusZ, s);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.add(this.gridSegments);
 
-    // 鈹€鈹€ Aux lines (vertical Z-axis guides) 鈹€鈹€
+  
     const auxGeo = buildAuxLinesGeometry(s);
     this.auxSegments = new THREE.LineSegments(auxGeo, new THREE.LineBasicMaterial({ color: this.theme.auxLineColor }));
     this.scene.add(this.auxSegments);
 
-    // 鈹€鈹€ Connector lines (between layers) 鈹€鈹€
+  
     const connGeo = buildConnectorGeometry(s);
     this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: 0.35 }));
     this.scene.add(this.connectorSegments);
 
-    // 鈹€鈹€ Center markers 鈹€鈹€
+  
     this.markerGroup = new THREE.Group();
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
       const sphere = new THREE.Mesh(
@@ -200,15 +200,15 @@ export class LeftPanel {
     this.scene.add(this.markerGroup);
     this.highlightCenterMarker(this.focusZ);
 
-    // 鈹€鈹€ Pieces group 鈹€鈹€
+  
     this.piecesGroup = new THREE.Group();
     this.scene.add(this.piecesGroup);
 
-    // 鈹€鈹€ Aux lines group (3D hover overlays) 鈹€鈹€
+  
     this.auxLinesGroup = new THREE.Group();
     this.scene.add(this.auxLinesGroup);
 
-    // 鈹€鈹€ Highlight markers group (3D) 鈹€鈹€
+  
     this.highlightMarkers3DGroup = new THREE.Group();
     this.scene.add(this.highlightMarkers3DGroup);
   }
@@ -217,7 +217,7 @@ export class LeftPanel {
   
 
 
-  // ==== Focus layer ====
+
 
   highlightFocusLayer(z: number): void {
     this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
@@ -244,7 +244,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Rotation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   public rotateY(direction: number): void {
     const angle = (direction * Math.PI) / 2;
@@ -256,7 +256,7 @@ export class LeftPanel {
     this.camera.lookAt(target);
   }
 
-  // 鈹€鈹€ Zoom 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   /**
    * Zoom the view.
@@ -266,19 +266,19 @@ export class LeftPanel {
    */
   public zoom(delta: number, anchorPoint?: THREE.Vector3): void {
     if (anchorPoint) {
-      // Anchor-based: move camera position along the vector from camera to anchor
+    
       const dir = new THREE.Vector3().copy(anchorPoint).sub(this.camera.position);
       const dist = dir.length();
       const minDist = 5.0;
       const moveAmount = dist * delta * 0.15;
 
       if (moveAmount > 0 && dist - moveAmount < minDist) {
-        // Clamp so we don't get too close
+      
         const clampedDist = Math.max(minDist, dist - moveAmount);
         const ratio = (dist - clampedDist) / dist;
         this.camera.position.add(dir.clone().multiplyScalar(ratio));
       } else if (moveAmount < 0) {
-        // Zooming out: always allow
+      
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       } else {
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
@@ -287,14 +287,14 @@ export class LeftPanel {
       this.camera.lookAt(6, 6, CENTER_Z);
       this.camera.updateProjectionMatrix();
     } else {
-      // Fallback: FOV adjustment
+    
       this.camera.fov = Math.max(15, Math.min(60, this.camera.fov - delta * 2));
       this.camera.updateProjectionMatrix();
     }
     this.checkBoundarySafety();
   }
 
-  // 鈹€鈹€ Piece rendering 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   renderAllPieces(board: Board, focusZ: number): void {
     const s = LeftPanel.LAYER_SPACING;
@@ -328,7 +328,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ 3D Aux lines 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   clear3DAuxLines(): void {
     while (this.auxLinesGroup.children.length > 0) {
@@ -348,12 +348,12 @@ export class LeftPanel {
     this.clear3DAuxLines();
     if (data.lines.length === 0 && data.points.length === 0) return;
 
-    // Gate with auxMode bitmask
+  
     const drawTactical = !!(this.auxMode & 0b10);
     const drawCenter = !!(this.auxMode & 0b01);
     if (!drawTactical && !drawCenter) return;
 
-    // 鈹€鈹€ Lines 鈹€鈹€
+  
     if (data.lines.length > 0) {
       const pos: number[] = [];
       const col: number[] = [];
@@ -377,7 +377,7 @@ export class LeftPanel {
       this.auxLinesGroup.add(seg);
     }
 
-    // 鈹€鈹€ Highlight points (3D) 鈹€鈹€
+  
     for (const pt of data.points) {
       const geo = new THREE.SphereGeometry(0.12, 8, 6);
       const mat = new THREE.MeshBasicMaterial({
@@ -390,7 +390,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Theme 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   setAuxMode(mode: AuxMode): void {
     this.auxMode = mode;
