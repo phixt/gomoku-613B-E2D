@@ -22,6 +22,12 @@ function main(): void {
   const btnYes = document.getElementById("modal-yes");
   const btnNo = document.getElementById("modal-no");
   let isModalOpen = false;
+  const escMenu = document.getElementById("esc-menu");
+  const escResume = document.getElementById("esc-resume");
+  const escRestart = document.getElementById("esc-restart");
+  const escSave = document.getElementById("esc-save");
+  const escTitle = document.getElementById("esc-title");
+  let isEscMenuOpen = false;
   const startScreen = document.getElementById("start-screen");
   const startBtn = document.getElementById("start-btn");
 
@@ -69,10 +75,6 @@ function main(): void {
     setTimeout(forceCorrectSize, 550);
   };
 
-  const openRestartModal = (): void => {
-    isModalOpen = true;
-    if (restartModal) restartModal.classList.remove("hidden");
-  };
 
   const closeRestartModal = (): void => {
     isModalOpen = false;
@@ -87,11 +89,43 @@ function main(): void {
     closeRestartModal();
   };
 
+  const openEscMenu = (): void => {
+    isEscMenuOpen = true;
+    if (escMenu) escMenu.classList.remove("hidden");
+  };
+
+  const closeEscMenu = (): void => {
+    isEscMenuOpen = false;
+    if (escMenu) escMenu.classList.add("hidden");
+  };
+
+  const returnToTitle = (): void => {
+    rightPanel.board.reset();
+    focusZ = 0;
+    rightPanel.resetGame();
+    leftPanel.renderAllPieces(rightPanel.board, focusZ);
+    isGameStarted = false;
+    closeEscMenu();
+    if (startScreen) {
+      startScreen.style.display = "";
+      startScreen.classList.remove("fade-out");
+    }
+  };
+
+  const saveGame = (): void => {
+    console.log("[Save] Save feature will be implemented in v0.4.0");
+  };
+
 
   if (startBtn) startBtn.addEventListener("click", startGame);
 
   if (btnYes) btnYes.addEventListener("click", confirmRestart);
   if (btnNo) btnNo.addEventListener("click", closeRestartModal);
+
+  escResume?.addEventListener("click", closeEscMenu);
+  escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
+  escSave?.addEventListener("click", () => { closeEscMenu(); saveGame(); });
+  escTitle?.addEventListener("click", () => { closeEscMenu(); returnToTitle(); });
 
 
   window.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -103,7 +137,29 @@ function main(): void {
       return; // Block all other keys before game starts
     }
 
-    // Modal interceptor
+    // Unified modal interceptor �� priority: Esc menu > restart modal
+    if (isEscMenuOpen) {
+      switch (e.code) {
+        case "Escape": e.preventDefault(); closeEscMenu(); break;
+        case "KeyR": e.preventDefault(); closeEscMenu(); confirmRestart(); break;
+        case "KeyS": e.preventDefault(); closeEscMenu(); saveGame(); break;
+        case "KeyT": e.preventDefault(); closeEscMenu(); returnToTitle(); break;
+      }
+      e.stopPropagation();
+      return;
+    }
+
+    if (isModalOpen) {
+      if (e.code === "Escape") {
+        e.preventDefault();
+        closeRestartModal();
+      } else if (e.code === "Enter") {
+        e.preventDefault();
+        confirmRestart();
+      }
+      e.stopPropagation();
+      return;
+    }
     if (isModalOpen) {
       if (e.code === "Escape") {
         e.preventDefault();
@@ -184,7 +240,13 @@ function main(): void {
       case "r": case "R":
         if (!isGameStarted) return;
         e.preventDefault();
-        openRestartModal();
+        openEscMenu();
+        break;
+
+      case "Escape":
+        if (!isGameStarted) return;
+        e.preventDefault();
+        openEscMenu();
         break;
 
       case "x": case "X":
