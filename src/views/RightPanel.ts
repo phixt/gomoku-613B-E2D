@@ -18,7 +18,7 @@ const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
 const ALLY_COLOR = 0x00FF00;
 const ENEMY_COLOR = 0xFF0000;
 
-// 鈹€鈹€ Grid geometry 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓 Grid geometry 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 function buildLayerGridGeometry(): THREE.BufferGeometry {
   const p: number[] = [];
@@ -29,7 +29,7 @@ function buildLayerGridGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-// 鈹€鈹€ Piece texture 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓 Piece texture 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64, canvas = document.createElement("canvas");
@@ -63,7 +63,7 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
 }
 
 
-// 鈹€鈹€ RightPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓 RightPanel 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 export class RightPanel {
   public readonly renderer: THREE.WebGLRenderer;
@@ -317,9 +317,9 @@ export class RightPanel {
   /**
    * Scan a single 2D direction with noise reduction:
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone �?draw nothing (noise cancelled).
-   * If first non-empty is ally �?green from hover to that stone, continue forward.
-   * If first non-empty is enemy �?red from hover to that stone, stop.
+   * If board edge is reached without finding a stone 閳?draw nothing (noise cancelled).
+   * If first non-empty is ally 閳?green from hover to that stone, continue forward.
+   * If first non-empty is enemy 閳?red from hover to that stone, stop.
    */
   private scanDirection2D(
     hx: number, hy: number, dx: number, dy: number, z: number,
@@ -330,7 +330,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone �?draw nothing
+      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone 閳?draw nothing
       if (firstStep > maxSteps) return; // exceeded search range
             const s = this.board.get(px, py, z);
       if (s !== 0) break;
@@ -389,7 +389,7 @@ export class RightPanel {
   /**
    * Scan a single 3D direction with noise reduction.
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone �?draw nothing.
+   * If board edge reached without finding a stone 閳?draw nothing.
    */
   private scanDirection3D(
     hx: number, hy: number, hz: number,
@@ -488,7 +488,7 @@ export class RightPanel {
 
     if (winner !== 0) {
       setTimeout(() => {
-        alert(winner === BLACK ? "黑方胜利" : "白方胜利");
+        alert(winner === BLACK ? "榛戞柟鑳滃埄" : "鐧芥柟鑳滃埄");
         this.board.reset();
         this.renderPieces();
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
