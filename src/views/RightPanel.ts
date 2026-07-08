@@ -76,7 +76,6 @@ export class RightPanel {
   private camera: THREE.OrthographicCamera;
   private gridGroup: THREE.Group;
   private gridSegments: THREE.LineSegments;
-  private centerMarker: THREE.Mesh;
   private pieceGroup: THREE.Group;
   private ghostMesh: THREE.Mesh | null;
 
@@ -126,18 +125,31 @@ export class RightPanel {
 
     this.blackMat = new THREE.MeshBasicMaterial({ map: this.blackTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
     this.whiteMat = new THREE.MeshBasicMaterial({ map: this.whiteTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
-
     this.gridGroup = new THREE.Group();
     const gridGeo = buildLayerGridGeometry();
     const gridMat = new THREE.LineBasicMaterial({ color: theme.gridColor, transparent: true, opacity: 1 });
     this.gridSegments = new THREE.LineSegments(gridGeo, gridMat);
     this.gridGroup.add(this.gridSegments);
 
-    const cg = new THREE.CircleGeometry(0.15, 12);
-    const cm = new THREE.MeshBasicMaterial({ color: 0xff8c00 });
-    this.centerMarker = new THREE.Mesh(cg, cm);
-    this.centerMarker.position.set(CENTER, CENTER, 0.02);
-    this.gridGroup.add(this.centerMarker);
+    // --- Star points for board navigation ---
+    const starPositions = [
+        { x: 6, y: 6 },
+        { x: 1, y: 1 }, { x: 1, y: 11 },
+        { x: 11, y: 1 }, { x: 11, y: 11 }
+    ];
+    const starGeo = new THREE.CircleGeometry(0.12, 32);
+    const starMat = new THREE.MeshBasicMaterial({
+        color: 0xCC0000,
+        side: THREE.DoubleSide,
+        depthWrite: true,
+        depthTest: true,
+    });
+    starPositions.forEach(p => {
+        const m = new THREE.Mesh(starGeo, starMat);
+        m.position.set(p.x, p.y, 0.005);
+        this.gridGroup.add(m);
+    });
+
 
     this.scene.add(this.gridGroup);
     this.pieceGroup = new THREE.Group();
@@ -167,7 +179,6 @@ export class RightPanel {
 
     requestAnimationFrame(() => { requestAnimationFrame(() => { this.resize(); }); });
   }
-
   dispose(): void {
     window.removeEventListener("resize", this.boundResize);
     this.renderer.domElement.removeEventListener("mousemove", this.boundMouseMove);
@@ -306,9 +317,9 @@ export class RightPanel {
   /**
    * Scan a single 2D direction with noise reduction:
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone éˆ«?draw nothing (noise cancelled).
-   * If first non-empty is ally éˆ«?green from hover to that stone, continue forward.
-   * If first non-empty is enemy éˆ«?red from hover to that stone, stop.
+   * If board edge is reached without finding a stone éˆ?draw nothing (noise cancelled).
+   * If first non-empty is ally éˆ?green from hover to that stone, continue forward.
+   * If first non-empty is enemy éˆ?red from hover to that stone, stop.
    */
   private scanDirection2D(
     hx: number, hy: number, dx: number, dy: number, z: number,
@@ -319,7 +330,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone éˆ«?draw nothing
+      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; // no stone éˆ?draw nothing
       if (firstStep > maxSteps) return; // exceeded search range
             const s = this.board.get(px, py, z);
       if (s !== 0) break;
@@ -378,7 +389,7 @@ export class RightPanel {
   /**
    * Scan a single 3D direction with noise reduction.
    * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone éˆ«?draw nothing.
+   * If board edge reached without finding a stone éˆ?draw nothing.
    */
   private scanDirection3D(
     hx: number, hy: number, hz: number,

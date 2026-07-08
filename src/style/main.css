@@ -34,22 +34,23 @@ body.dark-theme {
 
 #app {
     display: flex;
+    flex-direction: row;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 .panel {
     position: relative;
     height: 100%;
+    flex: 1;
     background: transparent;
 }
 
 #left-panel {
-    width: 50%;
 }
 
 #right-panel {
-    width: 50%;
     border-left: 1px solid rgba(128, 128, 128, 0.2);
 }
 
