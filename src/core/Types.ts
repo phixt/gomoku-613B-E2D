@@ -9,14 +9,22 @@ export interface Vector3Int {
   z: number;
 }
 
-/** 3D auxiliary line segment (world coords, Z pre-multiplied by layerSpacing). */
+/** Auxiliary line display mode (bitmask). */
+export const AuxMode = {
+  ALL: 0b11,
+  TACTICAL_ONLY: 0b10,
+  NONE: 0b00,
+  CENTER_ONLY: 0b01,
+} as const;
+
+export type AuxMode = (typeof AuxMode)[keyof typeof AuxMode];
+
 export interface Line3DData {
   startX: number; startY: number; startZ: number;
   endX: number;   endY: number;   endZ: number;
   color: number;
 }
 
-/** 3D highlight dot (enemy stones, empty-line-ends, etc.). */
 export interface HighlightPoint3D {
   x: number; y: number; z: number;
   color: number;

@@ -1,11 +1,13 @@
 import * as THREE from "three";
-import { type Theme } from "../core/Types";
+import { type Theme, AuxMode } from "../core/Types";
 import type { AuxData3D } from "../core/Types";
 import type { Board } from "../core/Board";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;
-const Z_CENTER = 7.5;
+// Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2 = 5 * 3.5 / 2 = 8.75
+const LAYER_SPACING = 3.5; // ???????????????????
+const CENTER_Z = (LAYER_COUNT - 1) * LAYER_SPACING / 2;
 
 const VERTS_PER_LAYER = 26 * 2;
 
@@ -14,7 +16,7 @@ const AUX_PTS: [number, number][] = [
   [BOARD_SIZE - 1, BOARD_SIZE - 1], [6, 6],
 ];
 
-// 鈹€鈹€ Canvas piece texture 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Canvas piece texture 
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64;
@@ -28,9 +30,9 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   if (isGhost) {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#6699AA"); g.addColorStop(0.5, "#2A3A4A"); g.addColorStop(1, "#1A2A3A");
+      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#222222"); g.addColorStop(1, "#000000");
       ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = "#88AACC"; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = "#000000"; ctx.lineWidth = 2.5; ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
       g.addColorStop(0, "#F0E8E0"); g.addColorStop(0.5, "#D0C8C0"); g.addColorStop(1, "#A09A95");
@@ -40,9 +42,9 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   } else {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#6A8A8E"); g.addColorStop(0.5, "#3A4A4E"); g.addColorStop(1, "#1A2A2E");
+      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#000000"); g.addColorStop(1, "#000000");
       ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = "#1A2A2E"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = "#111111"; ctx.lineWidth = 2; ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
       g.addColorStop(0, "#FFFFFF"); g.addColorStop(0.5, "#C0D0D0"); g.addColorStop(1, "#90A0A0");
@@ -54,7 +56,7 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   return tex;
 }
 
-// 鈹€鈹€ Geometry builders (parameterized spacing) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Geometry builders (parameterized spacing) 
 
 function buildGridGeometry(focusZ: number, spacing: number): THREE.BufferGeometry {
   const positions: number[] = [];
@@ -97,7 +99,6 @@ function buildConnectorGeometry(spacing: number): THREE.BufferGeometry {
 function safeWidth(el: HTMLElement): number { return el.clientWidth || window.innerWidth * 0.5; }
 function safeHeight(el: HTMLElement): number { return el.clientHeight || window.innerHeight; }
 
-// 鈹€鈹€ LeftPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 export class LeftPanel {
   public readonly renderer: THREE.WebGLRenderer;
@@ -110,16 +111,19 @@ export class LeftPanel {
   private piecesGroup!: THREE.Group;
   private auxLinesGroup!: THREE.Group;
   private highlightMarkers3DGroup!: THREE.Group;
+  private hoverMarkerGroup!: THREE.Group;
   private container: HTMLElement;
   private focusZ: number = 0;
   private theme: Theme;
+  private auxMode: AuxMode = AuxMode.ALL;
   private blackTex: THREE.CanvasTexture;
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
 
-  /** Mutable layer spacing for Z/C dynamic adjustment. Range [2.5, 6.0]. */
-  private _layerSpacing: number = 2.5;
+
+
+  private static readonly LAYER_SPACING = LAYER_SPACING; // ???????
 
   constructor(container: HTMLElement, theme: Theme) {
     this.container = container;
@@ -134,10 +138,10 @@ export class LeftPanel {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(theme.bgColor);
 
-    this.camera = new THREE.PerspectiveCamera(20, w / h, 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(15, w / h, 0.1, 200);
     this.camera.up.set(0, 1, 0);
-    this.camera.position.set(16, 6, 32);
-    this.camera.lookAt(6, 6, Z_CENTER);
+    this.camera.position.set(20, 8, 40);
+    this.camera.lookAt(6, 6, CENTER_Z);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(w, h);
@@ -146,44 +150,50 @@ export class LeftPanel {
 
     this.buildAllGeometry();
 
+    this.hoverMarkerGroup = new THREE.Group();
+    this.hoverMarkerGroup.renderOrder = 3;
+    this.scene.add(this.hoverMarkerGroup);
+
     this.checkBoundarySafety();
+    this.rotateY(2);
   }
 
   /** @internal Exposed for cross-panel coordination. */
-  get layerSpacing(): number { return this._layerSpacing; }
+  get layerSpacing(): number { return LeftPanel.LAYER_SPACING; }
 
-  // 鈹€鈹€ Boundary safety 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
 
   private checkBoundarySafety(): void {
-    const target = new THREE.Vector3(6, 6, Z_CENTER);
+    const target = new THREE.Vector3(6, 6, CENTER_Z);
     const dist = this.camera.position.distanceTo(target);
     const vh = 2 * dist * Math.tan((this.camera.fov * Math.PI) / 360);
     if (vh < BOARD_SIZE) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${BOARD_SIZE}.`);
   }
 
-  // 鈹€鈹€ Geometry build / rebuild 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private buildAllGeometry(): void {
-    const s = this._layerSpacing;
+    const s = LeftPanel.LAYER_SPACING;
 
-    // 鈹€鈹€ Grid 鈹€鈹€
+  
     const geo = buildGridGeometry(this.focusZ, s);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.add(this.gridSegments);
 
-    // 鈹€鈹€ Aux lines (vertical Z-axis guides) 鈹€鈹€
+  
     const auxGeo = buildAuxLinesGeometry(s);
     this.auxSegments = new THREE.LineSegments(auxGeo, new THREE.LineBasicMaterial({ color: this.theme.auxLineColor }));
     this.scene.add(this.auxSegments);
 
-    // 鈹€鈹€ Connector lines (between layers) 鈹€鈹€
+  
     const connGeo = buildConnectorGeometry(s);
     this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: 0.35 }));
     this.scene.add(this.connectorSegments);
 
-    // 鈹€鈹€ Center markers 鈹€鈹€
+  
     this.markerGroup = new THREE.Group();
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
       const sphere = new THREE.Mesh(
@@ -197,122 +207,29 @@ export class LeftPanel {
     this.scene.add(this.markerGroup);
     this.highlightCenterMarker(this.focusZ);
 
-    // 鈹€鈹€ Pieces group 鈹€鈹€
+  
     this.piecesGroup = new THREE.Group();
     this.scene.add(this.piecesGroup);
 
-    // 鈹€鈹€ Aux lines group (3D hover overlays) 鈹€鈹€
+  
     this.auxLinesGroup = new THREE.Group();
     this.scene.add(this.auxLinesGroup);
 
-    // 鈹€鈹€ Highlight markers group (3D) 鈹€鈹€
+  
     this.highlightMarkers3DGroup = new THREE.Group();
     this.scene.add(this.highlightMarkers3DGroup);
   }
 
   /** Dispose all old geometry/materials and rebuild from scratch. */
-  private rebuildGeometry(): void {
-    this.clear3DAuxLines();
+  
 
-    // Dispose grid segments
-    if (this.gridSegments) {
-      this.scene.remove(this.gridSegments);
-      this.gridSegments.geometry.dispose();
-      const gm = this.gridSegments.material;
-      if (Array.isArray(gm)) gm.forEach((m) => m.dispose());
-      else (gm as THREE.Material).dispose();
-    }
 
-    // Dispose aux segments
-    if (this.auxSegments) {
-      this.scene.remove(this.auxSegments);
-      this.auxSegments.geometry.dispose();
-      (this.auxSegments.material as THREE.Material).dispose();
-    }
 
-    // Dispose connector segments
-    if (this.connectorSegments) {
-      this.scene.remove(this.connectorSegments);
-      this.connectorSegments.geometry.dispose();
-      (this.connectorSegments.material as THREE.Material).dispose();
-    }
-
-    // Dispose marker group children
-    if (this.markerGroup) {
-      this.scene.remove(this.markerGroup);
-      while (this.markerGroup.children.length > 0) {
-        const c = this.markerGroup.children[0];
-        if (c instanceof THREE.Mesh) {
-          c.geometry.dispose();
-          if (c.material instanceof THREE.Material) c.material.dispose();
-        }
-        this.markerGroup.remove(c);
-      }
-    }
-
-    // Dispose piece group children
-    if (this.piecesGroup) {
-      this.scene.remove(this.piecesGroup);
-      while (this.piecesGroup.children.length > 0) {
-        const c = this.piecesGroup.children[0];
-        if (c instanceof THREE.Sprite && c.material instanceof THREE.Material) c.material.dispose();
-        this.piecesGroup.remove(c);
-      }
-    }
-
-    // Dispose aux lines group
-    if (this.auxLinesGroup) {
-      this.scene.remove(this.auxLinesGroup);
-      while (this.auxLinesGroup.children.length > 0) {
-        const c = this.auxLinesGroup.children[0];
-        if (c instanceof THREE.LineSegments) {
-          c.geometry.dispose();
-          if (c.material instanceof THREE.Material) c.material.dispose();
-        }
-        this.auxLinesGroup.remove(c);
-      }
-    }
-
-    // Dispose highlight markers 3D group
-    if (this.highlightMarkers3DGroup) {
-      this.scene.remove(this.highlightMarkers3DGroup);
-      while (this.highlightMarkers3DGroup.children.length > 0) {
-        const c = this.highlightMarkers3DGroup.children[0];
-        if (c instanceof THREE.Mesh) {
-          c.geometry.dispose();
-          if (c.material instanceof THREE.Material) c.material.dispose();
-        }
-        this.highlightMarkers3DGroup.remove(c);
-      }
-    }
-
-    // Rebuild everything
-    this.buildAllGeometry();
-  }
-
-  /** Adjust layer spacing dynamically via Z/C keys. Range [2.5, 6.0]. */
-  adjustLayerSpacing(delta: number): void {
-    const old = this._layerSpacing;
-    this._layerSpacing = Math.max(2.5, Math.min(6.0, this._layerSpacing + delta));
-    if (this._layerSpacing === old) return;
-    console.log(`[LeftPanel] layerSpacing: ${this._layerSpacing.toFixed(2)}`);
-
-    // Rebuild all geometry with new spacing
-    this.rebuildGeometry();
-
-    // Update camera lookAt Z center
-    const lookAtZ = (LAYER_COUNT - 1) * this._layerSpacing / 2 + 0.5;
-    this.camera.lookAt(6, 6, lookAtZ);
-    this.camera.updateProjectionMatrix();
-    this.checkBoundarySafety();
-  }
-
-  // 鈹€鈹€ Focus layer 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
   highlightFocusLayer(z: number): void {
     this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
     const old = this.gridSegments;
-    const s = this._layerSpacing;
+    const s = LeftPanel.LAYER_SPACING;
     const geo = buildGridGeometry(this.focusZ, s);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
@@ -320,7 +237,7 @@ export class LeftPanel {
     this.scene.remove(old);
     this.scene.add(this.gridSegments);
     old.geometry.dispose();
-    if (Array.isArray(old.material)) old.material.forEach((m) => m.dispose());
+    if (Array.isArray(old.material)) old.material.forEach((m: THREE.Material) => m.dispose());
     else old.material.dispose();
     this.highlightCenterMarker(this.focusZ);
   }
@@ -334,11 +251,11 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Rotation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   public rotateY(direction: number): void {
     const angle = (direction * Math.PI) / 2;
-    const target = new THREE.Vector3(6, 6, Z_CENTER);
+    const target = new THREE.Vector3(6, 6, CENTER_Z);
     const offset = this.camera.position.clone().sub(target);
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
     this.camera.position.copy(target).add(offset);
@@ -346,7 +263,7 @@ export class LeftPanel {
     this.camera.lookAt(target);
   }
 
-  // 鈹€鈹€ Zoom 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   /**
    * Zoom the view.
@@ -356,38 +273,38 @@ export class LeftPanel {
    */
   public zoom(delta: number, anchorPoint?: THREE.Vector3): void {
     if (anchorPoint) {
-      // Anchor-based: move camera position along the vector from camera to anchor
+    
       const dir = new THREE.Vector3().copy(anchorPoint).sub(this.camera.position);
       const dist = dir.length();
       const minDist = 5.0;
       const moveAmount = dist * delta * 0.15;
 
       if (moveAmount > 0 && dist - moveAmount < minDist) {
-        // Clamp so we don't get too close
+      
         const clampedDist = Math.max(minDist, dist - moveAmount);
         const ratio = (dist - clampedDist) / dist;
         this.camera.position.add(dir.clone().multiplyScalar(ratio));
       } else if (moveAmount < 0) {
-        // Zooming out: always allow
+      
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       } else {
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       }
 
-      this.camera.lookAt(6, 6, Z_CENTER);
+      this.camera.lookAt(6, 6, CENTER_Z);
       this.camera.updateProjectionMatrix();
     } else {
-      // Fallback: FOV adjustment
+    
       this.camera.fov = Math.max(15, Math.min(60, this.camera.fov - delta * 2));
       this.camera.updateProjectionMatrix();
     }
     this.checkBoundarySafety();
   }
 
-  // 鈹€鈹€ Piece rendering 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   renderAllPieces(board: Board, focusZ: number): void {
-    const s = this._layerSpacing;
+    const s = LeftPanel.LAYER_SPACING;
     while (this.piecesGroup.children.length > 0) {
       const c = this.piecesGroup.children[0];
       if (c instanceof THREE.Sprite && c.material instanceof THREE.Material) c.material.dispose();
@@ -418,7 +335,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ 3D Aux lines 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   clear3DAuxLines(): void {
     while (this.auxLinesGroup.children.length > 0) {
@@ -438,7 +355,12 @@ export class LeftPanel {
     this.clear3DAuxLines();
     if (data.lines.length === 0 && data.points.length === 0) return;
 
-    // 鈹€鈹€ Lines 鈹€鈹€
+  
+    const drawTactical = !!(this.auxMode & 0b10);
+    const drawCenter = !!(this.auxMode & 0b01);
+    if (!drawTactical && !drawCenter) return;
+
+  
     if (data.lines.length > 0) {
       const pos: number[] = [];
       const col: number[] = [];
@@ -462,7 +384,7 @@ export class LeftPanel {
       this.auxLinesGroup.add(seg);
     }
 
-    // 鈹€鈹€ Highlight points (3D) 鈹€鈹€
+  
     for (const pt of data.points) {
       const geo = new THREE.SphereGeometry(0.12, 8, 6);
       const mat = new THREE.MeshBasicMaterial({
@@ -475,7 +397,11 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Theme 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
+  setAuxMode(mode: AuxMode): void {
+    this.auxMode = mode;
+  }
 
   updateTheme(theme: Theme): void {
     this.theme = theme;
@@ -485,6 +411,29 @@ export class LeftPanel {
     m[1].color.setHex(theme.focusGridColor);
     (this.auxSegments.material as THREE.LineBasicMaterial).color.setHex(theme.auxLineColor);
     (this.connectorSegments.material as THREE.LineBasicMaterial).color.setHex(theme.gridColor);
+  }
+
+
+  updateHoverMarker(x: number, y: number, z: number): void {
+    while (this.hoverMarkerGroup.children.length > 0) {
+      const c = this.hoverMarkerGroup.children[0];
+      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.hoverMarkerGroup.remove(c);
+    }
+    const marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x0088FF })
+    );
+    marker.position.set(x, y, z * this.layerSpacing + 0.1);
+    this.hoverMarkerGroup.add(marker);
+  }
+
+  clearHoverMarker(): void {
+    while (this.hoverMarkerGroup.children.length > 0) {
+      const c = this.hoverMarkerGroup.children[0];
+      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      this.hoverMarkerGroup.remove(c);
+    }
   }
 
   render(): void { this.renderer.render(this.scene, this.camera); }
