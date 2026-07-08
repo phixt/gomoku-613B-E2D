@@ -105,9 +105,18 @@ function main(): void {
   };
 
   const saveGame = (): void => {
-    // Serialize board state
-    const boardData: number[] = [];
-    rightPanel.board.forEach((_x, _y, _z, state) => { boardData.push(state); });
+    // Sparse serialization: only save non-empty cells
+    const moves: Array<{ x: number; y: number; z: number; player: number }> = [];
+    for (let z = 0; z < LAYER_COUNT; z++) {
+      for (let y = 0; y < 13; y++) {
+        for (let x = 0; x < 13; x++) {
+          const state = rightPanel.board.get(x, y, z);
+          if (state !== 0) {
+            moves.push({ x, y, z, player: state });
+          }
+        }
+      }
+    }
 
     const saveData = {
       version: "0.4.0",
@@ -115,7 +124,7 @@ function main(): void {
       boardSize: 13,
       layers: LAYER_COUNT,
       layerSpacing: leftPanel.layerSpacing,
-      board: boardData,
+      moves: moves,
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
       currentPlayer: rightPanel.getCurrentPlayer(),
@@ -123,7 +132,7 @@ function main(): void {
 
     const json = JSON.stringify(saveData);
     const base64 = btoa(unescape(encodeURIComponent(json)));
-    console.log("[Save] Save data:", base64);
+    console.log("[Save] Save data (%d moves):", moves.length, base64);
 
     // Copy to clipboard
     navigator.clipboard.writeText(base64).then(() => {
@@ -139,9 +148,13 @@ function main(): void {
       loadGame(text);
     } catch (err) {
       console.error("[Load] Clipboard read failed:", err);
-      // Fallback: prompt for paste
-      const text = prompt("Paste save data below:");
-      if (text) loadGame(text);
+      // Fallback: prompt user to paste
+      const text = prompt("[Load] Clipboard unavailable. Please copy the save data, then paste it below and press OK:");
+      if (text && text.trim()) {
+        loadGame(text.trim());
+      } else {
+        alert("[Load] Load cancelled: no data provided.");
+      }
     }
   };
 
@@ -150,20 +163,29 @@ function main(): void {
       const json = decodeURIComponent(escape(atob(base64String)));
       const data = JSON.parse(json);
 
-      // Validate
-      if (!data.version || !Array.isArray(data.board)) {
-        console.error("[Load] Invalid save data");
+      // Validate version and boardSize
+      if (data.version !== "0.4.0") {
+        alert("[Load] Incompatible save version: " + (data.version ?? "unknown") + ". Expected: 0.4.0");
+        return;
+      }
+      if (data.boardSize !== 13) {
+        alert("[Load] Incompatible board size: " + data.boardSize + ". Expected: 13");
+        return;
+      }
+      if (!Array.isArray(data.moves)) {
+        alert("[Load] Invalid save data: missing moves array.");
         return;
       }
 
-      // Restore board state
-      let idx = 0;
-      rightPanel.board.forEach((x, y, z, _state) => {
-        if (idx < data.board.length) {
-          rightPanel.board.set(x, y, z, data.board[idx]);
+      // Clear board before restoring
+      rightPanel.board.reset();
+
+      // Restore board state from sparse moves
+      for (const move of data.moves) {
+        if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
+          rightPanel.board.set(move.x, move.y, move.z, move.player);
         }
-        idx++;
-      });
+      }
 
       // Restore focusZ
       focusZ = data.focusZ ?? 0;
@@ -180,31 +202,30 @@ function main(): void {
       leftPanel.updateTheme(currentTheme);
       rightPanel.updateTheme(currentTheme);
 
-      // Restore layer spacing
-      if (data.layerSpacing != null) {
+      // Restore layer spacing ? triggers internal geometry rebuild
+      if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
         const delta = data.layerSpacing - leftPanel.layerSpacing;
         leftPanel.adjustLayerSpacing(delta);
       }
 
       // Restore current player
-      if (data.currentPlayer != null) {
+      if (data.currentPlayer === 1 || data.currentPlayer === 2) {
         rightPanel.setCurrentPlayer(data.currentPlayer);
       }
 
       // Update panels
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
-      rightPanel.renderPieces();
+      rightPanel.refresh();
 
       // Close esc menu on success
       closeEscMenu();
 
-      console.log("[Load] Game loaded successfully");
+      console.log("[Load] Game loaded successfully (%d moves)", data.moves.length);
     } catch (err) {
       console.error("[Load] Failed to load game:", err);
+      alert("[Load] Failed to load game. See console for details.");
     }
   };
-
-
 
   if (startBtn) startBtn.addEventListener("click", startGame);
 

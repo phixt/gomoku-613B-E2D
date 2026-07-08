@@ -242,7 +242,9 @@ export class RightPanel {
 
   getCurrentPlayer(): CellState { return this.currentPlayer; }
 
-  setCurrentPlayer(state: CellState): void { this.currentPlayer = state; }
+  setCurrentPlayer(state: CellState): void {
+    if (state === 1 || state === 2) { this.currentPlayer = state; }
+  }
 
 
 
@@ -514,7 +516,7 @@ export class RightPanel {
 
 
 
-  public renderPieces(): void {
+    private renderPieces(): void {
     this.pieceGroup.clear();
     this.ghostMesh = null;
 
@@ -531,10 +533,10 @@ export class RightPanel {
     }
   }
 
-
-
-
-  private applyFocusZ(): void {
+  /** Public refresh - re-renders pieces without exposing renderPieces directly */
+  public refresh(): void {
+    this.renderPieces();
+  }  private applyFocusZ(): void {
     const zPos = this.focusZ * LAYER_SPACING;
     this.camera.position.set(CENTER, CENTER, zPos + 50);
     this.camera.up.set(0, 1, 0);
