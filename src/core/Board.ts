@@ -1,4 +1,4 @@
-﻿import type { CellState, Vector3Int } from "./Types";
+import type { CellState, Vector3Int } from "./Types";
 
 const BOARD_SIZE = 13;
 const LAYER_COUNT = 6;

@@ -16,7 +16,7 @@ const AUX_PTS: [number, number][] = [
   [BOARD_SIZE - 1, BOARD_SIZE - 1], [6, 6],
 ];
 
-// 鈹€鈹€ Canvas piece texture 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Canvas piece texture 
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64;
@@ -56,7 +56,7 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   return tex;
 }
 
-// 鈹€鈹€ Geometry builders (parameterized spacing) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Geometry builders (parameterized spacing) 
 
 function buildGridGeometry(focusZ: number, spacing: number): THREE.BufferGeometry {
   const positions: number[] = [];
@@ -99,7 +99,6 @@ function buildConnectorGeometry(spacing: number): THREE.BufferGeometry {
 function safeWidth(el: HTMLElement): number { return el.clientWidth || window.innerWidth * 0.5; }
 function safeHeight(el: HTMLElement): number { return el.clientHeight || window.innerHeight; }
 
-// 鈹€鈹€ LeftPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 export class LeftPanel {
   public readonly renderer: THREE.WebGLRenderer;
@@ -121,6 +120,7 @@ export class LeftPanel {
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
+
 
 
   private static readonly LAYER_SPACING = LAYER_SPACING; // ???????
@@ -160,6 +160,7 @@ export class LeftPanel {
 
   /** @internal Exposed for cross-panel coordination. */
   get layerSpacing(): number { return LeftPanel.LAYER_SPACING; }
+
 
 
 
