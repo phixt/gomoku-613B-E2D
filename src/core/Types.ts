@@ -28,6 +28,7 @@ export interface Line3DData {
 export interface HighlightPoint3D {
   x: number; y: number; z: number;
   color: number;
+  isPathMarker?: boolean;
 }
 
 export interface AuxData3D {

@@ -119,7 +119,19 @@ function main(): void {
         leftPanel.zoom(-1);
         break;
 
-    
+
+      case "z": case "Z":
+        e.preventDefault();
+        console.log("KeyZ pressed");
+        leftPanel.adjustLayerSpacing(-0.5);
+        break;
+      case "c": case "C":
+        e.preventDefault();
+        console.log("KeyC pressed");
+        leftPanel.adjustLayerSpacing(0.5);
+        break;
+
+
       case "t": case "T":
         e.preventDefault();
         currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;

@@ -353,7 +353,7 @@ export class RightPanel {
 
       if (s === 0) {
         this.addHighlightMarker(prevX, prevY, color);
-        pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color });
+        pts3D.push({ x: prevX, y: prevY, z: z, color }); // logical Z index
         break;
       }
 
@@ -361,7 +361,7 @@ export class RightPanel {
         console.log("Enemy hit at:", px, py);
       
         this.addHighlightMarker(px, py, color);
-        pts3D.push({ x: px, y: py, z: z * LAYER_SPACING, color });
+        pts3D.push({ x: px, y: py, z: z, color }); // logical Z index
         break;
       }
 
@@ -372,7 +372,7 @@ export class RightPanel {
     // Marker at last valid piece when maxSteps terminated the loop
     if (prevX !== hx || prevY !== hy) {
       this.addHighlightMarker(prevX, prevY, ALLY_COLOR);
-      pts3D.push({ x: prevX, y: prevY, z: z * LAYER_SPACING, color: ALLY_COLOR });
+      pts3D.push({ x: prevX, y: prevY, z: z, color: ALLY_COLOR }) // logical Z index;
     }
   }
 
@@ -386,7 +386,7 @@ export class RightPanel {
     dx: number, dy: number, dz: number,
     lines3D: Line3DData[], pts3D: HighlightPoint3D[],
   ): void {
-  
+
     const maxSteps = 4;
     let firstStep = 1;
     while (true) {
@@ -398,7 +398,7 @@ export class RightPanel {
       firstStep++;
     }
 
-  
+
     let step = firstStep;
     let prevX = hx, prevY = hy, prevZ = hz;
     while (true) {
@@ -412,24 +412,29 @@ export class RightPanel {
 
       if (s !== 0) {
       lines3D.push({
-        startX: prevX, startY: prevY, startZ: prevZ * LAYER_SPACING,
-        endX: px, endY: py, endZ: pz * LAYER_SPACING,
+        startX: prevX, startY: prevY, startZ: prevZ, // logical Z index
+        endX: px, endY: py, endZ: pz, // logical Z index
         color,
       });
       }
 
       if (s === 0) {
-        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
+        // Green marker at last valid piece, not at empty cell beyond
+        pts3D.push({ x: prevX, y: prevY, z: prevZ, color }); // logical Z index
         break;
       }
 
       if (!isAlly) {
-        pts3D.push({ x: px, y: py, z: pz * LAYER_SPACING, color });
+        pts3D.push({ x: px, y: py, z: pz, color }); // logical Z index
         break;
       }
 
       prevX = px; prevY = py; prevZ = pz;
       step++;
+    }
+    // Green marker at last valid piece when maxSteps terminated the loop
+    if (prevX !== hx || prevY !== hy || prevZ !== hz) {
+      pts3D.push({ x: prevX, y: prevY, z: prevZ, color: ALLY_COLOR }); // logical Z index
     }
   }
 
