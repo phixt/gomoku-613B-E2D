@@ -1,220 +1,153 @@
-/* src/styles/main.css */
+/* =========================================
+   1. 游戏主界面布局 (防塌陷核心，严禁修改)
+   ========================================= */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-user-select: none; user-select: none;
 }
-
 html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 100%; height: 100vh; overflow: hidden;
+    font-family: 'LXGW WenKai', 'Segoe UI', sans-serif;
     scrollbar-width: none;
-    -ms-overflow-style: none;
 }
+body::-webkit-scrollbar { display: none; }
 
-body::-webkit-scrollbar, html::-webkit-scrollbar {
-    display: none;
-}
+body { background-color: #F2F7F2; transition: background-color 0.3s ease; }
+body.dark-theme { background-color: #1A2629; }
 
-/* ── Theme backgrounds ── */
-body {
-    background-color: #E8F4F5;
-    transition: background-color 0.3s ease;
-}
-
-body.dark-theme {
-    background-color: #1A2629;
-}
-
+/* 强制锁死游戏界面左右分布 */
 #app {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    height: 100% !important;
+    position: relative; z-index: 1;
 }
-
 .panel {
-    position: relative;
-    height: 100%;
-    flex: 1;
+    position: relative; height: 100%; flex: 1;
     background: transparent;
 }
+#right-panel { border-left: 1px solid rgba(128, 128, 128, 0.2); }
 
-#left-panel {
-}
 
-#right-panel {
-    border-left: 1px solid rgba(128, 128, 128, 0.2);
-}
-
-/* ── Start screen ── */
+/* =========================================
+   2. 开始界面：水绿宣纸质感 (双栏布局)
+   ========================================= */
 #start-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
-    background: rgba(232, 244, 245, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
+    background: linear-gradient(135deg, #F4F9F4 0%, #E8F0E6 100%);
+    display: flex; justify-content: center; align-items: center;
     transition: opacity 0.5s ease;
 }
-
 body.dark-theme #start-screen {
-    background: rgba(26, 38, 41, 0.92);
+    background: linear-gradient(135deg, #1A2629 0%, #152022 100%);
 }
+#start-screen.fade-out { opacity: 0; pointer-events: none; }
 
-#start-screen.fade-out {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.start-content {
-    max-width: 700px;
-    padding: 50px;
-    text-align: center;
+.start-layout {
+    display: flex;
+    width: 90%; max-width: 1100px;
+    height: 80vh; min-height: 600px;
     background: rgba(255, 255, 255, 0.5);
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid #C5D5C0;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+body.dark-theme .start-layout {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #3A4A4E;
 }
 
-body.dark-theme .start-content {
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+/* 左侧：键盘与说明 */
+.start-left {
+    flex: 1.2;
+    padding: 40px;
+    display: flex; flex-direction: column;
+    border-right: 1px dashed #C5D5C0;
+}
+body.dark-theme .start-left { border-right-color: #3A4A4E; }
+
+.keyboard-sim {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 20px;
+    background: rgba(200, 220, 200, 0.1);
+    border-radius: 8px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+.kb-row { display: flex; gap: 10px; }
+
+.key {
+    width: 45px; height: 45px;
+    display: flex; justify-content: center; align-items: center;
+    background: #FFF; border: 1px solid #D0D0D0;
+    border-radius: 6px; font-size: 1.1em; color: #AAA;
+    font-family: 'Consolas', monospace;
+}
+.key.active {
+    background: #E8F4F5; border-color: #2C4A4E; color: #2C4A4E; font-weight: bold;
+}
+body.dark-theme .key { background: #2A3A3E; border-color: #4A5A5E; color: #6A7A7E; }
+body.dark-theme .key.active { background: #3A5A5E; border-color: #C8E0E4; color: #C8E0E4; }
+
+.key-desc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    font-size: 0.95em;
+    color: #3A4A4E;
+}
+body.dark-theme .key-desc-grid { color: #A0B0B4; }
+
+.desc-item { display: flex; align-items: center; gap: 10px; }
+.key-tag {
+    padding: 4px 8px;
+    background: #FFF; border: 1px solid #D0D0D0;
+    border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.9em; color: #AAA;
+    min-width: 60px; text-align: center;
+}
+.key-tag.active {
+    background: #E8F4F5; border-color: #2C4A4E; color: #2C4A4E; font-weight: bold;
+}
+body.dark-theme .key-tag { background: #2A3A3E; border-color: #4A5A5E; color: #6A7A7E; }
+body.dark-theme .key-tag.active { background: #3A5A5E; border-color: #C8E0E4; color: #C8E0E4; }
+
+/* 右侧：标题与按钮 */
+.start-right {
+    flex: 0.8;
+    padding: 40px;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
 }
 
-.start-content h1 {
-    font-size: 3em;
-    margin-bottom: 10px;
-    color: #2C4A4E;
-    letter-spacing: 2px;
+.start-right h1 {
+    font-size: 2.5em; color: #2C4A4E; letter-spacing: 4px; margin-bottom: 10px;
+    font-weight: normal;
 }
-
-body.dark-theme .start-content h1 {
-    color: #C8E0E4;
-}
+body.dark-theme .start-right h1 { color: #C8E0E4; }
 
 .subtitle {
-    font-size: 1.1em;
-    color: #6A8A8E;
-    margin-bottom: 40px;
-    font-weight: 300;
+    font-size: 1em; color: #6A8A8E; margin-bottom: 40px; letter-spacing: 2px;
 }
+body.dark-theme .subtitle { color: #8A9A9E; }
 
-body.dark-theme .subtitle {
-    color: #8A9A9E;
+.mouse-actions {
+    margin-bottom: 40px; color: #5A6A6E; font-size: 0.95em; line-height: 1.8;
 }
-
-.controls-section {
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.controls-section h3 {
-    font-size: 1.2em;
-    color: #2C4A4E;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #C8E0E4;
-    padding-bottom: 8px;
-}
-
-body.dark-theme .controls-section h3 {
-    color: #C8E0E4;
-    border-bottom-color: #3A5A5E;
-}
-
-.controls-grid {
-    display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.key-combo {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-kbd {
-    background: linear-gradient(135deg, #C8E0E4 0%, #A0C0C4 100%);
-    border: 1px solid #8A9A9E;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #1A2629;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    min-width: 40px;
-    text-align: center;
-}
-
-body.dark-theme kbd {
-    background: linear-gradient(135deg, #3A5A5E 0%, #2C4A4E 100%);
-    border-color: #5A6A6E;
-    color: #E8F4F5;
-}
-
-.controls-grid span {
-    color: #4A5A5E;
-    font-size: 0.95em;
-}
-
-body.dark-theme .controls-grid span {
-    color: #A0B0B4;
-}
-
-.helper-text {
-    font-size: 0.85em;
-    color: #6A7A7E;
-    margin-top: 8px;
-    font-style: italic;
-}
-
-body.dark-theme .helper-text {
-    color: #7A8A8E;
-}
+body.dark-theme .mouse-actions { color: #8A9A9E; }
 
 #start-btn {
-    margin-top: 40px;
-    padding: 15px 60px;
-    font-size: 1.3em;
-    background: transparent;
-    border: 3px solid #2C4A4E;
-    border-radius: 8px;
-    color: #2C4A4E;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    letter-spacing: 2px;
+    padding: 15px 60px; font-size: 1.2em;
+    background: transparent; border: 2px solid #2C4A4E; border-radius: 6px;
+    color: #2C4A4E; cursor: pointer; letter-spacing: 4px;
+    font-family: 'LXGW WenKai', sans-serif; transition: all 0.3s;
 }
-
-body.dark-theme #start-btn {
-    border-color: #C8E0E4;
-    color: #C8E0E4;
-}
+body.dark-theme #start-btn { border-color: #C8E0E4; color: #C8E0E4; }
 
 #start-btn:hover {
-    background: #2C4A4E;
-    color: #E8F4F5;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 74, 78, 0.3);
+    background: #2C4A4E; color: #F4F9F4;
+    box-shadow: 0 4px 15px rgba(44, 74, 78, 0.2);
 }
-
-body.dark-theme #start-btn:hover {
-    background: #C8E0E4;
-    color: #1A2629;
-}
+body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }

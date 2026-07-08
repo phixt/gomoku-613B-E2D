@@ -4,61 +4,141 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gomoku-613B-E2D</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" />
     <link rel="stylesheet" href="/src/style/main.css" />
 </head>
-<body>
+<body class="light-theme">
     <!-- 开始界面覆盖层 -->
     <div id="start-screen">
-        <div class="start-content">
-            <h1>GOMOKU 613B-E2D</h1>
-            <p class="subtitle">Discrete 3D Tactical Gomoku</p>
+        <div class="start-layout">
             
-            <div class="controls-section">
-                <h3>3D 空间与视角</h3>
-                <div class="controls-grid">
-                    <div class="key-combo"><kbd>Q</kbd> / <kbd>E</kbd></div>
-                    <span>旋转 3D 视角（绕 Y 轴）</span>
-                    
-                    <div class="key-combo"><kbd>W</kbd> / <kbd>S</kbd></div>
-                    <span>推拉 3D 视角（缩放）</span>
-                    
-                    <div class="key-combo"><kbd>Z</kbd> / <kbd>C</kbd></div>
-                    <span>调整层间距（压缩 / 拉大）</span>
+            <!-- 左侧：键盘布局 + 文字说明 -->
+            <div class="start-left">
+                <div class="keyboard-sim">
+                    <div class="kb-row">
+                        <div class="key active">Q</div>
+                        <div class="key active">W</div>
+                        <div class="key active">E</div>
+                        <div class="key">R</div>
+                        <div class="key active">T</div>
+                    </div>
+                    <div class="kb-row">
+                        <div class="key active">A</div>
+                        <div class="key">S</div>
+                        <div class="key active">D</div>
+                        <div class="key active">F</div>
+                        <div class="key">G</div>
+                        <div class="key active">H</div>
+                    </div>
+                    <div class="kb-row">
+                        <div class="key active">Z</div>
+                        <div class="key">X</div>
+                        <div class="key active">C</div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="controls-section">
-                <h3>层级与平面</h3>
-                <div class="controls-grid">
-                    <div class="key-combo"><kbd>A</kbd> / <kbd>D</kbd></div>
-                    <span>切换层级（循环 0-5）</span>
-                    
-                    <div class="key-combo"><kbd>F</kbd></div>
-                    <span>翻转 2D 主战场（水平镜像）</span>
+                
+                <div class="key-desc-grid">
+                    <div class="desc-item"><span class="key-tag active">Q / E</span> 旋转 3D 视角</div>
+                    <div class="desc-item"><span class="key-tag active">W / S</span> 推拉 3D 视角</div>
+                    <div class="desc-item"><span class="key-tag active">A / D</span> 切换层级 (循环)</div>
+                    <div class="desc-item"><span class="key-tag active">Z / C</span> 调整层间距</div>
+                    <div class="desc-item"><span class="key-tag active">F</span> 翻转 2D 主战场</div>
+                    <div class="desc-item"><span class="key-tag active">H</span> 开关战术辅助线</div>
+                    <div class="desc-item"><span class="key-tag active">T</span> 切换 亮/暗 主题</div>
                 </div>
             </div>
 
-            <div class="controls-section">
-                <h3>显示与对弈</h3>
-                <div class="controls-grid">
-                    <div class="key-combo"><kbd>T</kbd></div>
-                    <span>切换 亮色 / 暗色 主题</span>
-                    
-                    <div class="key-combo"><kbd>H</kbd></div>
-                    <span>开启 / 关闭 战术辅助线</span>
-                    
-                    <div class="key-combo"><span>鼠标悬停</span></div>
-                    <span>查看 2D/3D 战术线 & 蓝色定位点</span>
-                    
-                    <div class="key-combo"><span>鼠标点击</span></div>
-                    <span>在当前焦点层落子</span>
+            <!-- 右侧：标题、鼠标说明、开始按钮 -->
+            <div class="start-right">
+                <h1>GOMOKU 613B-E2D</h1>
+                <p class="subtitle">Discrete 3D Tactical Gomoku</p>
+                
+                <div class="mouse-actions">
+                    <p>🖱️ 鼠标悬停：查看战术线</p>
+                    <p>🖱️ 鼠标点击：当前层落子</p>
+                </div>
+
+                <button id="start-btn">START GAME</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 游戏主界面（绝对不要动这里的结构） -->
+    <div id="app">
+        <div id="left-panel" class="panel"></div>
+        <div id="right-panel" class="panel"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+                <!-- 中间：真实键盘布局模拟 -->
+                <div class="keyboard-sim">
+                    <!-- 第一行：Q W E R T -->
+                    <div class="kb-row">
+                        <div class="key active">Q</div>
+                        <div class="key active">W</div>
+                        <div class="key active">E</div>
+                        <div class="key">R</div> <!-- 无功能，白色 -->
+                        <div class="key active">T</div>
+                    </div>
+                    <!-- 第二行：A S D F G H -->
+                    <div class="kb-row">
+                        <div class="key active">A</div>
+                        <div class="key">S</div> <!-- 无功能，白色 -->
+                        <div class="key active">D</div>
+                        <div class="key active">F</div>
+                        <div class="key">G</div> <!-- 无功能，白色 -->
+                        <div class="key active">H</div>
+                    </div>
+                    <!-- 第三行：Z X C -->
+                    <div class="kb-row">
+                        <div class="key active">Z</div>
+                        <div class="key">X</div> <!-- 无功能，白色 -->
+                        <div class="key active">C</div>
+                    </div>
                 </div>
             </div>
-            
+                <!-- 右侧说明与引出线 -->
+                <div class="side-panel right-side">
+                    <div class="desc-row">
+                        <div class="connector-line right-line"></div>
+                        <div class="desc-text">
+                            <strong>W / S</strong><br>推拉 3D 视角
+                        </div>
+                    </div>
+                    <div class="desc-row">
+                        <div class="connector-line right-line"></div>
+                        <div class="desc-text">
+                            <strong>F</strong><br>翻转 2D 主战场
+                        </div>
+                    </div>
+                    <div class="desc-row">
+                        <div class="connector-line right-line"></div>
+                        <div class="desc-text">
+                            <strong>H</strong><br>开关战术辅助线
+                        </div>
+                    </div>
+                    <div class="desc-row">
+                        <div class="connector-line right-line"></div>
+                        <div class="desc-text">
+                            <strong>T</strong><br>切换 亮/暗 主题
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mouse-actions">
+                <span>鼠标悬停：查看战术线</span>
+                <span class="divider">|</span>
+                <span>鼠标点击：当前层落子</span>
+            </div>
+
             <button id="start-btn">START GAME</button>
         </div>
     </div>
 
+    <!-- 游戏主界面（绝对不要动这里的结构） -->
     <div id="app">
         <div id="left-panel" class="panel"></div>
         <div id="right-panel" class="panel"></div>
