@@ -16,7 +16,7 @@ const AUX_PTS: [number, number][] = [
   [BOARD_SIZE - 1, BOARD_SIZE - 1], [6, 6],
 ];
 
-// 鈹€鈹€ Canvas piece texture 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Canvas piece texture 
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
   const size = 64;
@@ -56,7 +56,7 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
   return tex;
 }
 
-// 鈹€鈹€ Geometry builders (parameterized spacing) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+//  Geometry builders (parameterized spacing) 
 
 function buildGridGeometry(focusZ: number, spacing: number): THREE.BufferGeometry {
   const positions: number[] = [];
@@ -99,7 +99,6 @@ function buildConnectorGeometry(spacing: number): THREE.BufferGeometry {
 function safeWidth(el: HTMLElement): number { return el.clientWidth || window.innerWidth * 0.5; }
 function safeHeight(el: HTMLElement): number { return el.clientHeight || window.innerHeight; }
 
-// 鈹€鈹€ LeftPanel 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 export class LeftPanel {
   public readonly renderer: THREE.WebGLRenderer;
@@ -121,7 +120,7 @@ export class LeftPanel {
   private blackGhostTex: THREE.CanvasTexture;
   private whiteGhostTex: THREE.CanvasTexture;
 
-  // ====== ????????????======
+
   private static readonly LAYER_SPACING = LAYER_SPACING; // ???????
 
   constructor(container: HTMLElement, theme: Theme) {
@@ -155,7 +154,7 @@ export class LeftPanel {
   /** @internal Exposed for cross-panel coordination. */
   get layerSpacing(): number { return LeftPanel.LAYER_SPACING; }
 
-  // 鈹€鈹€ Boundary safety 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 
   private checkBoundarySafety(): void {
     const target = new THREE.Vector3(6, 6, CENTER_Z);
@@ -163,8 +162,6 @@ export class LeftPanel {
     const vh = 2 * dist * Math.tan((this.camera.fov * Math.PI) / 360);
     if (vh < BOARD_SIZE) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${BOARD_SIZE}.`);
   }
-
-  // 鈹€鈹€ Geometry build / rebuild 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
   private buildAllGeometry(): void {
     const s = LeftPanel.LAYER_SPACING;
@@ -200,15 +197,15 @@ export class LeftPanel {
     this.scene.add(this.markerGroup);
     this.highlightCenterMarker(this.focusZ);
 
-    // 鈹€鈹€ Pieces group 鈹€鈹€
+    
     this.piecesGroup = new THREE.Group();
     this.scene.add(this.piecesGroup);
 
-    // 鈹€鈹€ Aux lines group (3D hover overlays) 鈹€鈹€
+    
     this.auxLinesGroup = new THREE.Group();
     this.scene.add(this.auxLinesGroup);
 
-    // 鈹€鈹€ Highlight markers group (3D) 鈹€鈹€
+    
     this.highlightMarkers3DGroup = new THREE.Group();
     this.scene.add(this.highlightMarkers3DGroup);
   }
@@ -244,7 +241,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Rotation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
 
   public rotateY(direction: number): void {
     const angle = (direction * Math.PI) / 2;
@@ -256,7 +253,7 @@ export class LeftPanel {
     this.camera.lookAt(target);
   }
 
-  // 鈹€鈹€ Zoom 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
 
   /**
    * Zoom the view.
@@ -294,7 +291,7 @@ export class LeftPanel {
     this.checkBoundarySafety();
   }
 
-  // 鈹€鈹€ Piece rendering 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
 
   renderAllPieces(board: Board, focusZ: number): void {
     const s = LeftPanel.LAYER_SPACING;
@@ -328,7 +325,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ 3D Aux lines 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
 
   clear3DAuxLines(): void {
     while (this.auxLinesGroup.children.length > 0) {
@@ -390,7 +387,7 @@ export class LeftPanel {
     }
   }
 
-  // 鈹€鈹€ Theme 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  
 
   setAuxMode(mode: AuxMode): void {
     this.auxMode = mode;
