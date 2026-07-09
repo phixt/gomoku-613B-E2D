@@ -128,17 +128,11 @@ function main(): void {
     list.innerHTML = "";
     entries.forEach((entry, i) => {
       const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
-    entries.forEach((entry, i) => {
-      const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
       const div = document.createElement("div");
       div.className = "save-slot" + (data === null ? " empty" : "");
       div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
-      div.className = "save-slot" + (data === null ? " empty" : "");
-      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
-        const t = e.currentTarget as HTMLElement;
-        const r = t.getBoundingClientRect();
-        overlayManager.showSlotMenu(i, r.right, r.top, saveManager.slots);
+        overlayManager.showSlotMenu(i, e);
       });
       list.appendChild(div);
     });
