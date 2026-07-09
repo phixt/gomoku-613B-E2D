@@ -21,11 +21,12 @@ class EventBus {
 
 export const eventBus = new EventBus();
 
-// Define Event Names as constants
 export const Events = {
-    BOARD_CHANGED: "BOARD_CHANGED",
+    THEME_TOGGLED: "THEME_TOGGLED",
     LAYER_CHANGED: "LAYER_CHANGED",
-    THEME_CHANGED: "THEME_CHANGED",
+    BOARD_UPDATED: "BOARD_UPDATED",
     GAME_RESET: "GAME_RESET",
-    HOVER_CHANGED: "HOVER_CHANGED",
+    SAVE_REQUESTED: "SAVE_REQUESTED",
+    SAVE_UPDATED: "SAVE_UPDATED",
+    OVERLAY_REQUEST: "OVERLAY_REQUEST",
 };

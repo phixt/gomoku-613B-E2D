@@ -4,8 +4,9 @@ import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, PIECE_RADIUS } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
+import { resourceManager } from "../utils/ResourceManager";
 
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER = (BOARD_SIZE - 1) / 2;
@@ -178,8 +179,9 @@ export class RightPanel {
     requestAnimationFrame(() => { requestAnimationFrame(() => { this.resize(); }); });
 
     // Subscribe to events
-    eventBus.on(Events.THEME_CHANGED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
+    eventBus.on(Events.GAME_RESET, () => { this.currentPlayer = 1; this.renderPieces(); });
   }
   dispose(): void {
     window.removeEventListener("resize", this.boundResize);
@@ -469,7 +471,7 @@ export class RightPanel {
   private showGhostPiece(gx: number, gy: number): void {
     const isBlack = this.currentPlayer === BLACK;
     if (!this.ghostMesh) {
-      const geo = new THREE.CircleGeometry(PIECE_RADIUS, 24);
+      const geo = resourceManager.getGeometry("piece");
       const mat = new THREE.MeshBasicMaterial({
         map: isBlack ? this.blackGhostTex : this.whiteGhostTex,
         transparent: true, opacity: GHOST_OPACITY, side: THREE.DoubleSide, depthWrite: false,
@@ -525,7 +527,7 @@ export class RightPanel {
     this.pieceGroup.clear();
     this.ghostMesh = null;
 
-    const geo = new THREE.CircleGeometry(PIECE_RADIUS, 24);
+    const geo = resourceManager.getGeometry("piece");
     for (let y = 0; y < BOARD_SIZE; y++) {
       for (let x = 0; x < BOARD_SIZE; x++) {
         const state = this.board.get(x, y, this.focusZ);

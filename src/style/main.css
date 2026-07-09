@@ -264,6 +264,7 @@ body.dark-theme .save-area h3 {
     flex-grow: 1;
     overflow-y: auto;
     min-height: 150px;
+    padding: 0 15px;
 }
 
 .save-slot {
@@ -796,4 +797,89 @@ body.dark-theme .esc-btn.danger kbd {
 body.dark-theme .esc-btn.danger:hover {
     background: rgba(208, 128, 128, 0.08);
     border-color: #D08080 !important;
+}
+
+/* 存档槽位容器与样式 */
+.save-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.save-area h3 {
+    font-size: 1.1em;
+    color: #2C4A4E;
+    margin-bottom: 15px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .save-area h3 { color: #C8E0E4; }
+
+.save-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 150px; /* 确保最小高度可见 */
+}
+
+.save-slot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid #C5D5C0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9em;
+    color: #3A4A4E;
+}
+
+.save-slot:hover {
+    background: #E8F4F5;
+    border-color: #2C4A4E;
+    transform: translateX(3px);
+}
+
+.save-slot.empty {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.save-slot .slot-index {
+    font-weight: bold;
+    color: #2C4A4E;
+    font-family: 'Consolas', monospace;
+}
+
+.save-slot .slot-info {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 0.85em;
+    color: #6A8A8E;
+}
+
+body.dark-theme .save-slot {
+    background: rgba(255,255,255,0.05);
+    border-color: #3A4A4E;
+    color: #A0B0B4;
+}
+
+body.dark-theme .save-slot:hover {
+    background: #3A5A5E;
+    border-color: #C8E0E4;
+}
+
+body.dark-theme .save-slot .slot-index { color: #C8E0E4; }
+
+.slot-hint {
+    text-align: center;
+    font-size: 0.8em;
+    color: #8A9A9E;
+    margin-top: 10px;
 }

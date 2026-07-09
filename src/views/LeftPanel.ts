@@ -2,8 +2,9 @@ import * as THREE from "three";
 import { type Theme, AuxMode, LIGHT_THEME, DARK_THEME } from "../core/Types";
 import type { AuxData3D } from "../core/Types";
 import type { Board } from "../core/Board";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, MIN_LAYER_SPACING, MAX_LAYER_SPACING } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
+import { resourceManager } from "../utils/ResourceManager";
 
 // Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
@@ -136,10 +137,10 @@ export class LeftPanel {
     this.theme = theme;
     const w = safeWidth(container), h = safeHeight(container);
 
-    this.blackTex = createPieceTexture(true, false);
-    this.whiteTex = createPieceTexture(false, false);
-    this.blackGhostTex = createPieceTexture(true, true);
-    this.whiteGhostTex = createPieceTexture(false, true);
+    this.blackTex = resourceManager.getOrCreateTexture("black", () => createPieceTexture(true, false));
+    this.whiteTex = resourceManager.getOrCreateTexture("white", () => createPieceTexture(false, false));
+    this.blackGhostTex = resourceManager.getOrCreateTexture("blackGhost", () => createPieceTexture(true, true));
+    this.whiteGhostTex = resourceManager.getOrCreateTexture("whiteGhost", () => createPieceTexture(false, true));
 
     this.focusBlackMat = new THREE.SpriteMaterial({ map: this.blackTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
     this.focusWhiteMat = new THREE.SpriteMaterial({ map: this.whiteTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
@@ -208,7 +209,7 @@ export class LeftPanel {
     this.markerGroup = new THREE.Group();
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
       const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.1, 8, 6),
+        resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 }),
       );
       sphere.position.set(6, 6, layer * s);
@@ -315,7 +316,7 @@ export class LeftPanel {
     this.checkBoundarySafety();
 
     // Subscribe to events
-    eventBus.on(Events.THEME_CHANGED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => { this.focusZ = z; this.highlightFocusLayer(z); });
   }
 
@@ -460,7 +461,7 @@ export class LeftPanel {
 
   adjustLayerSpacing(delta: number): void {
     console.log("adjustLayerSpacing called, new spacing:", this._layerSpacing);
-    this._layerSpacing = Math.max(2.0, Math.min(6.0, this._layerSpacing + delta));
+    this._layerSpacing = Math.max(MIN_LAYER_SPACING, Math.min(MAX_LAYER_SPACING, this._layerSpacing + delta));
 
     // Rebuild grid segments (same pattern as highlightFocusLayer)
     const oldGrid = this.gridSegments;
@@ -503,7 +504,7 @@ export class LeftPanel {
     this.markerGroup = new THREE.Group();
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
       const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.1, 8, 6),
+        resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 }),
       );
       sphere.position.set(6, 6, layer * s);

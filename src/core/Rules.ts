@@ -1,8 +1,6 @@
 import type { Board } from "./Board";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-
-const BOARD_SIZE = 13;
-const LAYER_COUNT = 6;
+import { BOARD_SIZE, LAYER_COUNT } from "./Config";
 
 export interface PatternCell3D {
   x: number;
