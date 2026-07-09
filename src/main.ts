@@ -80,6 +80,7 @@ function main(): void {
   requestAnimationFrame(() => { requestAnimationFrame(forceCorrectSize); });
 
   let focusZ = 0;
+  let isColorblindMode = false;
   leftPanel.renderAllPieces(rightPanel.board, focusZ);
 
   const animate = (): void => { leftPanel.render(); rightPanel.render(); requestAnimationFrame(animate); };
@@ -437,6 +438,12 @@ function main(): void {
           case "h": case "H":
             e.preventDefault();
             { const mode = rightPanel.cycleAuxMode(); leftPanel.setAuxMode(mode); }
+            break;
+          case "v": case "V":
+            e.preventDefault();
+            isColorblindMode = !isColorblindMode;
+            eventBus.emit(Events.COLORBLIND_MODE_TOGGLED, isColorblindMode);
+            overlayManager.showToast(isColorblindMode ? "色弱模式已开启 (蓝/黄)" : "色弱模式已关闭 (红/绿)");
             break;
         }
         break;

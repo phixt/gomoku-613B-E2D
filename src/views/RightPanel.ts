@@ -4,7 +4,7 @@ import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
@@ -13,9 +13,6 @@ const CENTER = (BOARD_SIZE - 1) / 2;
 const GHOST_OPACITY = 0.35;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
-
-const ALLY_COLOR = 0x00FF00;
-const ENEMY_COLOR = 0xFF0000;
 
 
 function buildLayerGridGeometry(): THREE.BufferGeometry {
@@ -96,12 +93,21 @@ export class RightPanel {
   private hoverValid: boolean = false;
   private hoverX: number = -1;
   private hoverY: number = -1;
+  private isColorblindMode: boolean = false;
   private _hoverWorldPos: THREE.Vector3 | null = null;
   private isGameActive: () => boolean = () => true;
   private isMirrored: boolean = true;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
   private boundResize: () => void;
+
+  private getSelfColor(): number {
+    return this.isColorblindMode ? COLOR_SELF_BLIND : COLOR_SELF_NORMAL;
+  }
+
+  private getEnemyColor(): number {
+    return this.isColorblindMode ? COLOR_ENEMY_BLIND : COLOR_ENEMY_NORMAL;
+  }
 
   constructor(container: HTMLElement, theme: Theme) {
     this.container = container;
@@ -182,6 +188,10 @@ export class RightPanel {
     eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
     eventBus.on(Events.GAME_RESET, () => { this.currentPlayer = 1; this.renderPieces(); });
+    eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
+      this.isColorblindMode = isBlind;
+      if (this.hoverX >= 0) this.computeHoverOverlays(this.hoverX, this.hoverY);
+    });
   }
   dispose(): void {
     window.removeEventListener("resize", this.boundResize);
@@ -363,7 +373,7 @@ export class RightPanel {
       const s = this.board.get(px, py, z);
 
       const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
+      const color = s === 0 ? this.getSelfColor() : (isAlly ? this.getSelfColor() : this.getEnemyColor());
 
     
       if (s !== 0) {
@@ -397,8 +407,8 @@ export class RightPanel {
     }
     // Marker at last valid piece when maxSteps terminated the loop
     if (prevX !== hx || prevY !== hy) {
-      this.addHighlightMarker(prevX, prevY, ALLY_COLOR);
-      pts3D.push({ x: prevX, y: prevY, z: z, color: ALLY_COLOR }) // logical Z index;
+      this.addHighlightMarker(prevX, prevY, this.getSelfColor());
+      pts3D.push({ x: prevX, y: prevY, z: z, color: this.getSelfColor() }) // logical Z index;
     }
   }
 
@@ -434,7 +444,7 @@ export class RightPanel {
       const s = this.board.get(px, py, pz);
 
       const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? ALLY_COLOR : (isAlly ? ALLY_COLOR : ENEMY_COLOR);
+      const color = s === 0 ? this.getSelfColor() : (isAlly ? this.getSelfColor() : this.getEnemyColor());
 
       if (s !== 0) {
       lines3D.push({
@@ -460,7 +470,7 @@ export class RightPanel {
     }
     // Green marker at last valid piece when maxSteps terminated the loop
     if (prevX !== hx || prevY !== hy || prevZ !== hz) {
-      pts3D.push({ x: prevX, y: prevY, z: prevZ, color: ALLY_COLOR }); // logical Z index
+      pts3D.push({ x: prevX, y: prevY, z: prevZ, color: this.getSelfColor() }); // logical Z index
     }
   }
 

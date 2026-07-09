@@ -1,4 +1,4 @@
-﻿type EventCallback = (...args: any[]) => void;
+type EventCallback = (...args: any[]) => void;
 
 class EventBus {
     private listeners: Record<string, EventCallback[]> = {};
@@ -29,4 +29,5 @@ export const Events = {
     SAVE_REQUESTED: "SAVE_REQUESTED",
     SAVE_UPDATED: "SAVE_UPDATED",
     OVERLAY_REQUEST: "OVERLAY_REQUEST",
+    COLORBLIND_MODE_TOGGLED: "COLORBLIND_MODE_TOGGLED",
 };
