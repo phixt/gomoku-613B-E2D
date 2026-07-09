@@ -36,7 +36,7 @@
             <!-- 左侧：键盘布局 + 文字说明 -->
             <div class="start-left">
                 <div class="keyboard-sim">
-                    <!-- 第一行：Q W E  R T -->
+                    <!-- 第一行：Q W E R T -->
                     <div class="kb-row">
                         <div class="key active">Q</div>
                         <div class="key active">W</div>
@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            <!-- 右侧：标题、鼠标说明、开始按钮 -->
+            <!-- 中间：标题、鼠标说明、开始按钮 -->
             <div class="start-right">
                 <h1>GOMOKU 613B-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
@@ -89,10 +89,28 @@
                     <p>🖱️ 鼠标点击：当前层落子</p>
                     <p>🖱️ 鼠标滚轮：旋转3D视角</p>
                 </div>
-
                 <button id="start-btn">START GAME</button>
+            </div>
+            <div class="start-right">
+                <h3>存档槽位</h3>
+                <div id="save-slots-list" class="save-slots-list">
+                    <!-- 槽位将由 JS 动态生成 -->
+                </div>
+                <p class="slot-hint">按 L 快速读取最新存档</p>
             </div>
         </div>
     </div>
+    <!-- 2. 全局 Toast 提示 -->
+    <div id="toast-container" class="hidden"></div>
+
+    <!-- 3. 存档操作菜单 (点击槽位弹出) -->
+    <div id="slot-action-menu" class="hidden">
+        <button id="slot-btn-enter" class="slot-action-btn">进入</button>
+        <button id="slot-btn-overwrite" class="slot-action-btn">覆盖</button>
+        <button id="slot-btn-paste" class="slot-action-btn">手动填充</button>
+    </div>
+    </div>
+    </div>
 </body>
+
 </html>

@@ -2,18 +2,34 @@
    1. 游戏主界面布局 (防塌陷核心，严禁修改)
    ========================================= */
 * {
-    margin: 0; padding: 0; box-sizing: border-box;
-    -webkit-user-select: none; user-select: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
 }
-html, body {
-    width: 100%; height: 100vh; overflow: hidden;
+
+html,
+body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
     font-family: 'LXGW WenKai', 'Segoe UI', sans-serif;
     scrollbar-width: none;
 }
-body::-webkit-scrollbar { display: none; }
 
-body { background-color: #F2F7F2; transition: background-color 0.3s ease; }
-body.dark-theme { background-color: #1A2629; }
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    background-color: #F2F7F2;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-theme {
+    background-color: #1A2629;
+}
 
 /* 强制锁死游戏界面左右分布 */
 #app {
@@ -21,147 +37,458 @@ body.dark-theme { background-color: #1A2629; }
     flex-direction: row !important;
     width: 100% !important;
     height: 100% !important;
-    position: relative; z-index: 1;
+    position: relative;
+    z-index: 1;
 }
+
 .panel {
-    position: relative; height: 100%; flex: 1;
+    position: relative;
+    height: 100%;
+    flex: 1;
     background: transparent;
 }
-#right-panel { border-left: 1px solid rgba(128, 128, 128, 0.2); }
+
+#right-panel {
+    border-left: 1px solid rgba(128, 128, 128, 0.2);
+}
 
 
 /* =========================================
-   2. 开始界面：水绿宣纸质感 (双栏布局)
+   2. 开始界面：三栏布局
    ========================================= */
 #start-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
     background: linear-gradient(135deg, #F4F9F4 0%, #E8F0E6 100%);
-    display: flex; justify-content: center; align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     transition: opacity 0.5s ease;
 }
+
 body.dark-theme #start-screen {
     background: linear-gradient(135deg, #1A2629 0%, #152022 100%);
 }
-#start-screen.fade-out { opacity: 0; pointer-events: none; }
+
+#start-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
 
 .start-layout {
     display: flex;
-    width: 90%; max-width: 1100px;
-    height: 80vh; min-height: 600px;
+    width: 95%;
+    max-width: 1200px;
+    height: 85vh;
+    min-height: 600px;
     background: rgba(255, 255, 255, 0.5);
     border: 1px solid #C5D5C0;
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
     overflow: hidden;
 }
+
 body.dark-theme .start-layout {
     background: rgba(255, 255, 255, 0.03);
     border-color: #3A4A4E;
 }
 
-/* 左侧：键盘与说明 */
 .start-left {
     flex: 1.2;
-    padding: 40px;
-    display: flex; flex-direction: column;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
     border-right: 1px dashed #C5D5C0;
 }
-body.dark-theme .start-left { border-right-color: #3A4A4E; }
 
+.start-center {
+    flex: 1;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-right: 1px dashed #C5D5C0;
+}
+
+.start-right {
+    flex: 0.8;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark-theme .start-left,
+body.dark-theme .start-center {
+    border-right-color: #3A4A4E;
+}
+
+/* 键盘模拟 */
 .keyboard-sim {
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
     background: rgba(200, 220, 200, 0.1);
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     align-items: center;
 }
-.kb-row { display: flex; gap: 10px; }
 
-.key {
-    width: 45px; height: 45px;
-    display: flex; justify-content: center; align-items: center;
-    background: #FFF; border: 1px solid #D0D0D0;
-    border-radius: 6px; font-size: 1.1em; color: #AAA;
+.kb-row {
+    display: flex;
+    gap: 8px;
+}
+
+.key,
+.key-spacer {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #FFF;
+    border: 1px solid #D0D0D0;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #AAA;
     font-family: 'Consolas', monospace;
 }
-.key.active {
-    background: #E8F4F5; border-color: #2C4A4E; color: #2C4A4E; font-weight: bold;
-}
-body.dark-theme .key { background: #2A3A3E; border-color: #4A5A5E; color: #6A7A7E; }
-body.dark-theme .key.active { background: #3A5A5E; border-color: #C8E0E4; color: #C8E0E4; }
 
+.key-spacer {
+    visibility: hidden;
+}
+
+.key.active {
+    background: #E8F4F5;
+    border-color: #2C4A4E;
+    color: #2C4A4E;
+    font-weight: bold;
+}
+
+body.dark-theme .key {
+    background: #2A3A3E;
+    border-color: #4A5A5E;
+    color: #6A7A7E;
+}
+
+body.dark-theme .key.active {
+    background: #3A5A5E;
+    border-color: #C8E0E4;
+    color: #C8E0E4;
+}
+
+/* 按键说明 */
 .key-desc-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    font-size: 0.95em;
+    gap: 12px;
+    font-size: 0.9em;
     color: #3A4A4E;
 }
-body.dark-theme .key-desc-grid { color: #A0B0B4; }
 
-.desc-item { display: flex; align-items: center; gap: 10px; }
+body.dark-theme .key-desc-grid {
+    color: #A0B0B4;
+}
+
+.desc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .key-tag {
-    padding: 4px 8px;
-    background: #FFF; border: 1px solid #D0D0D0;
-    border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.9em; color: #AAA;
-    min-width: 60px; text-align: center;
-}
-.key-tag.active {
-    background: #E8F4F5; border-color: #2C4A4E; color: #2C4A4E; font-weight: bold;
-}
-body.dark-theme .key-tag { background: #2A3A3E; border-color: #4A5A5E; color: #6A7A7E; }
-body.dark-theme .key-tag.active { background: #3A5A5E; border-color: #C8E0E4; color: #C8E0E4; }
-/* 隐形占位符：用于键盘布局的偏移对齐 */
-.key-spacer {
-    width: 45px;  /* 必须与 .key 的宽度完全一致 */
-    height: 45px; /* 必须与 .key 的高度完全一致 */
-    visibility: hidden; /* 占位但不可见 */
-}
-/* 右侧：标题与按钮 */
-.start-right {
-    flex: 0.8;
-    padding: 40px;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
+    padding: 3px 6px;
+    background: #FFF;
+    border: 1px solid #D0D0D0;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85em;
+    color: #AAA;
+    min-width: 50px;
     text-align: center;
 }
 
-.start-right h1 {
-    font-size: 2.5em; color: #2C4A4E; letter-spacing: 4px; margin-bottom: 10px;
+.key-tag.active {
+    background: #E8F4F5;
+    border-color: #2C4A4E;
+    color: #2C4A4E;
+    font-weight: bold;
+}
+
+body.dark-theme .key-tag {
+    background: #2A3A3E;
+    border-color: #4A5A5E;
+    color: #6A7A7E;
+}
+
+body.dark-theme .key-tag.active {
+    background: #3A5A5E;
+    border-color: #C8E0E4;
+    color: #C8E0E4;
+}
+
+/* 中间标题区 */
+.start-center h1 {
+    font-size: 2.2em;
+    color: #2C4A4E;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
     font-weight: normal;
 }
-body.dark-theme .start-right h1 { color: #C8E0E4; }
+
+body.dark-theme .start-center h1 {
+    color: #C8E0E4;
+}
 
 .subtitle {
-    font-size: 1em; color: #6A8A8E; margin-bottom: 40px; letter-spacing: 2px;
+    font-size: 0.95em;
+    color: #6A8A8E;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
 }
-body.dark-theme .subtitle { color: #8A9A9E; }
+
+body.dark-theme .subtitle {
+    color: #8A9A9E;
+}
 
 .mouse-actions {
-    margin-bottom: 40px; color: #5A6A6E; font-size: 0.95em; line-height: 1.8;
+    margin-bottom: 30px;
+    color: #5A6A6E;
+    font-size: 0.9em;
+    line-height: 1.6;
 }
-body.dark-theme .mouse-actions { color: #8A9A9E; }
+
+body.dark-theme .mouse-actions {
+    color: #8A9A9E;
+}
 
 #start-btn {
-    padding: 15px 60px; font-size: 1.2em;
-    background: transparent; border: 2px solid #2C4A4E; border-radius: 6px;
-    color: #2C4A4E; cursor: pointer; letter-spacing: 4px;
-    font-family: 'LXGW WenKai', sans-serif; transition: all 0.3s;
+    padding: 12px 40px;
+    font-size: 1.1em;
+    background: transparent;
+    border: 2px solid #2C4A4E;
+    border-radius: 6px;
+    color: #2C4A4E;
+    cursor: pointer;
+    letter-spacing: 4px;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.3s;
 }
-body.dark-theme #start-btn { border-color: #C8E0E4; color: #C8E0E4; }
+
+body.dark-theme #start-btn {
+    border-color: #C8E0E4;
+    color: #C8E0E4;
+}
 
 #start-btn:hover {
-    background: #2C4A4E; color: #F4F9F4;
+    background: #2C4A4E;
+    color: #F4F9F4;
     box-shadow: 0 4px 15px rgba(44, 74, 78, 0.2);
 }
-body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }
+
+body.dark-theme #start-btn:hover {
+    background: #C8E0E4;
+    color: #1A2629;
+}
+
+/* 右侧存档区 */
+.start-right h3 {
+    font-size: 1.2em;
+    color: #2C4A4E;
+    margin-bottom: 15px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .start-right h3 {
+    color: #C8E0E4;
+}
+
+.save-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.save-slot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid #C5D5C0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9em;
+    color: #3A4A4E;
+}
+
+.save-slot:hover {
+    background: #E8F4F5;
+    border-color: #2C4A4E;
+    transform: translateX(3px);
+}
+
+.save-slot.empty {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.save-slot .slot-index {
+    font-weight: bold;
+    color: #2C4A4E;
+    font-family: 'Consolas', monospace;
+}
+
+.save-slot .slot-info {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 0.85em;
+    color: #6A8A8E;
+}
+
+body.dark-theme .save-slot {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #3A4A4E;
+    color: #A0B0B4;
+}
+
+body.dark-theme .save-slot:hover {
+    background: #3A5A5E;
+    border-color: #C8E0E4;
+}
+
+body.dark-theme .save-slot .slot-index {
+    color: #C8E0E4;
+}
+
+.slot-hint {
+    text-align: center;
+    font-size: 0.8em;
+    color: #8A9A9E;
+    margin-top: 10px;
+}
+
+
+/* =========================================
+   3. Toast 提示与操作菜单
+   ========================================= */
+#toast-container {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+#toast-container.hidden {
+    display: none;
+}
+
+.toast {
+    padding: 10px 25px;
+    background: rgba(44, 74, 78, 0.9);
+    color: #F4F9F4;
+    border-radius: 6px;
+    font-size: 0.95em;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: toast-in 0.3s ease;
+}
+
+.toast.error {
+    background: rgba(139, 58, 58, 0.9);
+}
+
+body.dark-theme .toast {
+    background: rgba(200, 224, 228, 0.9);
+    color: #1A2629;
+}
+
+body.dark-theme .toast.error {
+    background: rgba(208, 128, 128, 0.9);
+    color: #1A2629;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#slot-action-menu {
+    position: fixed;
+    z-index: 250;
+    background: #F4F9F4;
+    border: 1px solid #C5D5C0;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#slot-action-menu.hidden {
+    display: none;
+}
+
+body.dark-theme #slot-action-menu {
+    background: #1A2629;
+    border-color: #3A4A4E;
+}
+
+.slot-action-btn {
+    padding: 8px 15px;
+    border: none;
+    background: transparent;
+    color: #2C4A4E;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: 'LXGW WenKai', sans-serif;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.slot-action-btn:hover {
+    background: rgba(44, 74, 78, 0.1);
+}
+
+body.dark-theme .slot-action-btn {
+    color: #C8E0E4;
+}
+
+body.dark-theme .slot-action-btn:hover {
+    background: rgba(200, 224, 228, 0.1);
+}
+
 /* =========================================
    Esc 暂停菜单
    ========================================= */
 #esc-menu {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 200;
     background: rgba(40, 46, 46, 0.517);
     backdrop-filter: blur(6px);
@@ -224,11 +551,13 @@ body.dark-theme #start-btn:hover { background: #C8E0E4; color: #1A2629; }
     border-color: #C07070 !important;
     color: #8B3A3A;
 }
+
 .esc-btn.danger kbd {
     background: rgba(192, 112, 112, 0.1);
     border-color: #C07070;
     color: #8B3A3A;
 }
+
 .esc-btn.danger:hover {
     background: rgba(139, 58, 58, 0.08);
     border-color: #8B3A3A !important;
@@ -239,24 +568,29 @@ body.dark-theme .esc-btn {
     color: #C8E0E4;
     border-color: #3A4A4E !important;
 }
+
 body.dark-theme .esc-btn kbd {
     background: rgba(200, 224, 228, 0.08);
     border-color: #3A4A4E;
     color: #8A9A9E;
 }
+
 body.dark-theme .esc-btn:hover {
     background: rgba(200, 224, 228, 0.05);
     border-color: #C8E0E4 !important;
 }
+
 body.dark-theme .esc-btn.danger {
     border-color: #7A4A4A !important;
     color: #D08080;
 }
+
 body.dark-theme .esc-btn.danger kbd {
     background: rgba(208, 128, 128, 0.1);
     border-color: #7A4A4A;
     color: #D08080;
 }
+
 body.dark-theme .esc-btn.danger:hover {
     background: rgba(208, 128, 128, 0.08);
     border-color: #D08080 !important;
