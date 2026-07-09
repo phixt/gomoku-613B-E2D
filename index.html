@@ -55,7 +55,7 @@
             </div>
         </div>
     </div>
-     <!-- 2. 指南页 (Guide Screen - 默认隐藏) -->
+    <!-- 2. 指南页 (Guide Screen - 默认隐藏) -->
     <div id="guide-screen" class="hidden">
         <div class="start-layout">
             <!-- 左侧：键盘布局 + 文字说明 -->
@@ -114,7 +114,8 @@
                     <p>🖱️ 鼠标点击：当前层落子</p>
                     <p>🖱️ 鼠标滚轮：旋转3D视角</p>
                 </div>
-                <button id="start-btn">START GAME</button>
+                <button id="guide-start-btn" class="primary-btn">开始游戏</button>
+                <button id="guide-back-btn" class="secondary-btn">返回标题</button>
             </div>
             <!-- 右侧：留白或装饰 -->
             <div class="start-right decorative-area">
@@ -124,16 +125,14 @@
             </div>
         </div>
     </div>
-    <!-- 2. 全局 Toast 提示 -->
+    <!-- 3. 全局 Toast 提示 -->
     <div id="toast-container" class="hidden"></div>
 
-    <!-- 3. 存档操作菜单 (点击槽位弹出) -->
+    <!-- 4. 存档操作菜单 (点击槽位弹出) -->
     <div id="slot-action-menu" class="hidden">
         <button id="slot-btn-enter" class="slot-action-btn">进入</button>
         <button id="slot-btn-overwrite" class="slot-action-btn">覆盖</button>
         <button id="slot-btn-paste" class="slot-action-btn">手动填充</button>
-    </div>
-    </div>
     </div>
 </body>
 

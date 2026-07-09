@@ -26,6 +26,10 @@ function main(): void {
   let isEscMenuOpen = false;
   const startScreen = document.getElementById("start-screen");
   const startBtn = document.getElementById("start-btn");
+  const guideBtn = document.getElementById("guide-btn");
+  const guideScreen = document.getElementById("guide-screen");
+  const guideBackBtn = document.getElementById("guide-back-btn");
+  const guideStartBtn = document.getElementById("guide-start-btn");
 
   const leftPanel = new LeftPanel(leftEl, currentTheme);
   const rightPanel = new RightPanel(rightEl, currentTheme);
@@ -302,6 +306,20 @@ function main(): void {
 
   if (startBtn) startBtn.addEventListener("click", startGame);
 
+  const showGuide = () => {
+    startScreen?.classList.add("hidden");
+    guideScreen?.classList.remove("hidden");
+  };
+  const backToStart = () => {
+    guideScreen?.classList.add("hidden");
+    startScreen?.classList.remove("hidden");
+  };
+
+  guideBtn?.addEventListener("click", showGuide);
+  guideBackBtn?.addEventListener("click", backToStart);
+  if (guideStartBtn) {
+    guideStartBtn.addEventListener("click", startGame);
+  }
 
   escResume?.addEventListener("click", closeEscMenu);
   escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
