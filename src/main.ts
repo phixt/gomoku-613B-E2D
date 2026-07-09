@@ -6,32 +6,38 @@ import { RightPanel } from "./views/RightPanel";
 import { LAYER_COUNT, PANEL_RATIO } from "./core/Config";
 import { eventBus, Events } from "./core/EventBus";
 
+const AppState = {
+    TITLE: "TITLE",
+    GUIDE_FROM_TITLE: "GUIDE_FROM_TITLE",
+    PLAYING: "PLAYING",
+    PAUSED: "PAUSED",
+    GUIDE_FROM_GAME: "GUIDE_FROM_GAME"
+} as const;
+type AppState = typeof AppState[keyof typeof AppState];
+
 function main(): void {
   const leftEl = document.getElementById("left-panel");
   const rightEl = document.getElementById("right-panel");
   if (!leftEl || !rightEl) throw new Error("Missing #left-panel or #right-panel element");
 
 
+  let appState: AppState = AppState.TITLE;
   let currentTheme: Theme = LIGHT_THEME;
   document.body.classList.remove("dark-theme");
 
-
-  let isGameStarted = false;
   const escMenu = document.getElementById("esc-menu");
   const escResume = document.getElementById("esc-resume");
   const escRestart = document.getElementById("esc-restart");
   const escSave = document.getElementById("esc-save");
   const escTitle = document.getElementById("esc-title");
-  let isEscMenuOpen = false;
   const startScreen = document.getElementById("start-screen");
   const startBtn = document.getElementById("start-btn");
   const guideBtn = document.getElementById("guide-btn");
   const guideScreen = document.getElementById("guide-screen");
-  const guideBackBtn = document.getElementById("guide-back-btn");
-  const guideStartBtn = document.getElementById("guide-start-btn");
 
   const leftPanel = new LeftPanel(leftEl, currentTheme);
   const rightPanel = new RightPanel(rightEl, currentTheme);
+  rightPanel.setGameActiveCallback(() => appState === AppState.PLAYING);
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
     leftPanel.renderAllPieces(board, z);
@@ -65,8 +71,10 @@ function main(): void {
    * Start the game: hide start screen, enable keyboard input.
    */
   const startGame = (): void => {
-    if (isGameStarted) return;
-    isGameStarted = true;
+    if (appState === AppState.PLAYING) return;
+    hideAllOverlays();
+    appState = AppState.PLAYING;
+    rightPanel.setGameActiveCallback(() => appState === AppState.PLAYING);
     if (startScreen) {
       startScreen.classList.add("fade-out");
       setTimeout(() => { startScreen.style.display = "none"; }, 500);
@@ -85,12 +93,12 @@ function main(): void {
   };
 
   const openEscMenu = (): void => {
-    isEscMenuOpen = true;
+    appState = AppState.PAUSED;
     if (escMenu) escMenu.classList.remove("hidden");
   };
 
   const closeEscMenu = (): void => {
-    isEscMenuOpen = false;
+    appState = AppState.PLAYING;
     if (escMenu) escMenu.classList.add("hidden");
   };
 
@@ -164,11 +172,12 @@ function main(): void {
     focusZ = 0;
     rightPanel.resetGame();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
-    isGameStarted = false;
-    closeEscMenu();
+    appState = AppState.TITLE;
+    hideAllOverlays();
+    startScreen?.classList.remove("hidden");
+    startScreen?.classList.remove("fade-out");
     if (startScreen) {
       startScreen.style.display = "";
-      startScreen.classList.remove("fade-out");
     }
   };
 
@@ -305,25 +314,83 @@ function main(): void {
 
   if (startBtn) startBtn.addEventListener("click", startGame);
 
-  const showGuide = () => {
+  // ===== Guide Screen State Machine =====
+  const guideBtnPrimary = document.getElementById("guide-btn-primary");
+  const guideBtnSecondary = document.getElementById("guide-btn-secondary");
+  const escGuideBtn = document.getElementById("esc-guide");
+
+  const hideAllOverlays = (): void => {
     startScreen?.classList.add("hidden");
-    guideScreen?.classList.remove("hidden");
-  };
-  const backToStart = () => {
     guideScreen?.classList.add("hidden");
-    startScreen?.classList.remove("hidden");
+    escMenu?.classList.add("hidden");
   };
 
-  guideBtn?.addEventListener("click", showGuide);
-  guideBackBtn?.addEventListener("click", backToStart);
-  if (guideStartBtn) {
-    guideStartBtn.addEventListener("click", startGame);
-  }
+  const backToTitle = (): void => {
+    rightPanel.board.reset();
+    focusZ = 0;
+    hideAllOverlays();
+    startScreen?.classList.remove("hidden");
+    appState = AppState.TITLE;
+    rightPanel.refresh();
+    leftPanel.renderAllPieces(rightPanel.board, focusZ);
+    rightPanel.setGameActiveCallback(() => appState === AppState.PLAYING);
+  };
+
+  const backToGame = (): void => {
+    hideAllOverlays();
+  };
+
+  const updateGuideButtons = (): void => {
+    if (!guideBtnPrimary || !guideBtnSecondary) return;
+    const oldP = guideBtnPrimary;
+    const oldS = guideBtnSecondary;
+    const newP = oldP.cloneNode(true) as HTMLElement;
+    const newS = oldS.cloneNode(true) as HTMLElement;
+    oldP.replaceWith(newP);
+    oldS.replaceWith(newS);
+    const btnP = document.getElementById("guide-btn-primary");
+    const btnS = document.getElementById("guide-btn-secondary");
+    if (appState === AppState.GUIDE_FROM_TITLE) {
+      if (btnP) { btnP.textContent = "开始游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); startGame(); }); }
+      if (btnS) { btnS.textContent = "返回标题"; btnS.addEventListener("click", backToTitle); }
+    } else {
+      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); confirmRestart(); }); }
+      if (btnS) { btnS.textContent = "回到游戏"; btnS.addEventListener("click", backToGame); }
+    }
+  };
+
+  guideBtn?.addEventListener("click", () => {
+    appState = AppState.GUIDE_FROM_TITLE;
+    hideAllOverlays();
+    guideScreen?.classList.remove("hidden");
+    updateGuideButtons();
+  });
+
+  escGuideBtn?.addEventListener("click", () => {
+    appState = AppState.GUIDE_FROM_GAME;
+    hideAllOverlays();
+    guideScreen?.classList.remove("hidden");
+    updateGuideButtons();
+  });
 
   escResume?.addEventListener("click", closeEscMenu);
   escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
   escSave?.addEventListener("click", () => { closeEscMenu(); saveGame(); });
   escTitle?.addEventListener("click", () => { closeEscMenu(); returnToTitle(); });
+  const escLoad = document.getElementById("esc-load");
+  escLoad?.addEventListener("click", () => {
+    closeEscMenu();
+    let lastIndex = -1;
+    for (let i = saveSlots.length - 1; i >= 0; i--) {
+      if (saveSlots[i] !== null) { lastIndex = i; break; }
+    }
+    if (lastIndex >= 0 && saveSlots[lastIndex]) {
+      loadGame(saveSlots[lastIndex]!);
+      showToast("已读取存档 " + (lastIndex + 1));
+    } else {
+      showToast("没有可读取的存档", true);
+    }
+  });
 
     // ===== Slot Action Menu Listeners =====
   document.getElementById("slot-btn-enter")?.addEventListener("click", () => {
@@ -397,121 +464,93 @@ function main(): void {
       eventBus.emit(Events.THEME_CHANGED, isDark);
       return;
     }
-    if (!isGameStarted) {
-      if (e.code === "Space" || e.code === "Enter") {
-        e.preventDefault();
-        startGame();
-      }
-      return; // Block all other keys before game starts
-    }
 
-    // Unified modal interceptor 锟斤拷 priority: Esc menu > restart modal
-    if (isEscMenuOpen) {
-      switch (e.code) {
-        case "Escape": e.preventDefault(); closeEscMenu(); break;
-        case "KeyR": e.preventDefault(); closeEscMenu(); confirmRestart(); break;
-        case "KeyS": e.preventDefault(); closeEscMenu(); saveGame(); break;
-        case "KeyL": {
+    switch (appState) {
+      case AppState.TITLE:
+      case AppState.GUIDE_FROM_TITLE:
+        if (e.code === "Space" || e.code === "Enter") {
           e.preventDefault();
-          closeEscMenu();
-          // Find last non-null index
-          let lastIndex = -1;
-          for (let i = saveSlots.length - 1; i >= 0; i--) {
-            if (saveSlots[i] !== null) { lastIndex = i; break; }
-          }
-          if (lastIndex >= 0 && saveSlots[lastIndex]) {
-            loadGame(saveSlots[lastIndex]!);
-            showToast("已读取存档 " + (lastIndex + 1));
-          } else {
-            showToast("没有可读取的存档", true);
-          }
-          break;
+          startGame();
+          return;
         }
-        case "KeyB": e.preventDefault(); closeEscMenu(); returnToTitle(); break;
+        break;
+
+      case AppState.GUIDE_FROM_GAME:
+      case AppState.PAUSED: {
+        e.preventDefault();
+        e.stopPropagation();
+        switch (e.code) {
+          case "Escape":
+            if (appState === AppState.GUIDE_FROM_GAME) {
+              appState = AppState.PLAYING;
+              guideScreen?.classList.add("hidden");
+            } else {
+              closeEscMenu();
+            }
+            break;
+          case "KeyR": closeEscMenu(); confirmRestart(); break;
+          case "KeyS": closeEscMenu(); saveGame(); break;
+          case "KeyL": {
+            closeEscMenu();
+            let lastIndex = -1;
+            for (let i = saveSlots.length - 1; i >= 0; i--) {
+              if (saveSlots[i] !== null) { lastIndex = i; break; }
+            }
+            if (lastIndex >= 0 && saveSlots[lastIndex]) {
+              loadGame(saveSlots[lastIndex]!);
+              showToast("已读取存档 " + (lastIndex + 1));
+            } else {
+              showToast("没有可读取的存档", true);
+            }
+            break;
+          }
+          case "KeyG":
+            closeEscMenu();
+            appState = AppState.GUIDE_FROM_GAME;
+            guideScreen?.classList.remove("hidden");
+            updateGuideButtons();
+            break;
+          case "KeyB": closeEscMenu(); returnToTitle(); break;
+        }
+        return;
       }
-      e.stopPropagation();
-      return;
-    }
 
-    switch (e.key) {
-    
-      case "a": case "A":
-        e.preventDefault();
-        focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
-        eventBus.emit(Events.LAYER_CHANGED, focusZ);
-        leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        break;
-
-      case "d": case "D":
-        e.preventDefault();
-        focusZ = (focusZ + 1) % LAYER_COUNT;
-        eventBus.emit(Events.LAYER_CHANGED, focusZ);
-        leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        break;
-
-    
-      case "q": case "Q":
-        e.preventDefault();
-        leftPanel.rotateY(1);
-        break;
-      case "e": case "E":
-        e.preventDefault();
-        leftPanel.rotateY(-1);
-        break;
-
-      case "f": case "F":
-        e.preventDefault();
-        rightPanel.toggleMirror();
-        break;
-
-    
-      case "w": case "W":
-        e.preventDefault();
-        leftPanel.zoom(1);
-        break;
-      case "s": case "S":
-        e.preventDefault();
-        leftPanel.zoom(-1);
-        break;
-
-
-      case "z": case "Z":
-        e.preventDefault();
-        console.log("KeyZ pressed");
-        leftPanel.adjustLayerSpacing(-0.5);
-        break;
-      case "c": case "C":
-        e.preventDefault();
-        console.log("KeyC pressed");
-        leftPanel.adjustLayerSpacing(0.5);
-        break;
-
-
-
-    
-      case "r": case "R":
-        if (!isGameStarted) return;
-        e.preventDefault();
-        openEscMenu();
-        break;
-
-      case "Escape":
-        if (!isGameStarted) return;
-        e.preventDefault();
-        openEscMenu();
-        break;
-
-      case "x": case "X":
-        if (!isGameStarted) return;
-        e.preventDefault();
-        leftPanel.toggleLayerSpacing();
-        break;
-
-      case "h": case "H":
-        e.preventDefault();
-        {
-          const mode = rightPanel.cycleAuxMode();
-          leftPanel.setAuxMode(mode);
+      case AppState.PLAYING:
+        switch (e.key) {
+          case "a": case "A":
+            e.preventDefault();
+            focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
+            eventBus.emit(Events.LAYER_CHANGED, focusZ);
+            leftPanel.renderAllPieces(rightPanel.board, focusZ);
+            break;
+          case "d": case "D":
+            e.preventDefault();
+            focusZ = (focusZ + 1) % LAYER_COUNT;
+            eventBus.emit(Events.LAYER_CHANGED, focusZ);
+            leftPanel.renderAllPieces(rightPanel.board, focusZ);
+            break;
+          case "q": case "Q": e.preventDefault(); leftPanel.rotateY(1); break;
+          case "e": case "E": e.preventDefault(); leftPanel.rotateY(-1); break;
+          case "f": case "F": e.preventDefault(); rightPanel.toggleMirror(); break;
+          case "w": case "W": e.preventDefault(); leftPanel.zoom(1); break;
+          case "s": case "S": e.preventDefault(); leftPanel.zoom(-1); break;
+          case "z": case "Z":
+            e.preventDefault();
+            console.log("KeyZ pressed");
+            leftPanel.adjustLayerSpacing(-0.5);
+            break;
+          case "c": case "C":
+            e.preventDefault();
+            console.log("KeyC pressed");
+            leftPanel.adjustLayerSpacing(0.5);
+            break;
+          case "r": case "R": e.preventDefault(); openEscMenu(); break;
+          case "Escape": e.preventDefault(); openEscMenu(); break;
+          case "x": case "X": e.preventDefault(); leftPanel.toggleLayerSpacing(); break;
+          case "h": case "H":
+            e.preventDefault();
+            { const mode = rightPanel.cycleAuxMode(); leftPanel.setAuxMode(mode); }
+            break;
         }
         break;
     }
@@ -519,7 +558,7 @@ function main(): void {
 
 
   leftEl.addEventListener("wheel", (e: WheelEvent) => {
-    if (!isGameStarted) return;
+    if (appState !== AppState.PLAYING) return;
     e.preventDefault();
     leftPanel.rotateY(e.deltaY > 0 ? 1 : -1);
   });

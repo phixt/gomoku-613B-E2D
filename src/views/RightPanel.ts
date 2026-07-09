@@ -96,6 +96,7 @@ export class RightPanel {
   private hoverX: number = -1;
   private hoverY: number = -1;
   private _hoverWorldPos: THREE.Vector3 | null = null;
+  private isGameActive: () => boolean = () => true;
   private isMirrored: boolean = true;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
@@ -486,6 +487,7 @@ export class RightPanel {
 
 
   private handleClick = (): void => {
+    if (!this.isGameActive()) return;
     if (!this.hoverValid) return;
     const gx = this.hoverX, gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
@@ -561,6 +563,10 @@ export class RightPanel {
 
   setAuxMode(mode: AuxMode): void {
     this.auxMode = mode;
+  }
+
+  public setGameActiveCallback(cb: () => boolean): void {
+    this.isGameActive = cb;
   }
 
   public toggleMirror(): void {
