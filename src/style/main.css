@@ -954,3 +954,28 @@ body.dark-theme .btn-secondary:hover { background: rgba(200, 224, 228, 0.1); }
 
 /* 确保 .hidden 类具有最高优先级的隐藏效果 */
 .hidden { display: none !important; }
+
+/* 快速存档槽位的视觉分隔 */
+.save-slot.quick-save {
+    margin-top: 15px;
+    border-top: 2px dashed #C5D5C0;
+    padding-top: 15px;
+}
+
+body.dark-theme .save-slot.quick-save {
+    border-top-color: #3A4A4E;
+}
+
+.save-slot.quick-save::before {
+    content: "快速存档";
+    display: block;
+    text-align: center;
+    font-size: 0.8em;
+    color: #6A8A8E;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .save-slot.quick-save::before {
+    color: #8A9A9E;
+}
