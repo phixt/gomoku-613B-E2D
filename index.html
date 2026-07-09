@@ -10,13 +10,18 @@
 </head>
 
 <body class="light-theme">
-    <!-- 游戏主界面（绝对不要动这里的结构） -->
+    <!-- ======================================================
+    游戏主界面（绝对不要动这里的结构）
+    ====================================================== -->
     <div id="app">
         <div id="left-panel" class="panel"></div>
         <div id="right-panel" class="panel"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
-    <!-- Esc 暂停菜单 -->
+
+    <!-- ======================================================
+    Esc 暂停菜单（保持原样）
+    ====================================================== -->
     <div id="esc-menu" class="hidden">
         <div class="modal-content esc-modal">
             <h2>暂停</h2>
@@ -30,22 +35,28 @@
             </div>
         </div>
     </div>
-    <!-- 1. 首页 (Start Screen) -->
+
+    <!-- ======================================================
+    1. 首页 (Start Screen) —— 已修改布局
+    ====================================================== -->
     <div id="start-screen">
         <div class="start-layout split-layout">
-            <!-- 左侧：标题与品牌区 -->
+            <!-- 左侧：标题 + 品牌区 + 按钮（沉底） -->
             <div class="start-left brand-area">
                 <h1>GOMOKU 613B-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
-                <div class="version-badge">v0.4.0-beta</div> <!-- 预留样式位置 -->
-            </div>
-            <!-- 右侧：操作与存档区 -->
-            <div class="start-right action-area">
+                <div class="version-badge">v0.4.0-beta</div>
+
+                <!-- ▼ 改动：按钮组从右栏移到这里，放在左栏底部 -->
                 <div class="action-buttons">
                     <button id="start-btn" class="primary-btn">开始游戏</button>
                     <button id="guide-btn" class="secondary-btn">快捷键说明</button>
                 </div>
+                <!-- ▲ 改动结束 -->
+            </div>
 
+            <!-- 右侧：存档槽位（保持不变） -->
+            <div class="start-right action-area">
                 <div class="save-area">
                     <h3>存档槽位</h3>
                     <div id="save-slots-list" class="save-slots-list">
@@ -56,10 +67,13 @@
             </div>
         </div>
     </div>
-    <!-- 2. 指南页 (Guide Screen - 默认隐藏) -->
+
+    <!-- ======================================================
+    2. 指南页 (Guide Screen) —— 已重构布局
+    ====================================================== -->
     <div id="guide-screen" class="hidden">
         <div class="start-layout">
-            <!-- 左侧：键盘布局 + 文字说明 -->
+            <!-- 左栏：键盘模拟（放大，居中偏下）+ 键位说明 -->
             <div class="start-left">
                 <div class="keyboard-sim">
                     <!-- 第一行：Q W E R T -->
@@ -67,29 +81,27 @@
                         <div class="key active">Q</div>
                         <div class="key active">W</div>
                         <div class="key active">E</div>
-                        <div class="key active">R</div> <!-- 修正：R 是有功能的，改为绿色 -->
+                        <div class="key active">R</div>
                         <div class="key active">T</div>
-                        <div class="key-spacer"></div> <!-- 隐形占位，让 QWE 偏左 -->
+                        <div class="key-spacer"></div>
                         <div class="key-spacer"></div>
                     </div>
-
                     <!-- 第二行：A S D F G H -->
                     <div class="kb-row">
                         <div class="key active">A</div>
-                        <div class="key active">S</div> <!-- 修正：S 是有功能的，改为绿色 -->
+                        <div class="key active">S</div>
                         <div class="key active">D</div>
                         <div class="key active">F</div>
                         <div class="key">G</div>
                         <div class="key active">H</div>
                     </div>
-
                     <!-- 第三行：Z X C V B -->
                     <div class="kb-row">
                         <div class="key active">Z</div>
                         <div class="key active">X</div>
                         <div class="key active">C</div>
-                        <div class="key">V</div> <!-- 填充无功能键，让 ZXC 偏左 -->
-                        <div class="key">B</div> <!-- 填充无功能键 -->
+                        <div class="key">V</div>
+                        <div class="key">B</div>
                     </div>
                 </div>
 
@@ -105,42 +117,43 @@
                 </div>
             </div>
 
-            <!-- 中间：标题、鼠标说明、开始按钮 -->
+            <!-- 右栏：标题（上下居中）+ 鼠标提示 + 按钮 -->
             <div class="start-right">
                 <h1>GOMOKU 613B-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
 
+                <!-- ▼ 改动：鼠标提示放在标题下方，居中偏右 -->
                 <div class="mouse-actions">
                     <p>🖱️ 鼠标悬停：查看辅助线</p>
                     <p>🖱️ 鼠标点击：当前层落子</p>
                     <p>🖱️ 鼠标滚轮：旋转3D视角</p>
                 </div>
-                <button id="guide-btn-primary" class="primary-btn">开始游戏</button>
-                <button id="guide-btn-secondary" class="secondary-btn">返回标题</button>
-            </div>
-            <!-- 右侧：留白或装饰 -->
-            <div class="start-right decorative-area">
-                <div class="tactical-hint">
-                    <p>提示：游戏开始后，按 <kbd>S</kbd> 拉近视角以查看完整棋盘。</p>
+                <!-- ▲ 改动结束 -->
+
+                <!-- ▼ 改动：按钮组放在右栏底部 -->
+                <div class="guide-actions">
+                    <button id="guide-btn-primary" class="primary-btn">开始游戏</button>
+                    <button id="guide-btn-secondary" class="secondary-btn">返回标题</button>
                 </div>
+                <!-- ▲ 改动结束 -->
             </div>
+
+            <!-- ▼ 改动：底部提示 — 左对齐，单行，不跨行 -->
+            <div class="guide-bottom-tip">
+                💡 提示：游戏开始后，按 <kbd>S</kbd> 拉近视角
+            </div>
+            <!-- ▲ 改动结束 -->
         </div>
     </div>
-    <!-- 3. 全局 Toast 提示 -->
+
+    <!-- ======================================================
+    3. 全局 Toast 提示（保持原样）
+    ====================================================== -->
     <div id="toast-container" class="hidden"></div>
 
-    <!-- 4. 存档操作菜单 (点击槽位弹出) -->
-    <div id="slot-action-menu" class="hidden">
-        <!-- 按钮由 OverlayManager 动态生成 -->
-    </div>
-    <!-- =========================================
-         静态 UI 层：槽位菜单、确认框、全局遮罩
-         ========================================= -->
-
-    <!-- 全局遮罩层 (用于点击外部关闭所有弹窗，z-index 最低) -->
-    <div id="global-backdrop" class="hidden"></div>
-
-    <!-- 槽位操作菜单 (静态预置所有按钮，JS 只负责显隐) -->
+    <!-- ======================================================
+    4. 槽位操作菜单（保持原样）
+    ====================================================== -->
     <div id="slot-action-menu" class="hidden context-menu">
         <button id="btn-slot-read" class="menu-btn">读取</button>
         <button id="btn-slot-overwrite" class="menu-btn">覆盖</button>
@@ -150,7 +163,9 @@
         <button id="btn-slot-cancel" class="menu-btn">取消</button>
     </div>
 
-    <!-- 确认对话框 (静态预置，JS 只负责改字和绑定 onclick) -->
+    <!-- ======================================================
+    5. 确认对话框（保持原样）
+    ====================================================== -->
     <div id="confirm-dialog" class="hidden modal-overlay">
         <div class="modal-content">
             <h3 id="confirm-title">确认操作</h3>
@@ -161,6 +176,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 全局遮罩（保持原样） -->
+    <div id="global-backdrop" class="hidden"></div>
 </body>
 
 </html>

@@ -327,89 +327,7 @@ body.dark-theme .save-slot .slot-index {
     margin-top: 10px;
 }
 
-/* 指南页：三栏布局 (复用之前的键盘和说明样式，此处省略重复代码，请保留之前的 .keyboard-sim, .key-desc-grid 等样式) */
-.start-center {
-    flex: 1;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-right: 1px dashed #C5D5C0;
-}
-
-body.dark-theme .start-center {
-    border-right-color: #3A4A4E;
-}
-
-.mouse-area h3 {
-    font-size: 1.5em;
-    color: #2C4A4E;
-    margin-bottom: 30px;
-    letter-spacing: 2px;
-}
-
-body.dark-theme .mouse-area h3 {
-    color: #C8E0E4;
-}
-
-.mouse-actions p {
-    font-size: 1.1em;
-    color: #3A4A4E;
-    margin-bottom: 20px;
-    line-height: 1.6;
-}
-
-.mouse-actions strong {
-    color: #2C4A4E;
-}
-
-body.dark-theme .mouse-actions p {
-    color: #A0B0B4;
-}
-
-body.dark-theme .mouse-actions strong {
-    color: #C8E0E4;
-}
-
-.decorative-area {
-    flex: 0.8;
-    padding: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-}
-
-.tactical-hint {
-    background: rgba(44, 74, 78, 0.05);
-    border: 1px dashed #C5D5C0;
-    padding: 20px;
-    border-radius: 8px;
-    font-size: 0.9em;
-    color: #5A6A6E;
-    text-align: center;
-    max-width: 200px;
-}
-
-body.dark-theme .tactical-hint {
-    background: rgba(200, 224, 228, 0.05);
-    border-color: #3A4A4E;
-    color: #8A9A9E;
-}
-
-.tactical-hint kbd {
-    background: rgba(44, 74, 78, 0.1);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'Consolas', monospace;
-    color: #2C4A4E;
-}
-
-body.dark-theme .tactical-hint kbd {
-    background: rgba(200, 224, 228, 0.1);
-    color: #C8E0E4;
-}
+/* 指南页：新版，已迁移到末尾 */
 
 /* 键盘模拟 */
 .keyboard-sim {
@@ -978,4 +896,175 @@ body.dark-theme .save-slot.quick-save {
 
 body.dark-theme .save-slot.quick-save::before {
     color: #8A9A9E;
+}
+
+/* =========================================
+   开始页与指南页布局调整（覆盖及新增）
+   ========================================= */
+/* 开始页左栏：标题靠上，按钮在剩余空间居中并上移 */
+#start-screen .start-left.brand-area {
+    justify-content: flex-start;
+    align-items: center;
+    padding: 1rem 0 2rem 0;
+    text-align: center;
+}
+
+#start-screen .action-buttons {
+    margin-top: auto;
+    margin-bottom: auto;
+    align-self: center;
+    transform: translateY(-20%);
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#start-screen .action-buttons .primary-btn,
+#start-screen .action-buttons .secondary-btn {
+    padding: 0.8rem 2.2rem;
+    font-size: 1.2rem;
+    border-radius: 6px; 
+    width: 200px;
+    text-align: center;
+}
+
+/* 指南页布局 */
+#guide-screen .start-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 2rem;
+    min-height: 70vh;
+    padding: 2rem 4rem;
+    position: relative;
+}
+
+#guide-screen .start-left {
+    flex: 1.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+#guide-screen .keyboard-sim {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 1.2rem auto;
+    transform: translateY(6%);
+}
+
+#guide-screen .key-desc-grid {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 1.2rem;
+    justify-items: start;
+}
+
+#guide-screen .start-right {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+#guide-screen .start-right h1 {
+    margin-bottom: 0.2rem;
+}
+#guide-screen .start-right .subtitle {
+    margin-bottom: 1.2rem;
+}
+
+#guide-screen .mouse-actions {
+    margin: 0.2rem 0 1.8rem 0;
+    padding-right: 1.5rem;
+    text-align: center;
+}
+#guide-screen .mouse-actions p {
+    margin: 0.2rem 0;
+}
+
+#guide-screen .guide-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#guide-screen .guide-bottom-tip {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 4rem;
+    right: 4rem;
+    text-align: left;
+    font-size: 0.95rem;
+    color: var(--text-secondary, #666);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#guide-screen .guide-bottom-tip kbd {
+    background: var(--bg-tertiary, #eee);
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* 暗色主题适配 */
+body.dark-theme #guide-screen .guide-bottom-tip {
+    color: var(--text-secondary-dark, #aaa);
+}
+body.dark-theme #guide-screen .guide-bottom-tip kbd {
+    background: var(--bg-tertiary-dark, #333);
+}
+
+/* 响应式 */
+@media (max-width: 820px) {
+    #start-screen .start-layout,
+    #guide-screen .start-layout {
+        flex-direction: column;
+        padding: 1.5rem;
+        min-height: auto;
+    }
+    #start-screen .start-left.brand-area {
+        justify-content: flex-start;
+    }
+    #start-screen .action-buttons {
+        transform: translateY(0);
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    #start-screen .action-buttons .primary-btn,
+    #start-screen .action-buttons .secondary-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+    }
+    #guide-screen .start-left {
+        order: 2;
+    }
+    #guide-screen .start-right {
+        order: 1;
+    }
+    #guide-screen .guide-bottom-tip {
+        position: static;
+        margin-top: 1.5rem;
+        white-space: normal;
+        text-align: left;
+        padding: 0 1rem;
+    }
+    #guide-screen .keyboard-sim {
+        transform: none;
+        max-width: 360px;
+    }
+    #guide-screen .mouse-actions {
+        padding-right: 0;
+    }
 }
