@@ -128,11 +128,17 @@ function main(): void {
     list.innerHTML = "";
     entries.forEach((entry, i) => {
       const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
+    entries.forEach((entry, i) => {
+      const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
       const div = document.createElement("div");
       div.className = "save-slot" + (data === null ? " empty" : "");
       div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
+      div.className = "save-slot" + (data === null ? " empty" : "");
+      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
-        overlayManager.showSlotMenu(i, e);
+        const t = e.currentTarget as HTMLElement;
+        const r = t.getBoundingClientRect();
+        overlayManager.showSlotMenu(i, r.right, r.top, saveManager.slots);
       });
       list.appendChild(div);
     });
@@ -141,6 +147,7 @@ function main(): void {
   eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SlotEntry>) => {
     renderSaveSlots(slots);
   });
+  renderSaveSlots(saveManager.slots);
   renderSaveSlots(saveManager.slots);
 
   const returnToTitle = (): void => {
@@ -272,6 +279,7 @@ function main(): void {
   const backToGame = (): void => {
     hideAllOverlays();
     gameStore.appState = AppState.PLAYING;
+    gameStore.appState = AppState.PLAYING;
   };
 
   const updateGuideButtons = (): void => {
@@ -288,6 +296,7 @@ function main(): void {
       if (btnP) { btnP.textContent = "开始游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); startGame(); }); }
       if (btnS) { btnS.textContent = "返回标题"; btnS.addEventListener("click", backToTitle); }
     } else {
+      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
       if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
       if (btnS) { btnS.textContent = "回到游戏"; btnS.addEventListener("click", backToGame); }
     }
