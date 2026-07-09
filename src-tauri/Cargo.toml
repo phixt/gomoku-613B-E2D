@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.3.2-beta.1"
+version = "0.4.0"
 description = "Gomoku game 6x6x13 with tauri"
 authors = ["phixt"]
 license = ""
