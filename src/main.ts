@@ -8,7 +8,7 @@ import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { saveManager } from "./core/SaveManager";
 import type { SaveData, SlotEntry } from "./core/SaveManager";
-import { overlayManager } from "./ui/OverlayManager";
+import { OverlayManager } from "./ui/OverlayManager";
 
 const AppState = {
     TITLE: "TITLE",
@@ -42,11 +42,20 @@ function main(): void {
   const leftPanel = new LeftPanel(leftEl, currentTheme);
   const rightPanel = new RightPanel(rightEl, currentTheme);
   rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
-  overlayManager.saveSlot = (index, data) => saveManager.save(index, data);
-  overlayManager.loadSlot = (index) => saveManager.load(index);
-  overlayManager.deleteSlot = (index) => saveManager.delete(index);
-  overlayManager.serializeGameState = () => serializeBoardState();
-  overlayManager.loadGameData = (data) => { loadGameFromData(data); };
+  var overlayManager = new OverlayManager({
+    onSave: function(index, data) {
+      saveManager.save(index, data);
+      overlayManager.showToast("已保存到存档 " + (index === 5 ? "快速档" : String(index + 1)));
+    },
+    onLoad: function(data) {
+      loadGameFromData(data);
+    },
+    onDelete: function(index) {
+      saveManager.delete(index);
+      overlayManager.showToast("已删除存档 " + (index + 1));
+    },
+    serializeState: function() { return serializeBoardState(); },
+  });
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
     leftPanel.renderAllPieces(board, z);
@@ -123,9 +132,7 @@ function main(): void {
       div.className = "save-slot" + (data === null ? " empty" : "");
       div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
-        const t = e.currentTarget as HTMLElement;
-        const r = t.getBoundingClientRect();
-        overlayManager.showSlotMenu(i, r.right, r.top, saveManager.slots);
+        overlayManager.showSlotMenu(i, e);
       });
       list.appendChild(div);
     });

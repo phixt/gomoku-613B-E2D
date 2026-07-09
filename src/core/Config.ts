@@ -5,5 +5,5 @@ export const MIN_LAYER_SPACING = 2.0;
 export const MAX_LAYER_SPACING = 6.0;
 export const PANEL_RATIO = 0.5;
 export const PIECE_RADIUS = 0.42;
-export const SAVE_SLOT_COUNT = 5;
-export const QUICK_SAVE_INDEX = 4;
+export const SAVE_SLOT_COUNT = 6;
+export const QUICK_SAVE_INDEX = 5;
