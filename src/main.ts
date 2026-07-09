@@ -7,7 +7,7 @@ import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./c
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { saveManager } from "./core/SaveManager";
-import type { SaveData, SlotEntry } from "./core/SaveManager";
+import type { SaveData } from "./core/SaveManager";
 import { OverlayManager } from "./ui/OverlayManager";
 
 const AppState = {
@@ -122,27 +122,32 @@ function main(): void {
   };
 
         // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
-    const renderSaveSlots = (entries: ReadonlyArray<SlotEntry>): void => {
+    const renderSaveSlots = (slots: ReadonlyArray<SaveData | null>): void => {
     const list = document.getElementById("save-slots-list");
-    if (!list) return;
+    if (!list) {
+      console.error("[renderSaveSlots] #save-slots-list NOT FOUND in DOM!");
+      return;
+    }
+    console.log("[renderSaveSlots] Called with", slots.length, "slots");
     list.innerHTML = "";
-    entries.forEach((entry, i) => {
-      const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
+    slots.forEach((data, i) => {
+      const isEmpty = data === null;
       const div = document.createElement("div");
-      div.className = "save-slot" + (data === null ? " empty" : "");
-      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
+      div.className = "save-slot" + (isEmpty ? " empty" : "");
+      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${isEmpty ? "空" : (`已存档 (${new Date(data!.timestamp).toLocaleTimeString()})`)}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
         overlayManager.showSlotMenu(i, e);
       });
       list.appendChild(div);
     });
+    console.log("[renderSaveSlots] Rendering complete");
   };
 
-  eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SlotEntry>) => {
+  eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SaveData | null>) => {
+    console.log("[main.ts] SAVE_UPDATED event received, slots:", slots.length, "items");
     renderSaveSlots(slots);
   });
-  renderSaveSlots(saveManager.slots);
-  renderSaveSlots(saveManager.slots);
+  renderSaveSlots(saveManager.getSlots());
 
   const returnToTitle = (): void => {
     rightPanel.board.reset();

@@ -1,4 +1,6 @@
-﻿export interface SaveData {
+﻿import { eventBus, Events } from "./EventBus";
+
+export interface SaveData {
     version: string;
     timestamp: number;
     boardSize: number;
@@ -100,6 +102,7 @@ class SaveManager {
 
     private persist(): void {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(this._slots));
+        eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
     }
 
     static serializeToBase64(data: SaveData): string {
