@@ -741,7 +741,7 @@ body.dark-theme .slot-action-btn:hover {
     padding: 2px 8px;
     font-size: 0.75em;
     font-family: 'Consolas', monospace;
-    color: #ebeeef;
+    color: #608491;
 }
 
 .esc-btn:hover {
@@ -883,3 +883,74 @@ body.dark-theme .save-slot .slot-index { color: #C8E0E4; }
     color: #8A9A9E;
     margin-top: 10px;
 }
+
+/* =========================================
+   静态 UI 层样式 (批次二)
+   ========================================= */
+
+/* 全局遮罩 (点击外部关闭) */
+#global-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 200; background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+}
+
+/* 槽位菜单 */
+.context-menu {
+    position: fixed; z-index: 210;
+    background: #F4F9F4; border: 1px solid #C5D5C0;
+    border-radius: 8px; padding: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; gap: 4px; min-width: 140px;
+}
+body.dark-theme .context-menu { background: #1A2629; border-color: #3A4A4E; }
+
+.menu-btn {
+    padding: 8px 15px; border: none; background: transparent;
+    color: #2C4A4E; cursor: pointer; border-radius: 4px;
+    font-family: 'LXGW WenKai', sans-serif; text-align: left; font-size: 0.95em;
+    transition: background 0.2s;
+}
+.menu-btn:hover { background: rgba(44, 74, 78, 0.1); }
+.menu-btn.danger { color: #8B3A3A; }
+.menu-btn.danger:hover { background: rgba(139, 58, 58, 0.1); }
+body.dark-theme .menu-btn { color: #C8E0E4; }
+body.dark-theme .menu-btn:hover { background: rgba(200, 224, 228, 0.1); }
+body.dark-theme .menu-btn.danger { color: #D08080; }
+body.dark-theme .menu-btn.danger:hover { background: rgba(208, 128, 128, 0.1); }
+
+/* 确认对话框 */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 220; display: flex; justify-content: center; align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+}
+.modal-content {
+    background: #F4F9F4; border: 1px solid #C5D5C0;
+    border-radius: 8px; padding: 30px 40px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 300px;
+}
+body.dark-theme .modal-content { background: #1A2629; border-color: #3A4A4E; }
+.modal-content h3 { font-size: 1.4em; color: #2C4A4E; margin-bottom: 15px; font-weight: normal; }
+body.dark-theme .modal-content h3 { color: #C8E0E4; }
+.modal-content p { font-size: 0.95em; color: #6A8A8E; margin-bottom: 25px; }
+body.dark-theme .modal-content p { color: #8A9A9E; }
+.modal-actions { display: flex; gap: 15px; justify-content: center; }
+
+.btn-danger {
+    padding: 8px 25px; background: #8B3A3A; color: #F4F9F4;
+    border: none; border-radius: 4px; cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif; transition: background 0.2s;
+}
+.btn-danger:hover { background: #6B2A2A; }
+
+.btn-secondary {
+    padding: 8px 25px; background: transparent; color: #2C4A4E;
+    border: 1px solid #C5D5C0; border-radius: 4px; cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif; transition: all 0.2s;
+}
+.btn-secondary:hover { background: rgba(44, 74, 78, 0.1); }
+body.dark-theme .btn-secondary { color: #C8E0E4; border-color: #3A4A4E; }
+body.dark-theme .btn-secondary:hover { background: rgba(200, 224, 228, 0.1); }
+
+/* 确保 .hidden 类具有最高优先级的隐藏效果 */
+.hidden { display: none !important; }
