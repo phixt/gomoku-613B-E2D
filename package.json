@@ -1,7 +1,7 @@
 {
   "name": "gomoku-613b-e2d",
   "private": true,
-  "version": "0.4.1-b.1",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,10 +11,11 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.1",
     "@types/three": "^0.185.0",
     "@types/tween.js": "^18.5.1",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.4"
   },
   "dependencies": {
     "@tauri-apps/plugin-store": "^2.4.3",

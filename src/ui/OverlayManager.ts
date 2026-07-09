@@ -1,4 +1,3 @@
-import { saveManager } from '../core/SaveManager';
 import type { SaveData } from '../core/SaveManager';
 
 export class OverlayManager {
@@ -6,6 +5,8 @@ export class OverlayManager {
     private onLoad: (data: SaveData) => void;
     private onDelete: (index: number) => void;
     private serializeState: () => SaveData;
+    private onGetSlots: () => ReadonlyArray<SaveData | null>;
+    private onLoadByIndex: (index: number) => SaveData | null;
 
     private backdrop: HTMLElement;
     private slotMenu: HTMLElement;
@@ -31,11 +32,15 @@ export class OverlayManager {
         onLoad: (data: SaveData) => void;
         onDelete: (index: number) => void;
         serializeState: () => SaveData;
+        onGetSlots: () => ReadonlyArray<SaveData | null>;
+        onLoadByIndex: (index: number) => SaveData | null;
     }) {
         this.onSave = callbacks.onSave;
         this.onLoad = callbacks.onLoad;
         this.onDelete = callbacks.onDelete;
         this.serializeState = callbacks.serializeState;
+        this.onGetSlots = callbacks.onGetSlots;
+        this.onLoadByIndex = callbacks.onLoadByIndex;
 
         this.backdrop = document.getElementById('global-backdrop')!;
 
@@ -63,7 +68,7 @@ export class OverlayManager {
         this.backdrop.onclick = () => this.closeAll();
 
         this.btnRead.onclick = () => {
-            const data = saveManager.load(this.currentSlotIndex);
+            const data = this.onLoadByIndex(this.currentSlotIndex);
             if (data) this.onLoad(data);
             this.closeAll();
         };
@@ -115,7 +120,7 @@ export class OverlayManager {
 
     public showSlotMenu(index: number, event: MouseEvent): void {
         this.currentSlotIndex = index;
-        const slots = saveManager.getSlots();
+        const slots = this.onGetSlots();
         const isEmpty = slots[index] === null;
         const isQuick = index === 5;
 

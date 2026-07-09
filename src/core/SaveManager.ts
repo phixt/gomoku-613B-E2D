@@ -1,4 +1,5 @@
-﻿import { eventBus, Events } from "./EventBus";
+import type { IStorageAdapter } from "./StorageAdapter";
+import { eventBus, Events } from "./EventBus";
 
 export interface SaveData {
     version: string;
@@ -23,10 +24,12 @@ export const TOTAL_SLOTS = 6;
 
 const STORAGE_KEY = "gomoku_saves_v3";
 
-class SaveManager {
+export class SaveManager {
     private _slots: (SaveData | null)[] = [];
+    private storage: IStorageAdapter;
 
-    constructor() {
+    constructor(storage: IStorageAdapter) {
+        this.storage = storage;
         this.loadFromStorage();
     }
 
@@ -86,7 +89,7 @@ class SaveManager {
 
     private loadFromStorage(): void {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
+            const raw = this.storage.get(STORAGE_KEY);
             if (raw) {
                 const parsed: (SaveData | null)[] = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length === TOTAL_SLOTS) {
@@ -101,7 +104,7 @@ class SaveManager {
     }
 
     private persist(): void {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this._slots));
+        this.storage.set(STORAGE_KEY, JSON.stringify(this._slots));
         eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
     }
 
@@ -124,4 +127,3 @@ class SaveManager {
     }
 }
 
-export const saveManager = new SaveManager();

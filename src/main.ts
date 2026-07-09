@@ -1,4 +1,4 @@
-﻿import "./style/main.css";
+import "./style/main.css";
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
@@ -6,8 +6,9 @@ import { RightPanel } from "./views/RightPanel";
 import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./core/Config";
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
-import { saveManager } from "./core/SaveManager";
-import type { SaveData } from "./core/SaveManager";
+import { SaveManager, type SaveData } from "./core/SaveManager";
+import { LocalStorageAdapter } from "./core/LocalStorageAdapter";
+import type { IStorageAdapter } from "./core/StorageAdapter";
 import { OverlayManager } from "./ui/OverlayManager";
 
 const AppState = {
@@ -19,11 +20,25 @@ const AppState = {
 } as const;
 type AppState = typeof AppState[keyof typeof AppState];
 
-function main(): void {
+async function main(): Promise<void> {
   const leftEl = document.getElementById("left-panel");
   const rightEl = document.getElementById("right-panel");
   if (!leftEl || !rightEl) throw new Error("Missing #left-panel or #right-panel element");
 
+
+  // Initialize storage adapter based on environment
+  let adapter: IStorageAdapter;
+  if (import.meta.env.VITE_IS_TAURI) {
+    console.log("[Init] Running in Tauri environment, loading TauriStoreAdapter...");
+    const { TauriStoreAdapter } = await import("./core/TauriStoreAdapter");
+    const tauriAdapter = new TauriStoreAdapter();
+    await tauriAdapter.init();
+    adapter = tauriAdapter;
+  } else {
+    console.log("[Init] Running in Web environment, using LocalStorageAdapter...");
+    adapter = new LocalStorageAdapter();
+  }
+  const saveManager = new SaveManager(adapter);
 
   gameStore.appState = AppState.TITLE;
   let currentTheme: Theme = LIGHT_THEME;
@@ -55,6 +70,8 @@ function main(): void {
       overlayManager.showToast("已删除存档 " + (index + 1));
     },
     serializeState: function() { return serializeBoardState(); },
+    onGetSlots: function() { return saveManager.getSlots(); },
+    onLoadByIndex: function(index) { return saveManager.load(index); },
   });
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
