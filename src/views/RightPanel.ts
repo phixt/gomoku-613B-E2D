@@ -1,15 +1,14 @@
 import * as THREE from "three";
-import { type Theme, type CellState, BLACK, WHITE, AuxMode } from "../core/Types";
+import { type Theme, type CellState, BLACK, WHITE, AuxMode, LIGHT_THEME, DARK_THEME } from "../core/Types";
 import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, PIECE_RADIUS } from "../core/Config";
+import { eventBus, Events } from "../core/EventBus";
 
-const BOARD_SIZE = 13;
-const LAYER_COUNT = 6;
-const LAYER_SPACING = 3.5; // ???? LeftPanel.LAYER_SPACING
+const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER = (BOARD_SIZE - 1) / 2;
-const PIECE_RADIUS = 0.42;
 const GHOST_OPACITY = 0.35;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
@@ -176,6 +175,10 @@ export class RightPanel {
     this.renderer.domElement.addEventListener("click", this.boundClick);
 
     requestAnimationFrame(() => { requestAnimationFrame(() => { this.resize(); }); });
+
+    // Subscribe to events
+    eventBus.on(Events.THEME_CHANGED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
   }
   dispose(): void {
     window.removeEventListener("resize", this.boundResize);
@@ -569,6 +572,11 @@ export class RightPanel {
     this.theme = theme;
     this.renderer.setClearColor(this.theme.bgColor);
     (this.gridSegments.material as THREE.LineBasicMaterial).color.setHex(this.theme.gridColor);
+  }
+
+  applyTheme(isDark: boolean): void {
+    const theme = isDark ? DARK_THEME : LIGHT_THEME;
+    this.updateTheme(theme);
   }
 
   render(): void { this.renderer.render(this.scene, this.camera); }

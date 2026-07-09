@@ -1,8 +1,7 @@
 import type { CellState, Vector3Int } from "./Types";
+import { BOARD_SIZE, LAYER_COUNT } from "./Config";
 
-const BOARD_SIZE = 13;
-const LAYER_COUNT = 6;
-const CELL_TOTAL = BOARD_SIZE * BOARD_SIZE * LAYER_COUNT; // 1014
+const CELL_TOTAL = BOARD_SIZE * BOARD_SIZE * LAYER_COUNT;
 
 export class Board {
   private data: Uint8Array;

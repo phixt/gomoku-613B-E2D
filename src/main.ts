@@ -3,9 +3,8 @@ import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
-
-const LAYER_COUNT = 6;
-const PANEL_RATIO = 0.5;
+import { LAYER_COUNT, PANEL_RATIO } from "./core/Config";
+import { eventBus, Events } from "./core/EventBus";
 
 function main(): void {
   const leftEl = document.getElementById("left-panel");
@@ -393,9 +392,9 @@ function main(): void {
     if (e.key === "t" || e.key === "T") {
       e.preventDefault();
       currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
-      document.body.classList.toggle("dark-theme", currentTheme.name === "dark");
-      leftPanel.updateTheme(currentTheme);
-      rightPanel.updateTheme(currentTheme);
+      const isDark = currentTheme.name === "dark";
+      document.body.classList.toggle("dark-theme", isDark);
+      eventBus.emit(Events.THEME_CHANGED, isDark);
       return;
     }
     if (!isGameStarted) {
@@ -439,17 +438,15 @@ function main(): void {
       case "a": case "A":
         e.preventDefault();
         focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
-        leftPanel.highlightFocusLayer(focusZ);
+        eventBus.emit(Events.LAYER_CHANGED, focusZ);
         leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        rightPanel.setFocusZ(focusZ);
         break;
 
       case "d": case "D":
         e.preventDefault();
         focusZ = (focusZ + 1) % LAYER_COUNT;
-        leftPanel.highlightFocusLayer(focusZ);
+        eventBus.emit(Events.LAYER_CHANGED, focusZ);
         leftPanel.renderAllPieces(rightPanel.board, focusZ);
-        rightPanel.setFocusZ(focusZ);
         break;
 
     

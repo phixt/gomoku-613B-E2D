@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { type Theme, AuxMode } from "../core/Types";
+import { type Theme, AuxMode, LIGHT_THEME, DARK_THEME } from "../core/Types";
 import type { AuxData3D } from "../core/Types";
 import type { Board } from "../core/Board";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING } from "../core/Config";
+import { eventBus, Events } from "../core/EventBus";
 
-const BOARD_SIZE = 13;
-const LAYER_COUNT = 6;
-// Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2 = 5 * 3.5 / 2 = 8.75
-const LAYER_SPACING = 3.5; // ???????????????????
+// Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2
+const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER_Z = (LAYER_COUNT - 1) * LAYER_SPACING / 2;
 
 const VERTS_PER_LAYER = 26 * 2;
@@ -313,6 +313,10 @@ export class LeftPanel {
       this.camera.updateProjectionMatrix();
     }
     this.checkBoundarySafety();
+
+    // Subscribe to events
+    eventBus.on(Events.THEME_CHANGED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.LAYER_CHANGED, (z: number) => { this.focusZ = z; this.highlightFocusLayer(z); });
   }
 
 
@@ -424,6 +428,11 @@ export class LeftPanel {
     m[1].color.setHex(theme.focusGridColor);
     (this.auxSegments.material as THREE.LineBasicMaterial).color.setHex(theme.auxLineColor);
     (this.connectorSegments.material as THREE.LineBasicMaterial).color.setHex(theme.gridColor);
+  }
+
+  applyTheme(isDark: boolean): void {
+    const theme = isDark ? DARK_THEME : LIGHT_THEME;
+    this.updateTheme(theme);
   }
 
 

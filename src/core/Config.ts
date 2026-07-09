@@ -1,0 +1,7 @@
+﻿export const BOARD_SIZE = 13;
+export const LAYER_COUNT = 6;
+export const DEFAULT_LAYER_SPACING = 3.5;
+export const MIN_LAYER_SPACING = 2.0;
+export const MAX_LAYER_SPACING = 6.0;
+export const PANEL_RATIO = 0.5;
+export const PIECE_RADIUS = 0.42;
