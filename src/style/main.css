@@ -54,9 +54,10 @@ body.dark-theme {
 
 
 /* =========================================
-   2. 开始界面：三栏布局
+   2. 开始界面与指南页 (统一背景与容器)
    ========================================= */
-#start-screen {
+#start-screen,
+#guide-screen {
     position: fixed;
     top: 0;
     left: 0;
@@ -70,13 +71,19 @@ body.dark-theme {
     transition: opacity 0.5s ease;
 }
 
-body.dark-theme #start-screen {
+body.dark-theme #start-screen,
+body.dark-theme #guide-screen {
     background: linear-gradient(135deg, #1A2629 0%, #152022 100%);
 }
 
-#start-screen.fade-out {
+#start-screen.fade-out,
+#guide-screen.fade-out {
     opacity: 0;
     pointer-events: none;
+}
+
+.hidden {
+    display: none !important;
 }
 
 .start-layout {
@@ -97,14 +104,229 @@ body.dark-theme .start-layout {
     border-color: #3A4A4E;
 }
 
-.start-left {
-    flex: 1.2;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
+/* 首页：左右分栏 (1:1.2) */
+.split-layout .start-left {
+    flex: 1;
     border-right: 1px dashed #C5D5C0;
 }
 
+.split-layout .start-right {
+    flex: 1.2;
+}
+
+body.dark-theme .split-layout .start-left {
+    border-right-color: #3A4A4E;
+}
+
+/* 品牌区 (左) */
+.brand-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+}
+
+.brand-area h1 {
+    font-size: 2.8em;
+    color: #2C4A4E;
+    letter-spacing: 6px;
+    margin-bottom: 15px;
+    font-weight: normal;
+}
+
+body.dark-theme .brand-area h1 {
+    color: #C8E0E4;
+}
+
+.brand-area .subtitle {
+    font-size: 1.1em;
+    color: #6A8A8E;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .brand-area .subtitle {
+    color: #8A9A9E;
+}
+
+.version-badge {
+    padding: 6px 16px;
+    background: rgba(44, 74, 78, 0.1);
+    border: 1px solid #C5D5C0;
+    border-radius: 20px;
+    color: #2C4A4E;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    font-family: 'Consolas', monospace;
+}
+
+body.dark-theme .version-badge {
+    background: rgba(200, 224, 228, 0.1);
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+}
+
+/* 操作区 (右) */
+.action-area {
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    gap: 30px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.primary-btn,
+.secondary-btn {
+    width: 200px;
+    padding: 12px 0;
+    font-size: 1.1em;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 4px;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.3s;
+}
+
+.primary-btn {
+    background: #2C4A4E;
+    color: #F4F9F4;
+    border: 2px solid #2C4A4E;
+}
+
+.primary-btn:hover {
+    background: #1A3A3E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(44, 74, 78, 0.3);
+}
+
+.secondary-btn {
+    background: transparent;
+    color: #2C4A4E;
+    border: 1px solid #C5D5C0;
+}
+
+.secondary-btn:hover {
+    background: rgba(44, 74, 78, 0.05);
+    border-color: #2C4A4E;
+}
+
+body.dark-theme .primary-btn {
+    background: #C8E0E4;
+    color: #1A2629;
+    border-color: #C8E0E4;
+}
+
+body.dark-theme .primary-btn:hover {
+    background: #A0C0C4;
+}
+
+body.dark-theme .secondary-btn {
+    color: #C8E0E4;
+    border-color: #3A4A4E;
+}
+
+body.dark-theme .secondary-btn:hover {
+    background: rgba(200, 224, 228, 0.05);
+    border-color: #C8E0E4;
+}
+
+/* 存档区 */
+.save-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.save-area h3 {
+    font-size: 1.1em;
+    color: #2C4A4E;
+    margin-bottom: 15px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .save-area h3 {
+    color: #C8E0E4;
+}
+
+.save-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 150px;
+}
+
+.save-slot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid #C5D5C0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9em;
+    color: #3A4A4E;
+}
+
+.save-slot:hover {
+    background: #E8F4F5;
+    border-color: #2C4A4E;
+    transform: translateX(3px);
+}
+
+.save-slot.empty {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.save-slot .slot-index {
+    font-weight: bold;
+    color: #2C4A4E;
+    font-family: 'Consolas', monospace;
+}
+
+.save-slot .slot-info {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 0.85em;
+    color: #6A8A8E;
+}
+
+body.dark-theme .save-slot {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #3A4A4E;
+    color: #A0B0B4;
+}
+
+body.dark-theme .save-slot:hover {
+    background: #3A5A5E;
+    border-color: #C8E0E4;
+}
+
+body.dark-theme .save-slot .slot-index {
+    color: #C8E0E4;
+}
+
+.slot-hint {
+    text-align: center;
+    font-size: 0.8em;
+    color: #8A9A9E;
+    margin-top: 10px;
+}
+
+/* 指南页：三栏布局 (复用之前的键盘和说明样式，此处省略重复代码，请保留之前的 .keyboard-sim, .key-desc-grid 等样式) */
 .start-center {
     flex: 1;
     padding: 30px;
@@ -116,16 +338,76 @@ body.dark-theme .start-layout {
     border-right: 1px dashed #C5D5C0;
 }
 
-.start-right {
+body.dark-theme .start-center {
+    border-right-color: #3A4A4E;
+}
+
+.mouse-area h3 {
+    font-size: 1.5em;
+    color: #2C4A4E;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .mouse-area h3 {
+    color: #C8E0E4;
+}
+
+.mouse-actions p {
+    font-size: 1.1em;
+    color: #3A4A4E;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.mouse-actions strong {
+    color: #2C4A4E;
+}
+
+body.dark-theme .mouse-actions p {
+    color: #A0B0B4;
+}
+
+body.dark-theme .mouse-actions strong {
+    color: #C8E0E4;
+}
+
+.decorative-area {
     flex: 0.8;
     padding: 30px;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
 }
 
-body.dark-theme .start-left,
-body.dark-theme .start-center {
-    border-right-color: #3A4A4E;
+.tactical-hint {
+    background: rgba(44, 74, 78, 0.05);
+    border: 1px dashed #C5D5C0;
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #5A6A6E;
+    text-align: center;
+    max-width: 200px;
+}
+
+body.dark-theme .tactical-hint {
+    background: rgba(200, 224, 228, 0.05);
+    border-color: #3A4A4E;
+    color: #8A9A9E;
+}
+
+.tactical-hint kbd {
+    background: rgba(44, 74, 78, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', monospace;
+    color: #2C4A4E;
+}
+
+body.dark-theme .tactical-hint kbd {
+    background: rgba(200, 224, 228, 0.1);
+    color: #C8E0E4;
 }
 
 /* 键盘模拟 */
@@ -297,87 +579,7 @@ body.dark-theme #start-btn:hover {
     color: #1A2629;
 }
 
-/* 右侧存档区 */
-.start-right h3 {
-    font-size: 1.2em;
-    color: #2C4A4E;
-    margin-bottom: 15px;
-    text-align: center;
-    letter-spacing: 2px;
-}
-
-body.dark-theme .start-right h3 {
-    color: #C8E0E4;
-}
-
-.save-slots-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-.save-slot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid #C5D5C0;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9em;
-    color: #3A4A4E;
-}
-
-.save-slot:hover {
-    background: #E8F4F5;
-    border-color: #2C4A4E;
-    transform: translateX(3px);
-}
-
-.save-slot.empty {
-    opacity: 0.6;
-    border-style: dashed;
-}
-
-.save-slot .slot-index {
-    font-weight: bold;
-    color: #2C4A4E;
-    font-family: 'Consolas', monospace;
-}
-
-.save-slot .slot-info {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 0.85em;
-    color: #6A8A8E;
-}
-
-body.dark-theme .save-slot {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: #3A4A4E;
-    color: #A0B0B4;
-}
-
-body.dark-theme .save-slot:hover {
-    background: #3A5A5E;
-    border-color: #C8E0E4;
-}
-
-body.dark-theme .save-slot .slot-index {
-    color: #C8E0E4;
-}
-
-.slot-hint {
-    text-align: center;
-    font-size: 0.8em;
-    color: #8A9A9E;
-    margin-top: 10px;
-}
-
+/* 注意：请确保保留之前 CSS 中关于 .keyboard-sim, .key, .key-desc-grid, .toast, #slot-action-menu, #esc-menu 的所有样式！ */
 
 /* =========================================
    3. Toast 提示与操作菜单
