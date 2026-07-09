@@ -49,6 +49,7 @@
       "timestampUrl": "",
       "nsis": {
         "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/uninstaller.ico",
         "languages": ["SimpChinese", "English"],
         "displayLanguageSelector": true
       }
