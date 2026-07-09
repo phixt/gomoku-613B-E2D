@@ -132,8 +132,9 @@ function main(): void {
     list.innerHTML = "";
     slots.forEach((data, i) => {
       const isEmpty = data === null;
+      const isQuickSave = i === 5;
       const div = document.createElement("div");
-      div.className = "save-slot" + (isEmpty ? " empty" : "");
+      div.className = "save-slot" + (isEmpty ? " empty" : "") + (isQuickSave ? " quick-save" : "");
       div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${isEmpty ? "空" : (`已存档 (${new Date(data!.timestamp).toLocaleTimeString()})`)}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
         overlayManager.showSlotMenu(i, e);
