@@ -5,6 +5,7 @@ import type { SaveData, SlotEntry } from "../core/SaveManager";
 class OverlayManager {
   private backdropEl: HTMLDivElement | null = null;
   private activeMenu: HTMLElement | null = null;
+  private cachedSlots: ReadonlyArray<SlotEntry> = [];
 
   serializeGameState: (() => SaveData) | null = null;
   loadGameData: ((data: SaveData) => void) | null = null;
@@ -16,6 +17,7 @@ class OverlayManager {
   constructor() {
     this.createBackdrop();
     eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SlotEntry>) => {
+      this.cachedSlots = slots;
       if (this.onSlotsChanged) this.onSlotsChanged(slots);
     });
   }
@@ -104,11 +106,11 @@ class OverlayManager {
       } else {
         ax = anchorXOrEvent.clientX; ay = anchorXOrEvent.clientY;
       }
-      slotList = [] as any;
+      slotList = this.cachedSlots;
     } else {
       ax = anchorXOrEvent;
       ay = anchorY ?? 0;
-      slotList = slots ?? ([] as any);
+      slotList = slots ?? this.cachedSlots;
     }
     menu.style.left = ax + "px";
     menu.style.top = ay + "px";

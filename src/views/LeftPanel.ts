@@ -168,6 +168,10 @@ export class LeftPanel {
 
     this.checkBoundarySafety();
     this.rotateY(2);
+
+    // Subscribe to events
+    eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.LAYER_CHANGED, (z: number) => { this.focusZ = z; this.highlightFocusLayer(z); });
   }
 
   /** @internal Exposed for cross-panel coordination. */
@@ -315,9 +319,6 @@ export class LeftPanel {
     }
     this.checkBoundarySafety();
 
-    // Subscribe to events
-    eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
-    eventBus.on(Events.LAYER_CHANGED, (z: number) => { this.focusZ = z; this.highlightFocusLayer(z); });
   }
 
 

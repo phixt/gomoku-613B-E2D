@@ -7,7 +7,7 @@ import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./c
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { saveManager } from "./core/SaveManager";
-import type { SaveData } from "./core/SaveManager";
+import type { SaveData, SlotEntry } from "./core/SaveManager";
 import { overlayManager } from "./ui/OverlayManager";
 
 const AppState = {
@@ -113,26 +113,28 @@ function main(): void {
   };
 
         // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
-  const renderSaveSlots = (slots: (SaveData | null)[]): void => {
+    const renderSaveSlots = (entries: ReadonlyArray<SlotEntry>): void => {
     const list = document.getElementById("save-slots-list");
     if (!list) return;
     list.innerHTML = "";
-    slots.forEach((slot, i) => {
+    entries.forEach((entry, i) => {
+      const data = entry && typeof entry === "object" && "data" in entry ? entry.data : entry;
       const div = document.createElement("div");
-      div.className = "save-slot" + (slot === null ? " empty" : "");
-      const infoText = slot ? `已存档 (${new Date(slot.timestamp).toLocaleTimeString()})` : "空";
-      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${infoText}</span>`;
+      div.className = "save-slot" + (data === null ? " empty" : "");
+      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${data ? `已存档 (${new Date(data.timestamp).toLocaleTimeString()})` : "空"}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
-        overlayManager.showSlotMenu(i, e);
+        const t = e.currentTarget as HTMLElement;
+        const r = t.getBoundingClientRect();
+        overlayManager.showSlotMenu(i, r.right, r.top, saveManager.slots);
       });
       list.appendChild(div);
     });
   };
 
-  eventBus.on(Events.SAVE_UPDATED, (slots: (SaveData | null)[]) => {
+  eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SlotEntry>) => {
     renderSaveSlots(slots);
   });
-  renderSaveSlots(saveManager.getSlots());
+  renderSaveSlots(saveManager.slots);
 
   const returnToTitle = (): void => {
     rightPanel.board.reset();
@@ -192,7 +194,20 @@ function main(): void {
       }
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
       rightPanel.refresh();
-      closeEscMenu();
+      // State-aware transition
+      if (gameStore.appState === AppState.TITLE || gameStore.appState === AppState.GUIDE_FROM_TITLE) {
+        const ss = document.getElementById("start-screen");
+        const gs = document.getElementById("guide-screen");
+        if (ss) {
+          ss.style.display = "";
+          ss.classList.add("hidden");
+        }
+        gs?.classList.add("hidden");
+        gameStore.appState = AppState.PLAYING;
+        forceCorrectSize();
+      } else if (gameStore.appState === AppState.PAUSED || gameStore.appState === AppState.GUIDE_FROM_GAME) {
+        closeEscMenu();
+      }
       overlayManager.showToast("已加载存档");
     } catch (err) {
       console.error("[Load] Failed:", err);
@@ -209,6 +224,8 @@ function main(): void {
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
     saveManager.save(targetIndex, data);
+    const slotName = targetIndex === QUICK_SAVE_INDEX ? "快速存档" : `存档 ${targetIndex + 1}`;
+    overlayManager.showToast(`已保存到${slotName}`);
     const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
     navigator.clipboard.writeText(base64).then(() => {
       console.log("[Save] Copied to clipboard");
@@ -217,91 +234,7 @@ function main(): void {
     });
   };
 
-  const loadGameFromClipboard = async (): Promise<void> => {
-    try {
-      const text = await navigator.clipboard.readText();
-      loadGame(text);
-    } catch (err) {
-      console.error("[Load] Clipboard read failed:", err);
-      // Fallback: prompt user to paste
-      const text = prompt("[Load] Clipboard unavailable. Please copy the save data, then paste it below and press OK:");
-      if (text && text.trim()) {
-        loadGame(text.trim());
-      } else {
-        alert("[Load] Load cancelled: no data provided.");
-      }
-    }
-  };
-
-  const loadGame = (base64String: string): void => {
-    try {
-      const json = decodeURIComponent(escape(atob(base64String)));
-      const data = JSON.parse(json);
-
-      // Validate version and boardSize
-      if (data.version !== "0.4.0") {
-        alert("[Load] Incompatible save version: " + (data.version ?? "unknown") + ". Expected: 0.4.0");
-        return;
-      }
-      if (data.boardSize !== 13) {
-        alert("[Load] Incompatible board size: " + data.boardSize + ". Expected: 13");
-        return;
-      }
-      if (!Array.isArray(data.moves)) {
-        alert("[Load] Invalid save data: missing moves array.");
-        return;
-      }
-
-      // Clear board before restoring
-      rightPanel.board.reset();
-
-      // Restore board state from sparse moves
-      for (const move of data.moves) {
-        if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
-          rightPanel.board.set(move.x, move.y, move.z, move.player);
-        }
-      }
-
-      // Restore focusZ
-      focusZ = data.focusZ ?? 0;
-      rightPanel.setFocusZ(focusZ);
-
-      // Restore theme
-      if (data.isDarkTheme) {
-        currentTheme = DARK_THEME;
-        document.body.classList.add("dark-theme");
-      } else {
-        currentTheme = LIGHT_THEME;
-        document.body.classList.remove("dark-theme");
-      }
-      leftPanel.updateTheme(currentTheme);
-      rightPanel.updateTheme(currentTheme);
-
-      // Restore layer spacing ? triggers internal geometry rebuild
-      if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
-        const delta = data.layerSpacing - leftPanel.layerSpacing;
-        leftPanel.adjustLayerSpacing(delta);
-      }
-
-      // Restore current player
-      if (data.currentPlayer === 1 || data.currentPlayer === 2) {
-        rightPanel.setCurrentPlayer(data.currentPlayer);
-      }
-
-      // Update panels
-      leftPanel.renderAllPieces(rightPanel.board, focusZ);
-      rightPanel.refresh();
-
-      // Close esc menu on success
-      closeEscMenu();
-
-      console.log("[Load] Game loaded successfully (%d moves)", data.moves.length);
-    } catch (err) {
-      console.error("[Load] Failed to load game:", err);
-      alert("[Load] Failed to load game. See console for details.");
-    }
-  };
-  void loadGameFromClipboard;
+  
 
 
   if (startBtn) startBtn.addEventListener("click", startGame);
@@ -315,6 +248,7 @@ function main(): void {
     startScreen?.classList.add("hidden");
     guideScreen?.classList.add("hidden");
     escMenu?.classList.add("hidden");
+    overlayManager.closeAll();
   };
 
   const backToTitle = (): void => {
@@ -330,6 +264,7 @@ function main(): void {
 
   const backToGame = (): void => {
     hideAllOverlays();
+    gameStore.appState = AppState.PLAYING;
   };
 
   const updateGuideButtons = (): void => {
@@ -346,7 +281,7 @@ function main(): void {
       if (btnP) { btnP.textContent = "开始游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); startGame(); }); }
       if (btnS) { btnS.textContent = "返回标题"; btnS.addEventListener("click", backToTitle); }
     } else {
-      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); confirmRestart(); }); }
+      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
       if (btnS) { btnS.textContent = "回到游戏"; btnS.addEventListener("click", backToGame); }
     }
   };
@@ -359,8 +294,8 @@ function main(): void {
   });
 
   escGuideBtn?.addEventListener("click", () => {
+    closeEscMenu();
     gameStore.appState = AppState.GUIDE_FROM_GAME;
-    hideAllOverlays();
     guideScreen?.classList.remove("hidden");
     updateGuideButtons();
   });
@@ -399,6 +334,17 @@ function main(): void {
         if (e.code === "Space" || e.code === "Enter") {
           e.preventDefault();
           startGame();
+          return;
+        }
+        if (e.code === "KeyL") {
+          e.preventDefault();
+          const idx = saveManager.getLatestIndex();
+          if (idx >= 0) {
+            const data = saveManager.load(idx);
+            if (data) { loadGameFromData(data); }
+          } else {
+            overlayManager.showToast("没有可读取的存档", true);
+          }
           return;
         }
         break;
