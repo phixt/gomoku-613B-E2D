@@ -66,6 +66,7 @@ export class RightPanel {
   public onPieceChanged: ((board: Board, focusZ: number) => void) | null = null;
   public on3DAuxDataChanged: ((data: AuxData3D) => void) | null = null;
   public onHoverChanged: ((x: number, y: number, z: number) => void) | null = null;
+  public onPiecePlaced: ((x: number, y: number, z: number, player: number) => void) | null = null;
 
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
@@ -97,6 +98,7 @@ export class RightPanel {
   private isColorblindMode: boolean = false;
   private _hoverWorldPos: THREE.Vector3 | null = null;
   private isGameActive: () => boolean = () => true;
+  private isMyTurn: () => boolean = () => true;
   private isMirrored: boolean = true;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
@@ -274,8 +276,10 @@ export class RightPanel {
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
         if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
       }, 50);
+      return;
     }
 
+    if (this.onPiecePlaced) this.onPiecePlaced(x, y, z, this._currentPlayer);
     this._currentPlayer = this._currentPlayer === BLACK ? WHITE : BLACK;
     this.clearAllOverlays();
   }
@@ -523,6 +527,7 @@ export class RightPanel {
 
   private handleClick = (): void => {
     if (!this.isGameActive()) return;
+    if (!this.isMyTurn()) return;
     if (!this.hoverValid) return;
     const gx = this.hoverX, gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
@@ -544,8 +549,10 @@ export class RightPanel {
         if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
         if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
       }, 50);
+      return;
     }
 
+    if (this.onPiecePlaced) this.onPiecePlaced(gx, gy, this.focusZ, this._currentPlayer);
     this._currentPlayer = this._currentPlayer === BLACK ? WHITE : BLACK;
     this.clearAllOverlays();
 
@@ -604,6 +611,10 @@ export class RightPanel {
     this.isGameActive = cb;
   }
 
+  public setTurnCallback(cb: () => boolean): void {
+    this.isMyTurn = cb;
+  }
+
   public toggleMirror(): void {
     this.isMirrored = !this.isMirrored;
     this.resize();
@@ -628,10 +639,10 @@ export class RightPanel {
 
     this.renderer.setSize(containerWidth, containerHeight);
 
-    // 濡娲忔稉鏍櫕缁屾椽妫挎径褍鐨敍? 閸?BOARD_SIZE-1閿?
+    // 婵☆偄顑囧ú蹇旂▔閺嶎偅娅曠紒灞炬そ濡寧寰勮閻剟鏁? 闁?BOARD_SIZE-1闁?
     const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
 
-    // 閸栧懎鎯堢€瑰鍙忔潏纭呯獩閻ㄥ嫭鈧鏄傜€?
+    // 闁告牕鎳庨幆鍫⑩偓鐟邦槸閸欏繑娼忕涵鍛崺闁汇劌瀚埀顒冾嚙閺勫倻鈧?
     const totalSize = boardWorldSize + (RightPanel.GRID_PADDING * 2);
 
     const aspect = containerWidth / containerHeight;
@@ -640,11 +651,11 @@ export class RightPanel {
     let frustumHalfHeight: number;
 
     if (aspect > 1) {
-      // 鐎硅棄鐫嗛敍姘剁彯鎼达缚璐熼崺鍝勫櫙閿涘苯顔旀惔锕佸殰闁倸绨?
+      // 閻庣妫勯惈鍡涙晬濮樺墎褰幖杈剧細鐠愮喖宕洪崫鍕珯闁挎稑鑻鏃€鎯旈敃浣告闂侇偄鍊哥花?
       frustumHalfHeight = totalSize / 2;
       frustumHalfWidth = frustumHalfHeight * aspect;
     } else {
-      // 缁旀牕鐫嗛幋鏍劀閺傜懓鑸伴敍姘啍鎼达缚璐熼崺鍝勫櫙閿涘矂鐝惔锕佸殰闁倸绨?
+      // 缂佹梹鐗曢惈鍡涘箣閺嶎煈鍔€闁哄倻鎳撻懜浼存晬濮橆剦鍟嶉幖杈剧細鐠愮喖宕洪崫鍕珯闁挎稑鐭傞悵顔芥償閿曚礁娈伴梺顐㈠€哥花?
       frustumHalfWidth = totalSize / 2;
       frustumHalfHeight = frustumHalfWidth / aspect;
     }

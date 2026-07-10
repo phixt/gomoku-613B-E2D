@@ -1,4 +1,4 @@
-﻿import * as THREE from "three";
+import * as THREE from "three";
 import { PIECE_RADIUS } from "../core/Config";
 
 type GeometryKey = "piece" | "marker";

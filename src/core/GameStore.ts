@@ -1,4 +1,4 @@
-﻿import { eventBus, Events } from "./EventBus";
+import { eventBus, Events } from "./EventBus";
 import { LAYER_COUNT, DEFAULT_LAYER_SPACING } from "./Config";
 
 export interface GameState {

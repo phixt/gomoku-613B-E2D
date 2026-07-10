@@ -1,5 +1,5 @@
 import "./style/main.css";
-import { LIGHT_THEME, DARK_THEME, WHITE } from "./core/Types";
+import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
@@ -78,12 +78,6 @@ async function main(): Promise<void> {
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
     leftPanel.renderAllPieces(board, z);
-    audioManager.playSFX("click");
-    setTimeout(() => {
-      if (isAIMode && !isAIThinking && rightPanel.currentPlayer === WHITE) {
-        triggerAIMove();
-      }
-    }, 0);
   };
 
   rightPanel.on3DAuxDataChanged = (data): void => {
@@ -93,6 +87,22 @@ async function main(): Promise<void> {
   rightPanel.onHoverChanged = (x, y, z): void => {
     if (x >= 0) leftPanel.updateHoverMarker(x, y, z);
     else leftPanel.clearHoverMarker();
+  };
+
+  // Turn control and placement callback
+  rightPanel.setTurnCallback(() => {
+    // PvP: both players can click (pass-and-play); PvE: only the human's color can click
+    return !isPvEMode || currentPlayer === playerColor;
+  });
+
+  rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
+    audioManager.playSFX("click");
+    currentPlayer = player === 1 ? 2 : 1;
+    overlayManager.showToast(currentPlayer === 1 ? "\u9ed1\u65b9\u56de\u5408" : "\u767d\u65b9\u56de\u5408");
+    const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+    if (isPvEMode && currentPlayer === aiColor) {
+      triggerAIMove();
+    }
   };
 
   const forceCorrectSize = (): void => {
@@ -106,7 +116,9 @@ async function main(): Promise<void> {
 
   let focusZ = 0;
   let isColorblindMode = false;
-  let isAIMode = false;
+  let isPvEMode = false;
+  let currentPlayer: 1 | 2 = 1;
+  let playerColor: 1 | 2 = 1; // 1=Black, 2=White
   let aiEngine: AIEngine | null = null;
   let isAIThinking = false;
   leftPanel.renderAllPieces(rightPanel.board, focusZ);
@@ -120,7 +132,9 @@ async function main(): Promise<void> {
   const startGame = (): void => {
     if (gameStore.appState === AppState.PLAYING) return;
     hideAllOverlays();
-    if (isAIMode) {
+    currentPlayer = 1;
+    playerColor = 1;
+    if (isPvEMode) {
       const diffSelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
       aiEngine = new AIEngine(diffSelect?.value as "Easy" | "Medium" | "Hard" || "Easy");
       isAIThinking = false;
@@ -142,12 +156,12 @@ async function main(): Promise<void> {
   const triggerAIMove = async (): Promise<void> => {
     if (!aiEngine || isAIThinking) return;
     isAIThinking = true;
+    overlayManager.showToast("AI \u601d\u8003\u4e2d...");
     eventBus.emit(Events.AI_MOVE_REQUEST);
     try {
       const move = await aiEngine.think(rightPanel.board);
       if (move && rightPanel.board.get(move.x, move.y, move.z) === 0) {
         rightPanel.placeAIPiece(move.x, move.y, move.z);
-        eventBus.emit(Events.PLAY_SOUND, { sound: "click" });
       }
     } catch (_err) {
       // cancelled or no valid moves
@@ -159,6 +173,7 @@ async function main(): Promise<void> {
   const confirmRestart = (): void => {
     if (aiEngine) aiEngine.cancel();
     isAIThinking = false;
+    currentPlayer = 1;
     rightPanel.board.reset();
     gameStore.setFocusZ(0);
     rightPanel.resetGame();
@@ -207,6 +222,11 @@ async function main(): Promise<void> {
   renderSaveSlots(saveManager.getSlots());
 
   const returnToTitle = (): void => {
+    if (aiEngine) aiEngine.cancel();
+    isAIThinking = false;
+    currentPlayer = 1;
+    playerColor = 1;
+    aiEngine = null;
     rightPanel.board.reset();
     focusZ = 0;
     rightPanel.resetGame();
@@ -218,6 +238,7 @@ async function main(): Promise<void> {
     if (startScreen) {
       startScreen.style.display = "";
     }
+    audioManager.playBGM("menu");
   };
 
   const serializeBoardState = (): SaveData => {
@@ -496,9 +517,19 @@ async function main(): Promise<void> {
             break;
           case "m": case "M":
             e.preventDefault();
-            isAIMode = !isAIMode;
-            overlayManager.showToast(isAIMode ? "AI 模式已开启（执白）" : "玩家对战模式");
-            if (!isAIMode && aiEngine) { aiEngine.cancel(); aiEngine = null; isAIThinking = false; }
+            isPvEMode = !isPvEMode;
+            overlayManager.showToast(isPvEMode ? "AI 模式已开启（执白）" : "玩家对战模式");
+            const colorGroup = document.getElementById("player-color-group");
+            if (colorGroup) {
+              if (isPvEMode) colorGroup.classList.remove("hidden");
+              else colorGroup.classList.add("hidden");
+            }
+            if (!isPvEMode) {
+              if (aiEngine) { aiEngine.cancel(); aiEngine = null; isAIThinking = false; }
+            } else {
+              const aiCol: 1 | 2 = playerColor === 1 ? 2 : 1;
+              if (currentPlayer === aiCol) triggerAIMove();
+            }
             break;
           case "v": case "V":
             e.preventDefault();
@@ -543,8 +574,21 @@ async function main(): Promise<void> {
   const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
 
   if (pvpRadio && pveRadio) {
-    pvpRadio.addEventListener("change", () => { isAIMode = false; });
-    pveRadio.addEventListener("change", () => { isAIMode = true; });
+    pvpRadio.addEventListener("change", () => {
+      isPvEMode = false;
+      const colorGroup = document.getElementById("player-color-group");
+      if (colorGroup) colorGroup.classList.add("hidden");
+      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+    });
+    pveRadio.addEventListener("change", () => {
+      isPvEMode = true;
+      const colorGroup = document.getElementById("player-color-group");
+      if (colorGroup) colorGroup.classList.remove("hidden");
+      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+      if (gameStore.appState === AppState.PLAYING && currentPlayer === aiColor) {
+        triggerAIMove();
+      }
+    });
   }
 
   if (difficultySelect) {
@@ -561,6 +605,25 @@ async function main(): Promise<void> {
       audioManager.setVolume(val, val * 0.5);
     });
   }
+
+  // Wire player color radios
+  const blackRadio = document.getElementById("color-black") as HTMLInputElement;
+  const whiteRadio = document.getElementById("color-white") as HTMLInputElement;
+
+  const onPlayerColorChange = (): void => {
+    if (blackRadio && blackRadio.checked) playerColor = 1;
+    else if (whiteRadio && whiteRadio.checked) playerColor = 2;
+    // If game is running and it is now the AI's turn, trigger immediately
+    if (gameStore.appState === AppState.PLAYING && isPvEMode) {
+      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+      if (currentPlayer === aiColor) {
+        triggerAIMove();
+      }
+    }
+  };
+
+  if (blackRadio) blackRadio.addEventListener("change", onPlayerColorChange);
+  if (whiteRadio) whiteRadio.addEventListener("change", onPlayerColorChange);
 }
 
 main();
