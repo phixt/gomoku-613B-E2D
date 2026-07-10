@@ -89,4 +89,8 @@ export const UI_TEXT = {
 
     // ================= 其他 =================
     PASTE_PLACEHOLDER: "粘贴 Base64 存档数据", // 替代 "粘贴" + "存档数据"
+
+    // ================= replay =================
+    BTN_REPLAY: "复盘",
+    REPLAY_ENTER: "Replay mode - {0} moves",
 } as const;

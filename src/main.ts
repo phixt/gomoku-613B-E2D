@@ -22,6 +22,7 @@ const AppState = {
   PLAYING: "PLAYING",
   PAUSED: "PAUSED",
   GAME_OVER: "GAME_OVER",
+  REPLAY: "REPLAY",
   GUIDE_FROM_GAME: "GUIDE_FROM_GAME"
 } as const;
 type AppState = typeof AppState[keyof typeof AppState];
@@ -326,20 +327,48 @@ async function main(): Promise<void> {
       console.error("[renderSaveSlots] #save-slots-list NOT FOUND in DOM!");
       return;
     }
-    console.log("[renderSaveSlots] Called with", slots.length, "slots");
     list.innerHTML = "";
     slots.forEach((data, i) => {
       const isEmpty = data === null;
       const isQuickSave = i === 5;
       const div = document.createElement("div");
       div.className = "save-slot" + (isEmpty ? " empty" : "") + (isQuickSave ? " quick-save" : "");
-      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${isEmpty ? "空" : `已存档 (${new Date(data!.timestamp).toLocaleTimeString()})`}</span>`;
-      div.addEventListener("click", (e: MouseEvent) => {
-        overlayManager.showSlotMenu(i, e);
-      });
+
+      if (!data) {
+        // Empty slot
+        div.innerHTML = '<span class="slot-index">0' + (i + 1) + '</span> <span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>';
+      } else {
+        // Occupied slot with metadata
+        const date = new Date(data.timestamp);
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const min = String(date.getMinutes()).padStart(2, "0");
+        const timeStr = mm + "/" + dd + " " + hh + ":" + min;
+        const modeStr = data.gameMode === "pve" ? "PvE" : "PvP";
+        const movesCount = data.moves ? data.moves.length : 0;
+        const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
+
+        div.innerHTML =
+          '<span class="slot-index">0' + (i + 1) + '</span>' +
+          '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
+          '<span class="slot-actions">' +
+            '<button class="slot-btn-load">' + UI_TEXT.SLOT_READ + '</button>' +
+            '<button class="slot-btn-replay">' + UI_TEXT.BTN_REPLAY + '</button>' +
+            '<button class="slot-btn-delete">' + UI_TEXT.SLOT_DELETE + '</button>' +
+          '</span>';
+      }
+
+      // Bind click handlers directly
+      const loadBtn = div.querySelector(".slot-btn-load");
+      if (loadBtn) loadBtn.addEventListener("click", (e) => { e.stopPropagation(); if (data) loadGameFromData(data); });
+      const replayBtn = div.querySelector(".slot-btn-replay");
+      if (replayBtn) replayBtn.addEventListener("click", (e) => { e.stopPropagation(); if (data) startReplay(data); });
+      const deleteBtn = div.querySelector(".slot-btn-delete");
+      if (deleteBtn) deleteBtn.addEventListener("click", (e) => { e.stopPropagation(); overlayManager.showConfirm(UI_TEXT.CONFIRM_TITLE, UI_TEXT.CONFIRM_DELETE(i + 1), () => { saveManager.delete(i); overlayManager.showToast(UI_TEXT.DELETE_SUCCESS(i + 1)); }); });
+
       list.appendChild(div);
     });
-    console.log("[renderSaveSlots] Rendering complete");
   };
 
   eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SaveData | null>) => {
@@ -347,6 +376,13 @@ async function main(): Promise<void> {
     renderSaveSlots(slots);
   });
   renderSaveSlots(saveManager.getSlots());
+
+  const startReplay = (data: SaveData): void => {
+    console.log("[Replay] Starting replay for save:", data.id);
+    loadGameFromData(data);
+    gameStore.appState = AppState.REPLAY;
+    overlayManager.showToast(UI_TEXT.REPLAY_ENTER.replace("{0}", String(data.moves ? data.moves.length : 0)));
+  };
 
   const returnToTitle = (): void => {
     document.getElementById("victory-modal")?.classList.add("hidden");
