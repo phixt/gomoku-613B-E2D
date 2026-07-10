@@ -326,6 +326,22 @@ export class RightPanel {
     return snapshot;
   }
 
+  /** Instantly load a board snapshot for save-file restoration. */
+  loadBoardSnapshot(snapshot: number[][][]): void {
+    this.board.reset();
+    this.lastMove = null;
+    for (let z = 0; z < Math.min(snapshot.length, LAYER_COUNT); z++) {
+      for (let y = 0; y < Math.min(snapshot[z]?.length ?? 0, BOARD_SIZE); y++) {
+        for (let x = 0; x < Math.min(snapshot[z][y]?.length ?? 0, BOARD_SIZE); x++) {
+          const val = snapshot[z][y][x] as 0 | 1 | 2;
+          if (val !== 0) this.board.set(x, y, z, val);
+        }
+      }
+    }
+    this.renderPieces();
+  }
+
+
   private clearHighlightMarkers(): void {
     while (this.highlightMarkersGroup.children.length > 0) {
       const c = this.highlightMarkersGroup.children[0];

@@ -577,6 +577,17 @@ export class LeftPanel {
     this.lastMoveRing.visible = true;
   }
 
+  /** Restore camera focus and layer spacing from a loaded save. */
+  restoreCameraState(focusZ: number, layerSpacing: number): void {
+    const delta = layerSpacing - this._layerSpacing;
+    if (Math.abs(delta) > 0.01) {
+      this.adjustLayerSpacing(delta);
+    }
+    this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, focusZ));
+    this.highlightFocusLayer(this.focusZ);
+  }
+
+
   render(): void {
     // Billboard effect: always face the camera so the ring is a perfect circle
     if (this.lastMoveRing && this.lastMoveRing.visible) {

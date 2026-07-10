@@ -33,6 +33,7 @@ export interface SaveData {
   currentPlayer: 1 | 2;    // 下一手该谁
   focusZ: number;          // 存档时的视角层级
   isDarkTheme: boolean;    // 主题偏好
+  playerColor: 1 | 2;
   
   // 3D 物理配置 (防止未来默认值变更导致旧存档错位)
   boardSize: number;       // 13
@@ -168,6 +169,7 @@ export class SaveManager {
         currentPlayer: data.currentPlayer || 1,
         focusZ: data.focusZ || 0,
         isDarkTheme: data.isDarkTheme || false,
+        playerColor: data.playerColor || 1,
         boardSize,
         layers,
         layerSpacing: data.layerSpacing || 3.5,

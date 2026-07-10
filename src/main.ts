@@ -394,6 +394,7 @@ async function main(): Promise<void> {
       currentPlayer: currentPlayer,
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
+      playerColor: playerColor,
       boardSize: 13,
       layers: LAYER_COUNT,
       layerSpacing: leftPanel.layerSpacing
@@ -403,51 +404,61 @@ async function main(): Promise<void> {
   const loadGameFromData = (data: SaveData): void => {
     try {
       if (!data) {overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);return;}
-      rightPanel.board.reset();
-      focusZ = data.focusZ ?? 0;
+      console.log("[Load] Restoring from save:", data.id || "unknown");
 
-      // Use boardState snapshot if available (O(1) loading, future saves)
-      if (data.boardState && Array.isArray(data.boardState)) {
-        for (let z = 0; z < data.boardState.length && z < LAYER_COUNT; z++) {
-          for (let y = 0; y < (data.boardState[z]?.length ?? 0) && y < 13; y++) {
-            for (let x = 0; x < (data.boardState[z]?.[y]?.length ?? 0) && x < 13; x++) {
-              const val = data.boardState[z][y][x] as 0 | 1 | 2;
-              if (val !== 0) rightPanel.board.set(x, y, z, val);
-            }
-          }
-        }
-      } else if (data.moves) {
-        // Fallback: replay moves for legacy saves
-        for (const move of data.moves) {
-          if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
-            rightPanel.board.set(move.x, move.y, move.z, move.player as any);
-          }
-        }
-      } else {
-        overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);
-        return;
-      }
-
-      if (data.currentPlayer === 1 || data.currentPlayer === 2) {
-        rightPanel.setCurrentPlayer(data.currentPlayer);
-        currentPlayer = data.currentPlayer;
-      }
-      if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
-        const delta = data.layerSpacing - leftPanel.layerSpacing;
-        leftPanel.adjustLayerSpacing(delta);
-      }
-      if (data.gameMode === "pve") {
-        isPvEMode = true;
-      } else if (data.gameMode === "pvp") {
-        isPvEMode = false;
-      }
+      // Restore theme first
       if (data.isDarkTheme != null) {
         currentTheme = data.isDarkTheme ? DARK_THEME : LIGHT_THEME;
         document.body.classList.toggle("dark-theme", data.isDarkTheme);
         eventBus.emit(Events.THEME_TOGGLED, data.isDarkTheme);
       }
+
+      // Restore camera and layer spacing
+      focusZ = data.focusZ ?? 0;
+      if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
+        leftPanel.restoreCameraState(focusZ, data.layerSpacing);
+      }
+
+      // Instant-load board snapshot
+      if (data.boardState && Array.isArray(data.boardState)) {
+        rightPanel.loadBoardSnapshot(data.boardState);
+      } else if (data.moves) {
+        // Fallback: replay moves for legacy saves
+        rightPanel.board.reset();
+        for (const move of data.moves) {
+          if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
+            rightPanel.board.set(move.x, move.y, move.z, move.player as any);
+          }
+        }
+        rightPanel.refresh();
+      } else {
+        overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);
+        return;
+      }
+
+      // Restore move history
+      moveHistory = data.moves ? [...data.moves] : [];
+
+      // Restore turn state
+      if (data.currentPlayer === 1 || data.currentPlayer === 2) {
+        rightPanel.setCurrentPlayer(data.currentPlayer);
+        currentPlayer = data.currentPlayer;
+      }
+      playerColor = (data.playerColor === 1 || data.playerColor === 2) ? data.playerColor : 1;
+
+      // Restore game mode and AI
+      if (data.gameMode === "pve") {
+        isPvEMode = true;
+        aiEngine = new AIEngine(data.aiDifficulty as "Easy" | "Medium" | "Hard" || "Easy");
+        isAIThinking = false;
+      } else {
+        isPvEMode = false;
+        if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+      }
+
+      // Sync 3D view
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
-      rightPanel.refresh();
+
       // State-aware transition
       if (gameStore.appState === AppState.TITLE || gameStore.appState === AppState.GUIDE_FROM_TITLE) {
         const ss = document.getElementById("start-screen");
@@ -464,6 +475,15 @@ async function main(): Promise<void> {
         closeEscMenu();
       }
       overlayManager.showToast(UI_TEXT.SAVE_LOADED);
+
+      // Handle AI turn edge case after loading
+      if (isPvEMode) {
+        const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+        if (currentPlayer === aiColor) {
+          console.log("[Load] AI turn after loading, triggering...");
+          setTimeout(() => triggerAIMove(), 500);
+        }
+      }
     } catch (err) {
       console.error("[Load] Failed:", err);
       overlayManager.showToast(UI_TEXT.SAVE_FAILED, true);
