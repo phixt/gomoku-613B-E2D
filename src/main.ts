@@ -1,4 +1,4 @@
-import "./style/main.css";
+﻿import "./style/main.css";
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
@@ -12,6 +12,8 @@ import type { IStorageAdapter } from "./core/StorageAdapter";
 import { OverlayManager } from "./ui/OverlayManager";
 import { audioManager } from "./audio/AudioManager";
 import { AIEngine } from "./ai/AIEngine";
+import * as THREE from "three";
+import { resourceManager } from "./utils/ResourceManager";
 
 const AppState = {
     TITLE: "TITLE",
@@ -99,6 +101,7 @@ async function main(): Promise<void> {
     audioManager.playSFX("click");
     currentPlayer = player === 1 ? 2 : 1;
     overlayManager.showToast(currentPlayer === 1 ? "\u9ed1\u65b9\u56de\u5408" : "\u767d\u65b9\u56de\u5408");
+    updateTurnIndicator(currentPlayer);
     const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
     if (isPvEMode && currentPlayer === aiColor) {
       triggerAIMove();
@@ -121,9 +124,67 @@ async function main(): Promise<void> {
   let playerColor: 1 | 2 = 1; // 1=Black, 2=White
   let aiEngine: AIEngine | null = null;
   let isAIThinking = false;
+
+  // ── 3D Turn Indicator (isolated scene) ─────────────────
+  const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
+  let indicatorScene: THREE.Scene | null = null;
+  let indicatorCamera: THREE.PerspectiveCamera | null = null;
+  let indicatorRenderer: THREE.WebGLRenderer | null = null;
+  let indicatorMesh: THREE.Mesh | null = null;
+  let indicatorBlackMat: THREE.Material | null = null;
+  let indicatorWhiteMat: THREE.Material | null = null;
+
+  if (indicatorCanvas) {
+    indicatorScene = new THREE.Scene();
+    indicatorCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 10);
+    indicatorCamera.position.set(0, 0, 3);
+
+    indicatorRenderer = new THREE.WebGLRenderer({
+      canvas: indicatorCanvas,
+      alpha: true,
+      antialias: true,
+    });
+    indicatorRenderer.setSize(64, 64);
+    indicatorRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1);
+    indicatorScene.add(light);
+    indicatorScene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+    // Use same geometry as board pieces
+    const geo = resourceManager.getGeometry("piece");
+    indicatorBlackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1 });
+    indicatorWhiteMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4, metalness: 0.1 });
+
+    indicatorMesh = new THREE.Mesh(geo, indicatorBlackMat);
+    indicatorScene.add(indicatorMesh);
+  }
+
+  const updateTurnIndicator = (player: 1 | 2): void => {
+    const textEl = document.getElementById("turn-indicator-text");
+    if (textEl) {
+      textEl.textContent = player === 1 ? "黑方回合" : "白方回合";
+    }
+    if (indicatorMesh && indicatorBlackMat && indicatorWhiteMat) {
+      indicatorMesh.material = player === 1 ? indicatorBlackMat : indicatorWhiteMat;
+    }
+  };
   leftPanel.renderAllPieces(rightPanel.board, focusZ);
 
-  const animate = (): void => { leftPanel.render(); rightPanel.render(); requestAnimationFrame(animate); };
+  const animate = (): void => {
+    leftPanel.render();
+    rightPanel.render();
+    if (indicatorRenderer && indicatorScene && indicatorCamera) {
+      if (gameStore.appState === AppState.PLAYING) {
+        indicatorRenderer.render(indicatorScene, indicatorCamera);
+        document.body.classList.add("in-game");
+      } else {
+        document.body.classList.remove("in-game");
+      }
+    }
+    requestAnimationFrame(animate);
+  };
   requestAnimationFrame(animate);
 
   /**
@@ -144,6 +205,17 @@ async function main(): Promise<void> {
     gameStore.appState = AppState.PLAYING;
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
     audioManager.playBGM("game");
+
+    updateTurnIndicator(currentPlayer);
+
+    // If AI plays Black (player chose White), AI must move first
+    if (isPvEMode) {
+      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+      if (currentPlayer === aiColor) {
+        setTimeout(() => triggerAIMove(), 200);
+      }
+    }
+
     if (startScreen) {
       startScreen.classList.add("fade-out");
       setTimeout(() => { startScreen.style.display = "none"; }, 500);
@@ -295,6 +367,7 @@ async function main(): Promise<void> {
         }
         gs?.classList.add("hidden");
         gameStore.appState = AppState.PLAYING;
+        updateTurnIndicator(currentPlayer);
         forceCorrectSize();
       } else if (gameStore.appState === AppState.PAUSED || gameStore.appState === AppState.GUIDE_FROM_GAME) {
         closeEscMenu();
@@ -573,23 +646,35 @@ async function main(): Promise<void> {
   const difficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
   const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
 
-  if (pvpRadio && pveRadio) {
-    pvpRadio.addEventListener("change", () => {
-      isPvEMode = false;
-      const colorGroup = document.getElementById("player-color-group");
-      if (colorGroup) colorGroup.classList.add("hidden");
-      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
-    });
-    pveRadio.addEventListener("change", () => {
-      isPvEMode = true;
-      const colorGroup = document.getElementById("player-color-group");
-      if (colorGroup) colorGroup.classList.remove("hidden");
+  const updateModeUI = (): void => {
+    isPvEMode = pveRadio?.checked ?? false;
+    const colorGroup = document.getElementById("player-color-group");
+    if (colorGroup) {
+      if (isPvEMode) {
+        colorGroup.classList.remove("hidden");
+      } else {
+        colorGroup.classList.add("hidden");
+      }
+    }
+    if (!isPvEMode && aiEngine) {
+      aiEngine.cancel();
+      aiEngine = null;
+    }
+    if (isPvEMode && gameStore.appState === AppState.PLAYING) {
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
-      if (gameStore.appState === AppState.PLAYING && currentPlayer === aiColor) {
+      if (currentPlayer === aiColor) {
         triggerAIMove();
       }
-    });
+    }
+  };
+
+  if (pvpRadio && pveRadio) {
+    pvpRadio.addEventListener("change", updateModeUI);
+    pveRadio.addEventListener("change", updateModeUI);
   }
+
+  // Set initial state
+  updateModeUI();
 
   if (difficultySelect) {
     difficultySelect.addEventListener("change", () => {
