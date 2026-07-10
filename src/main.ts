@@ -109,13 +109,16 @@ async function main(): Promise<void> {
     audioManager.playSFX("win");
     const modal = document.getElementById("victory-modal");
     const title = document.getElementById("victory-title");
-    if (modal && title) {
+    const subtitle = document.getElementById("victory-subtitle");
+    if (modal && title && subtitle) {
       title.textContent = winner === 1 ? UI_TEXT.BLACK_TURN + " - 获胜\uFF01" : UI_TEXT.WHITE_TURN + " - 获胜\uFF01";
+      subtitle.textContent = "本局共 " + moveCount + " 步";
       modal.classList.remove("hidden");
     }
   };
 
   rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
+    moveCount++;
     audioManager.playSFX("click");
     rightPanel.updateLastMoveUI(_x, _y, _z);
     leftPanel.updateLastMoveUI(_x, _y, _z);
@@ -144,6 +147,7 @@ async function main(): Promise<void> {
   let playerColor: 1 | 2 = 1; // 1=Black, 2=White
   let aiEngine: AIEngine | null = null;
   let isAIThinking = false;
+  let moveCount = 0;
 
   // ── 3D Turn Indicator (isolated scene) ─────────────────
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
@@ -226,6 +230,7 @@ async function main(): Promise<void> {
     if (gameStore.appState === AppState.PLAYING) return;
     hideAllOverlays();
         currentPlayer = 1;
+    moveCount = 0;
     // CRITICAL: Read player color from UI, DO NOT hardcode to 1
     const cw = document.getElementById("color-white") as HTMLInputElement;
     playerColor = (cw && cw.checked) ? 2 : 1;
@@ -283,6 +288,7 @@ async function main(): Promise<void> {
     document.getElementById("victory-modal")?.classList.add("hidden");
     if (aiEngine) aiEngine.cancel();
     isAIThinking = false;
+    moveCount = 0;
     currentPlayer = 1;
     // Re-read player color from UI on restart
     const cw2 = document.getElementById("color-white") as HTMLInputElement;

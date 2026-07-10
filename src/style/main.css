@@ -1277,54 +1277,82 @@ body.dark-theme #turn-indicator-text {
     to { transform: scale(1.1); opacity: 1; }
 }
 
-/* 获胜弹窗专属样式 */
+/* =========================================
+   获胜结算模态框 (复用全局极简风格)
+   ========================================= */
+
+/* 直接复用 .modal-content 的结构，只微调标题和按钮 */
 .victory-content {
-    background: linear-gradient(135deg, #F4F9F4 0%, #E0F0E0 100%);
-    border: 2px solid #4CAF50;
-    box-shadow: 0 10px 40px rgba(76, 175, 80, 0.3);
-    text-align: center;
-    padding: 40px 50px;
+    /* 移除之前的渐变和阴影，使用标准背景 */
+    background: #F4F9F4; 
+    border: 1px solid #C5D5C0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* 仅保留微弱投影，与暂停菜单一致 */
+    
+    /* 强制统一字体 */
+    font-family: 'LXGW WenKai', sans-serif !important;
 }
 
 body.dark-theme .victory-content {
-    background: linear-gradient(135deg, #1A2629 0%, #2A3A3E 100%);
-    border-color: #81C784;
-    box-shadow: 0 10px 40px rgba(129, 199, 132, 0.2);
+    background: #1A2629;
+    border-color: #3A4A4E;
 }
 
+/* 获胜标题：使用墨绿色，不加粗，保持优雅 */
 .victory-title {
-    font-size: 2.2em;
-    color: #2E7D32;
+    font-size: 1.8em;
+    color: #2C4A4E; /* 墨绿 */
     margin-bottom: 10px;
-    font-weight: bold;
+    font-weight: normal; /* 去除粗体，与全局标题一致 */
     letter-spacing: 2px;
 }
 
 body.dark-theme .victory-title {
-    color: #81C784;
+    color: #C8E0E4; /* 亮色主题下的浅色文字 */
 }
 
 .victory-subtitle {
-    font-size: 1.1em;
-    color: #666;
-    margin-bottom: 30px;
+    font-size: 1em;
+    color: #6A8A8E; /* 次级文字颜色 */
+    margin-bottom: 25px;
 }
 
 body.dark-theme .victory-subtitle {
-    color: #AAA;
+    color: #8A9A9E;
 }
 
-.btn-primary {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 6px;
-    cursor: pointer;
+/* 按钮样式：完全复用暂停菜单的按钮风格 */
+.victory-content .modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+/* 确保按钮字体也是霞骛文楷 */
+.victory-content button {
+    font-family: 'LXGW WenKai', sans-serif !important;
     font-size: 1em;
-    transition: background 0.2s;
+    padding: 8px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.btn-primary:hover {
-    background: #45a049;
+/* "再来一局" 按钮：使用主色调边框风格，而非实心色块 */
+#btn-victory-restart {
+    background: transparent;
+    color: #2C4A4E;
+    border: 1px solid #C5D5C0;
+}
+
+#btn-victory-restart:hover {
+    background: rgba(44, 74, 78, 0.1);
+}
+
+body.dark-theme #btn-victory-restart {
+    color: #C8E0E4;
+    border-color: #3A4A4E;
+}
+
+body.dark-theme #btn-victory-restart:hover {
+    background: rgba(200, 224, 228, 0.1);
 }
