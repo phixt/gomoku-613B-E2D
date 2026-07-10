@@ -101,6 +101,8 @@ async function main(): Promise<void> {
 
   // Turn control and placement callback
   rightPanel.setTurnCallback(() => {
+    // CRITICAL: Block mouse clicks during Replay mode
+    if (isReplayMode) return false;
     // Block clicks when not actively PLAYING (includes GAME_OVER, PAUSED, etc.)
     if (gameStore.appState !== AppState.PLAYING) return false;
     // PvP: both players can click; PvE: only the human's color can click
@@ -156,6 +158,7 @@ async function main(): Promise<void> {
   let isAIThinking = false;
   let moveCount = 0;
   let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
+  let isReplayMode = false;
 
   // ── 3D Turn Indicator (isolated scene) ─────────────────
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
@@ -485,10 +488,11 @@ const startReplay = (data: SaveData): void => {
     isAIThinking = false;
 
     // 2. Load board snapshot instantly (DO NOT use loadGameFromData)
-    rightPanel.loadBoardSnapshot(data.boardState);
+    // (loadBoardSnapshot handled by updateReplayUI)
 
     // 3. Set strict REPLAY state
-    gameStore.appState = AppState.REPLAY;
+    isReplayMode = true;
+    gameStore.appState = AppState.PLAYING;
 
     // 4. Initialize replay data (start at move 0 = empty board)
     focusZ = data.focusZ ?? 0;
@@ -556,6 +560,7 @@ const updateReplayUI = (): void => {
 
 const exitReplay = (): void => {
     console.log("[Replay] Exiting replay mode");
+    isReplayMode = false;
     const controls = document.getElementById("replay-controls");
     if (controls) controls.remove();
     replayState = null;
@@ -689,7 +694,9 @@ const exitReplay = (): void => {
         gs?.classList.add("hidden");
         gameStore.appState = AppState.PLAYING;
         updateTurnIndicator(currentPlayer);
+
         forceCorrectSize();
+        isReplayMode = false;
       } else if (gameStore.appState === AppState.PAUSED || gameStore.appState === AppState.GUIDE_FROM_GAME) {
         closeEscMenu();
       }
@@ -845,6 +852,26 @@ const exitReplay = (): void => {
       return;
     }
 
+    // Replay mode key handling - intercept BEFORE main switch
+    // Only step keys (Arrows) are intercepted; camera keys (A/D, Q/E, W/S) are intentionally passed through
+    if (isReplayMode) {
+      if (e.code === "Escape" || e.code === "KeyR") {
+        e.preventDefault();
+        exitReplay();
+        return;
+      }
+      if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        replayStep(-1);
+        return;
+      }
+      if (e.code === "ArrowRight") {
+        e.preventDefault();
+        replayStep(1);
+        return;
+      }
+      // Allow A/D/Q/E/W/S/F/H/V/X/Z/C camera and aux keys to fall through to PLAYING case below
+    }
     switch (gameStore.appState) {
       case AppState.TITLE:
       case AppState.GUIDE_FROM_TITLE:
@@ -957,18 +984,6 @@ const exitReplay = (): void => {
         }
         break;
 
-      case AppState.REPLAY:
-        if (e.code === "Escape" || e.code === "KeyR") {
-          e.preventDefault();
-          exitReplay();
-        } else if (e.code === "ArrowLeft") {
-          e.preventDefault();
-          replayStep(-1);
-        } else if (e.code === "ArrowRight") {
-          e.preventDefault();
-          replayStep(1);
-        }
-        break;
     }
   });
   leftEl.addEventListener("wheel", (e: WheelEvent) => {

@@ -1,0 +1,38 @@
+    console.log("[Replay] Starting replay for save:", data.id);
+
+    // 1. Cancel any running AI and clear timers
+    if (aiEngine) { aiEngine.cancel(); }
+    isAIThinking = false;
+
+    // 2. Use flag instead of new AppState to keep PLAYING render loop active
+    isReplayMode = true;
+    gameStore.appState = AppState.PLAYING;
+
+    // 3. Initialize replay data (start at move 0 = empty board)
+    focusZ = data.focusZ ?? 0;
+    replayState = {
+        moves: [...data.moves],
+        currentIndex: 0
+    };
+
+    // 4. Inject Replay Controls UI
+    let controls = document.getElementById("replay-controls");
+    if (!controls) {
+        controls = document.createElement("div");
+        controls.id = "replay-controls";
+        controls.innerHTML =
+            '<button id="btn-replay-prev">上一步</button>' +
+            '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
+            '<button id="btn-replay-next">下一步</button>' +
+            '<button id="btn-replay-exit">退出</button>';
+        document.body.appendChild(controls);
+
+        document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
+        document.getElementById("btn-replay-next")?.addEventListener("click", () => replayStep(1));
+        document.getElementById("btn-replay-exit")?.addEventListener("click", exitReplay);
+    }
+
+    // 5. Initial render (empty board)
+    updateReplayUI();
+    overlayManager.showToast("进入复盘模式 - 共 " + data.moves.length + " 步");
+};
