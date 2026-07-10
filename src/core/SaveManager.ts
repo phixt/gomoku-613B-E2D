@@ -39,7 +39,6 @@ export interface SaveData {
   layers: number;          // 6
   layerSpacing: number;    // 层间距
 }
-
 export interface SlotEntry {
   type: "general" | "quick";
   data: SaveData | null;
@@ -114,20 +113,67 @@ export class SaveManager {
     return latest;
   }
 
-  private loadFromStorage(): void {
+    private loadFromStorage(): void {
     try {
       const raw = this.storage.get(STORAGE_KEY);
       if (raw) {
         const parsed: (SaveData | null)[] = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length === TOTAL_SLOTS) {
-          this._slots = parsed;
+          // Run migration on each slot
+          this._slots = parsed.map((data) => data ? this.migrateData(data) : null);
           return;
         }
       }
     } catch {
-
-      /* corrupt data, reset */}
+      /* corrupt data, reset */
+    }
     this._slots = new Array(TOTAL_SLOTS).fill(null);
+  }
+
+  /**
+   * Migrate legacy save data to the latest version (2.0.0).
+   */
+  private migrateData(data: any): SaveData {
+    if (!data.version || data.version < "2.0.0") {
+      console.log("[SaveManager] Migrating legacy save data to v2.0.0...");
+      // Reconstruct boardState from moves if missing
+      const boardSize = data.boardSize || 13;
+      const layers = data.layers || 6;
+      const boardState: number[][][] = [];
+      for (let z = 0; z < layers; z++) {
+        const layer: number[][] = [];
+        for (let y = 0; y < boardSize; y++) {
+          layer.push(new Array(boardSize).fill(0));
+        }
+        boardState.push(layer);
+      }
+      // Populate boardState from moves
+      if (data.moves && Array.isArray(data.moves)) {
+        for (const move of data.moves) {
+          if (move.x >= 0 && move.x < boardSize && move.y >= 0 && move.y < boardSize && move.z >= 0 && move.z < layers) {
+            boardState[move.z][move.y][move.x] = move.player;
+          }
+        }
+      }
+      return {
+        id: data.id || crypto.randomUUID(),
+        version: "2.0.0",
+        timestamp: data.timestamp || Date.now(),
+        boardState,
+        moves: data.moves || [],
+        rules: data.rules || "gomoku",
+        gameMode: data.gameMode || "pvp",
+        status: data.status || "playing",
+        winner: data.winner || 0,
+        currentPlayer: data.currentPlayer || 1,
+        focusZ: data.focusZ || 0,
+        isDarkTheme: data.isDarkTheme || false,
+        boardSize,
+        layers,
+        layerSpacing: data.layerSpacing || 3.5,
+      } as SaveData;
+    }
+    return data as SaveData;
   }
 
   private persist(): void {
@@ -153,3 +199,4 @@ export class SaveManager {
     }
   }
 }
+

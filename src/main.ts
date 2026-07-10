@@ -36,10 +36,15 @@ async function main(): Promise<void> {
   let adapter: IStorageAdapter;
   if (import.meta.env.VITE_IS_TAURI) {
     console.log("[Init] Running in Tauri environment, loading TauriStoreAdapter...");
-    const { TauriStoreAdapter } = await import("./core/TauriStoreAdapter");
-    const tauriAdapter = new TauriStoreAdapter();
-    await tauriAdapter.init();
-    adapter = tauriAdapter;
+    try {
+      const { TauriStoreAdapter } = await import("./core/TauriStoreAdapter");
+      const tauriAdapter = new TauriStoreAdapter();
+      await tauriAdapter.init();
+      adapter = tauriAdapter;
+    } catch (e) {
+      console.error("[Init] Failed to load TauriStoreAdapter, falling back to LocalStorageAdapter:", e);
+      adapter = new LocalStorageAdapter();
+    }
   } else {
     console.log("[Init] Running in Web environment, using LocalStorageAdapter...");
     adapter = new LocalStorageAdapter();
@@ -66,7 +71,7 @@ async function main(): Promise<void> {
   var overlayManager = new OverlayManager({
     onSave: function (index, data) {
       saveManager.save(index, data);
-      overlayManager.showToast("已保存到存档 " + (index === 5 ? "快速档" : String(index + 1)));
+      overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(index === 5 ? UI_TEXT.QUICK_SAVE_LABEL : String(index + 1)));
     },
     onLoad: function (data) {
       loadGameFromData(data);
@@ -365,46 +370,88 @@ async function main(): Promise<void> {
   };
 
   const serializeBoardState = (): SaveData => {
-    const moves: Array<{x: number;y: number;z: number;player: number;}> = [];
+    const boardState: number[][][] = [];
+    const moves: Array<{x: number;y: number;z: number;player: 1 | 2;}> = [];
+    const bs = rightPanel.board;
     for (let z = 0; z < LAYER_COUNT; z++) {
+      const layer: number[][] = [];
       for (let y = 0; y < 13; y++) {
+        const row: number[] = [];
         for (let x = 0; x < 13; x++) {
-          const state = rightPanel.board.get(x, y, z);
-          if (state !== 0) {
-            moves.push({ x, y, z, player: state });
+          const s = bs.get(x, y, z);
+          row.push(s);
+          if (s !== 0) {
+            moves.push({ x, y, z, player: s as 1 | 2 });
           }
         }
+        layer.push(row);
       }
+      boardState.push(layer);
     }
     return {
-      version: "0.4.0",
+      id: crypto.randomUUID(),
+      version: "2.0.0",
       timestamp: Date.now(),
-      boardSize: 13,
-      layers: LAYER_COUNT,
-      layerSpacing: leftPanel.layerSpacing,
+      boardState,
       moves,
+      rules: "gomoku" as const,
+      gameMode: isPvEMode ? "pve" as const : "pvp" as const,
+      status: "playing" as const,
+      winner: 0 as const,
+      currentPlayer: rightPanel.getCurrentPlayer() as 1 | 2,
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
-      currentPlayer: rightPanel.getCurrentPlayer()
+      boardSize: 13,
+      layers: LAYER_COUNT,
+      layerSpacing: leftPanel.layerSpacing
     };
   };
 
   const loadGameFromData = (data: SaveData): void => {
     try {
-      if (!data || !data.moves) {overlayManager.showToast("无效的存档数据", true);return;}
+      if (!data) {overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);return;}
       rightPanel.board.reset();
       focusZ = data.focusZ ?? 0;
-      for (const move of data.moves) {
-        if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
-          rightPanel.board.set(move.x, move.y, move.z, move.player as any);
+
+      // Use boardState snapshot if available (O(1) loading, future saves)
+      if (data.boardState && Array.isArray(data.boardState)) {
+        for (let z = 0; z < data.boardState.length && z < LAYER_COUNT; z++) {
+          for (let y = 0; y < (data.boardState[z]?.length ?? 0) && y < 13; y++) {
+            for (let x = 0; x < (data.boardState[z]?.[y]?.length ?? 0) && x < 13; x++) {
+              const val = data.boardState[z][y][x] as 0 | 1 | 2;
+              if (val !== 0) rightPanel.board.set(x, y, z, val);
+            }
+          }
         }
+      } else if (data.moves) {
+        // Fallback: replay moves for legacy saves
+        for (const move of data.moves) {
+          if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
+            rightPanel.board.set(move.x, move.y, move.z, move.player as any);
+          }
+        }
+      } else {
+        overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);
+        return;
       }
+
       if (data.currentPlayer === 1 || data.currentPlayer === 2) {
         rightPanel.setCurrentPlayer(data.currentPlayer);
+        currentPlayer = data.currentPlayer;
       }
       if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
         const delta = data.layerSpacing - leftPanel.layerSpacing;
         leftPanel.adjustLayerSpacing(delta);
+      }
+      if (data.gameMode === "pve") {
+        isPvEMode = true;
+      } else if (data.gameMode === "pvp") {
+        isPvEMode = false;
+      }
+      if (data.isDarkTheme != null) {
+        currentTheme = data.isDarkTheme ? DARK_THEME : LIGHT_THEME;
+        document.body.classList.toggle("dark-theme", data.isDarkTheme);
+        eventBus.emit(Events.THEME_TOGGLED, data.isDarkTheme);
       }
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
       rightPanel.refresh();
@@ -423,10 +470,10 @@ async function main(): Promise<void> {
       } else if (gameStore.appState === AppState.PAUSED || gameStore.appState === AppState.GUIDE_FROM_GAME) {
         closeEscMenu();
       }
-      overlayManager.showToast("已加载存档");
+      overlayManager.showToast(UI_TEXT.SAVE_LOADED);
     } catch (err) {
       console.error("[Load] Failed:", err);
-      overlayManager.showToast("加载失败", true);
+      overlayManager.showToast(UI_TEXT.SAVE_FAILED, true);
     }
   };
 
@@ -439,8 +486,8 @@ async function main(): Promise<void> {
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
     saveManager.save(targetIndex, data);
-    const slotName = targetIndex === QUICK_SAVE_INDEX ? "快速存档" : `存档 ${targetIndex + 1}`;
-    overlayManager.showToast(`已保存到${slotName}`);
+    const slotName = targetIndex === QUICK_SAVE_INDEX ? UI_TEXT.QUICK_SAVE_LABEL : String(targetIndex + 1);
+    overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(slotName));
     const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
     navigator.clipboard.writeText(base64).then(() => {
       console.log("[Save] Copied to clipboard");
@@ -494,12 +541,12 @@ async function main(): Promise<void> {
     const btnP = document.getElementById("guide-btn-primary");
     const btnS = document.getElementById("guide-btn-secondary");
     if (gameStore.appState === AppState.GUIDE_FROM_TITLE) {
-      if (btnP) {btnP.textContent = "开始游戏";btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
-      if (btnS) {btnS.textContent = "返回标题";btnS.addEventListener("click", backToTitle);}
+      if (btnP) {btnP.textContent = UI_TEXT.BTN_START_GAME;btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
+      if (btnS) {btnS.textContent = UI_TEXT.BTN_BACK;btnS.addEventListener("click", backToTitle);}
     } else {
-      if (btnP) {btnP.textContent = "开始新游戏";btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
-      if (btnP) {btnP.textContent = "开始新游戏";btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
-      if (btnS) {btnS.textContent = "回到游戏";btnS.addEventListener("click", backToGame);}
+      if (btnP) {btnP.textContent = UI_TEXT.BTN_NEW_GAME;btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
+      if (btnP) {btnP.textContent = UI_TEXT.BTN_NEW_GAME;btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
+      if (btnS) {btnS.textContent = UI_TEXT.BTN_RESUME;btnS.addEventListener("click", backToGame);}
     }
   };
 
@@ -537,7 +584,7 @@ async function main(): Promise<void> {
       const data = saveManager.load(idx);
       if (data) {loadGameFromData(data);}
     } else {
-      overlayManager.showToast("没有可读取的存档", true);
+      overlayManager.showToast(UI_TEXT.NO_SAVE, true);
     }
   });
 
@@ -568,7 +615,7 @@ async function main(): Promise<void> {
             const data = saveManager.load(idx);
             if (data) {loadGameFromData(data);}
           } else {
-            overlayManager.showToast("没有可读取的存档", true);
+            overlayManager.showToast(UI_TEXT.NO_SAVE, true);
           }
           return;
         }
@@ -596,7 +643,7 @@ async function main(): Promise<void> {
                   const data = saveManager.load(idx);
                   if (data) {loadGameFromData(data);}
                 } else {
-                  overlayManager.showToast("没有可读取的存档", true);
+                  overlayManager.showToast(UI_TEXT.NO_SAVE, true);
                 }
                 break;
               }
@@ -650,7 +697,7 @@ async function main(): Promise<void> {
           case "m":case "M":
             e.preventDefault();
             isPvEMode = !isPvEMode;
-            overlayManager.showToast(isPvEMode ? "AI 模式已开启（执白）" : "玩家对战模式");
+            overlayManager.showToast(isPvEMode ? UI_TEXT.SETTING_PVE + " - " + UI_TEXT.SETTING_WHITE : UI_TEXT.SETTING_PVP);
             const colorGroup = document.getElementById("player-color-group");
             if (colorGroup) {
               if (isPvEMode) colorGroup.classList.remove("hidden");else
