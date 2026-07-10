@@ -491,6 +491,7 @@ const startReplay = (data: SaveData): void => {
     gameStore.appState = AppState.REPLAY;
 
     // 4. Initialize replay data (start at move 0 = empty board)
+    focusZ = data.focusZ ?? 0;
     replayState = {
         moves: [...data.moves],
         currentIndex: 0
@@ -533,16 +534,19 @@ const replayStep = (direction: number): void => {
 
 const updateReplayUI = (): void => {
     if (!replayState) return;
-    // Clear board
+    // Clear board and reset last move ring
     rightPanel.board.reset();
+    rightPanel.loadBoardSnapshot(Array(LAYER_COUNT).fill(null).map(() => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0))));
     // Replay moves up to currentIndex
     for (let i = 0; i < replayState.currentIndex; i++) {
         const m = replayState.moves[i];
         rightPanel.board.set(m.x, m.y, m.z, m.player);
     }
     rightPanel.refresh();
-    // Sync 3D view
+    // Sync 3D view with current focus layer
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
+    // Also update RightPanel focus layer to match
+    rightPanel.setFocusZ(focusZ);
     // Update step info text
     const info = document.getElementById("replay-step-info");
     if (info) {
@@ -844,6 +848,10 @@ const exitReplay = (): void => {
     switch (gameStore.appState) {
       case AppState.TITLE:
       case AppState.GUIDE_FROM_TITLE:
+        // Prevent arrow keys from scrolling the page
+        if (e.code.startsWith("Arrow")) {
+          e.preventDefault();
+        }
         if (e.code === "Space" || e.code === "Enter") {
           e.preventDefault();
           startGame();
@@ -900,6 +908,10 @@ const exitReplay = (): void => {
         }
 
       case AppState.PLAYING:
+        // Prevent arrow keys from scrolling the page
+        if (e.code.startsWith("Arrow")) {
+          e.preventDefault();
+        }
         switch (e.key) {
           case "a":case "A":
             e.preventDefault();
