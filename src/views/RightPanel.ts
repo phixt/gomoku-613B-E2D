@@ -4,7 +4,7 @@ import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND, COLOR_AUX_RED, COLOR_AUX_BLUE } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
@@ -96,6 +96,7 @@ export class RightPanel {
   private hoverX: number = -1;
   private hoverY: number = -1;
   private isColorblindMode: boolean = false;
+  private starMat!: THREE.MeshBasicMaterial;
   private _hoverWorldPos: THREE.Vector3 | null = null;
   private isGameActive: () => boolean = () => true;
   private isMyTurn: () => boolean = () => true;
@@ -146,15 +147,15 @@ export class RightPanel {
     { x: 11, y: 1 }, { x: 11, y: 11 }];
 
     const starGeo = new THREE.CircleGeometry(0.12, 32);
-    const starMat = new THREE.MeshBasicMaterial({
-      color: 0xCC0000,
+    this.starMat = new THREE.MeshBasicMaterial({
+      color: COLOR_AUX_RED,
       side: THREE.DoubleSide,
       transparent: true,
       depthWrite: false,
       depthTest: true
     });
     starPositions.forEach((p) => {
-      const m = new THREE.Mesh(starGeo, starMat);
+      const m = new THREE.Mesh(starGeo, this.starMat);
       m.position.set(p.x, p.y, 0.1);
       m.renderOrder = 999;
       this.gridGroup.add(m);
@@ -193,6 +194,7 @@ export class RightPanel {
     eventBus.on(Events.GAME_RESET, () => {this._currentPlayer = 1;this.renderPieces();});
     eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
       this.isColorblindMode = isBlind;
+      this.starMat.color.setHex(isBlind ? COLOR_AUX_BLUE : COLOR_AUX_RED);
       if (this.hoverX >= 0) this.computeHoverOverlays(this.hoverX, this.hoverY);
     });
   }

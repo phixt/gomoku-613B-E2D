@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { type Theme, AuxMode, LIGHT_THEME, DARK_THEME } from "../core/Types";
 import type { AuxData3D } from "../core/Types";
 import type { Board } from "../core/Board";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, MIN_LAYER_SPACING, MAX_LAYER_SPACING } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, MIN_LAYER_SPACING, MAX_LAYER_SPACING, COLOR_ENEMY_NORMAL, COLOR_ENEMY_BLIND } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
@@ -118,6 +118,7 @@ export class LeftPanel {
   private focusZ: number = 0;
   private theme: Theme;
   private auxMode: AuxMode = AuxMode.ALL;
+  private isColorblindMode: boolean = false;
   private blackTex: THREE.CanvasTexture;
   private whiteTex: THREE.CanvasTexture;
   private blackGhostTex: THREE.CanvasTexture;
@@ -171,6 +172,10 @@ export class LeftPanel {
 
     // Subscribe to events
     eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
+    eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
+      this.isColorblindMode = isBlind;
+      this.highlightCenterMarker(this.focusZ);
+    });
     eventBus.on(Events.LAYER_CHANGED, (z: number) => {this.focusZ = z;this.highlightFocusLayer(z);});
   }
 
@@ -265,8 +270,8 @@ export class LeftPanel {
     for (let i = 0; i < LAYER_COUNT; i++) {
       const sphere = this.markerGroup.children[i] as THREE.Mesh;
       const mat = sphere.material as THREE.MeshBasicMaterial;
-      if (i === focus) {sphere.scale.setScalar(1.5);mat.color.setHex(0xff0000);} else
-      {sphere.scale.setScalar(1.0);mat.color.setHex(0x8b0000);}
+      if (i === focus) {sphere.scale.setScalar(1.5);mat.color.setHex(this.isColorblindMode ? COLOR_ENEMY_BLIND : COLOR_ENEMY_NORMAL);} else
+      {sphere.scale.setScalar(1.0);mat.color.setHex(this.isColorblindMode ? 0x886600 : 0x8b0000);}
     }
   }
 
