@@ -11,7 +11,7 @@
 
 <body class="light-theme">
     <!-- ======================================================
-    游戏主界面（绝对不要动这里的结构）
+    游戏主界面（绝对不要动这里的结构)
     ====================================================== -->
     <div id="app">
         <div id="left-panel" class="panel"></div>
@@ -37,30 +37,69 @@
     </div>
 
     <!-- ======================================================
-    1. 首页 (Start Screen) —— 已修改布局
+    1. 首页 (Start Screen) —已修改布局
     ====================================================== -->
     <div id="start-screen">
         <div class="start-layout split-layout">
-            <!-- 左侧：标题 + 品牌区 + 按钮（沉底） -->
+            <!-- 左侧：标题+ 品牌+ 按钮（沉底） -->
             <div class="start-left brand-area">
                 <h1>GOMOKU 613B-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
-                <div class="version-badge">v0.4.0-beta</div>
+                <div class="version-badge">v0.5.1</div>
 
-                <!-- ▼ 改动：按钮组从右栏移到这里，放在左栏底部 -->
+                <!-- 改动：按钮组从右栏移到这里，放在左栏底部 -->
                 <div class="action-buttons">
                     <button id="start-btn" class="primary-btn">开始游戏</button>
                     <button id="guide-btn" class="secondary-btn">快捷键说明</button>
                 </div>
-                <!-- ▲ 改动结束 -->
+                <!-- 改动结束 -->
+                <!-- 游戏设置区域 -->
+                <div class="settings-section">
+                    <h3>游戏设置</h3>
+
+                    <!-- 游戏模式选择 -->
+                    <div class="setting-group">
+                        <label class="setting-label">对战模式</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="game-mode" value="pvp" checked>
+                                <span>双人对战 (PvP)</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="game-mode" value="pve">
+                                <span>人机对战 (PvE)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- AI难度选择（仅PvE模式） -->
+                    <div class="setting-group" id="ai-difficulty-group">
+                        <label class="setting-label" for="ai-difficulty">AI难度</label>
+                        <select id="ai-difficulty" class="setting-select">
+                            <option value="easy">简单</option>
+                            <option value="medium" selected>中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
+
+                    <!-- 音量控制 -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="volume-slider">音量</label>
+                        <div class="volume-control">
+                            <input type="range" id="volume-slider" min="0" max="100" value="70">
+                            <span id="volume-value">70%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- 右侧：存档槽位（保持不变） -->
+
+            <!-- 右侧：存档槽位（保持不变）-->
             <div class="start-right action-area">
                 <div class="save-area">
                     <h3>存档槽位</h3>
                     <div id="save-slots-list" class="save-slots-list">
-                        <!-- 槽位由 JS 动态生成 -->
+                        <!-- 槽位由JS 动态生成 -->
                     </div>
                     <p class="slot-hint">按 L 快速读取最新存档</p>
                 </div>
@@ -69,7 +108,7 @@
     </div>
 
     <!-- ======================================================
-    2. 指南页 (Guide Screen) —— 已重构布局
+    2. 指南页(Guide Screen) —已重构布局
     ====================================================== -->
     <div id="guide-screen" class="hidden">
         <div class="start-layout">
@@ -113,37 +152,37 @@
                     <div class="desc-item"><span class="key-tag active">R</span> 重新开始</div>
                     <div class="desc-item"><span class="key-tag active">F</span> 翻转 2D 棋盘</div>
                     <div class="desc-item"><span class="key-tag active">H</span> 开关辅助线</div>
-                    <div class="desc-item"><span class="key-tag active">T</span> 切换 亮/暗 主题</div>
-                    <div class="desc-item"><span class="key-tag active">V</span> 切换色弱模式 (蓝/黄)</div>
+                    <div class="desc-item"><span class="key-tag active">T</span> 切换主题</div>
+                    <div class="desc-item"><span class="key-tag active">V</span> 切换色弱模式 (开启/关闭)</div>
                 </div>
             </div>
 
-            <!-- 右栏：标题（上下居中）+ 鼠标提示 + 按钮 -->
+            <!-- 右栏：标题（上下居中+ 鼠标提示 + 按钮 -->
             <div class="start-right">
                 <h1>GOMOKU 613B-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
 
-                <!-- ▼ 改动：鼠标提示放在标题下方，居中偏右 -->
+                <!-- 改动：鼠标提示放在标题下方，居中偏右 -->
                 <div class="mouse-actions">
-                    <p>🖱️ 鼠标悬停：查看辅助线</p>
-                    <p>🖱️ 鼠标点击：当前层落子</p>
-                    <p>🖱️ 鼠标滚轮：旋转3D视角</p>
+                    <p>🖱鼠标悬停：查看辅助线</p>
+                    <p>🖱鼠标点击：当前层落子</p>
+                    <p>🖱鼠标滚轮：旋转 3D 视角</p>
                 </div>
-                <!-- ▲ 改动结束 -->
+                <!-- 改动结束 -->
 
-                <!-- ▼ 改动：按钮组放在右栏底部 -->
+                <!-- 改动：按钮组放在右栏底部 -->
                 <div class="guide-actions">
                     <button id="guide-btn-primary" class="primary-btn">开始游戏</button>
                     <button id="guide-btn-secondary" class="secondary-btn">返回标题</button>
                 </div>
-                <!-- ▲ 改动结束 -->
+                <!-- 改动结束 -->
             </div>
 
-            <!-- ▼ 改动：底部提示 — 左对齐，单行，不跨行 -->
+            <!-- 改动：底部提示左对齐，单行，不跨行 -->
             <div class="guide-bottom-tip">
                 💡 提示：游戏开始后，按 <kbd>S</kbd> 拉远视角
             </div>
-            <!-- ▲ 改动结束 -->
+            <!-- 改动结束 -->
         </div>
     </div>
 

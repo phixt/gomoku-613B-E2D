@@ -1068,3 +1068,144 @@ body.dark-theme #guide-screen .guide-bottom-tip kbd {
         padding-right: 0;
     }
 }
+/* =========================================
+   Settings area (game mode, difficulty, volume)
+   ========================================= */
+.settings-area {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #C5D5C0;
+}
+
+body.dark-theme .settings-area {
+    border-top-color: #3A4A4E;
+}
+
+.settings-area h3 {
+    font-size: 1em;
+    color: #2C4A4E;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    font-weight: normal;
+}
+
+body.dark-theme .settings-area h3 {
+    color: #C8E0E4;
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.setting-label {
+    min-width: 72px;
+    color: #6A8A8E;
+    letter-spacing: 1px;
+    font-size: 0.85em;
+}
+
+body.dark-theme .setting-label {
+    color: #8A9A9E;
+}
+
+.radio-group {
+    display: flex;
+    gap: 16px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: #2C4A4E;
+    font-size: 0.9em;
+}
+
+body.dark-theme .radio-label {
+    color: #C8E0E4;
+}
+
+.radio-label input[type="radio"] {
+    cursor: pointer;
+    accent-color: #2C4A4E;
+}
+
+body.dark-theme .radio-label input[type="radio"] {
+    accent-color: #C8E0E4;
+}
+
+.setting-select {
+    padding: 4px 8px;
+    border: 1px solid #C5D5C0;
+    border-radius: 4px;
+    background: transparent;
+    color: #2C4A4E;
+    font-size: 0.9em;
+    font-family: 'LXGW WenKai', sans-serif;
+    cursor: pointer;
+    outline: none;
+}
+
+body.dark-theme .setting-select {
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+}
+
+.setting-select:focus {
+    border-color: #2C4A4E;
+}
+
+body.dark-theme .setting-select:focus {
+    border-color: #C8E0E4;
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    max-width: 160px;
+    height: 4px;
+    border-radius: 2px;
+    background: #C5D5C0;
+    outline: none;
+    cursor: pointer;
+}
+
+body.dark-theme .volume-slider {
+    background: #3A4A4E;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2C4A4E;
+    cursor: pointer;
+    border: 2px solid #F4F9F4;
+}
+
+body.dark-theme .volume-slider::-webkit-slider-thumb {
+    background: #C8E0E4;
+    border-color: #1A2629;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2C4A4E;
+    cursor: pointer;
+    border: 2px solid #F4F9F4;
+}
+
+body.dark-theme .volume-slider::-moz-range-thumb {
+    background: #C8E0E4;
+    border-color: #1A2629;
+}

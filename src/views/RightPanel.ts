@@ -81,7 +81,8 @@ export class RightPanel {
 
   private container: HTMLElement;
   private focusZ: number = 0;
-  private currentPlayer: CellState = BLACK;
+  private _currentPlayer: CellState = BLACK;
+  public get currentPlayer(): CellState { return this._currentPlayer; }
   private theme: Theme;
   private auxMode: AuxMode = AuxMode.ALL;
   private blackTex: THREE.CanvasTexture;
@@ -187,7 +188,7 @@ export class RightPanel {
     // Subscribe to events
     eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
-    eventBus.on(Events.GAME_RESET, () => { this.currentPlayer = 1; this.renderPieces(); });
+    eventBus.on(Events.GAME_RESET, () => { this._currentPlayer = 1; this.renderPieces(); });
     eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
       this.isColorblindMode = isBlind;
       if (this.hoverX >= 0) this.computeHoverOverlays(this.hoverX, this.hoverY);
@@ -252,14 +253,36 @@ export class RightPanel {
 
   resetGame(): void {
     this.board.reset();
-    this.currentPlayer = BLACK;
+    this._currentPlayer = BLACK;
     this.setFocusZ(0);
   }
 
+
+  /** Place a piece for the AI opponent. */
+  public placeAIPiece(x: number, y: number, z: number): void {
+    if (this.board.get(x, y, z) !== 0) return;
+    this.board.set(x, y, z, this._currentPlayer);
+    this.renderPieces();
+    if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
+
+    const winner = checkWinner(this.board, x, y, z);
+    if (winner !== 0) {
+      setTimeout(() => {
+        alert(winner === BLACK ? "Black wins!" : "White wins!");
+        this.board.reset();
+        this.renderPieces();
+        if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
+        if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
+      }, 50);
+    }
+
+    this._currentPlayer = this._currentPlayer === BLACK ? WHITE : BLACK;
+    this.clearAllOverlays();
+  }
   getCurrentPlayer(): CellState { return this.currentPlayer; }
 
   setCurrentPlayer(state: CellState): void {
-    if (state === 1 || state === 2) { this.currentPlayer = state; }
+    if (state === 1 || state === 2) { this._currentPlayer = state; }
   }
 
 
@@ -503,7 +526,7 @@ export class RightPanel {
     if (!this.hoverValid) return;
     const gx = this.hoverX, gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
-    this.board.set(gx, gy, this.focusZ, this.currentPlayer);
+    this.board.set(gx, gy, this.focusZ, this._currentPlayer);
     const actualState = this.board.get(gx, gy, this.focusZ);
     console.log(`[Board] State at (${gx},${gy},${this.focusZ}) is now: ${actualState} (${actualState === BLACK ? "BLACK" : actualState === WHITE ? "WHITE" : "EMPTY"})`);
 
@@ -523,7 +546,7 @@ export class RightPanel {
       }, 50);
     }
 
-    this.currentPlayer = this.currentPlayer === BLACK ? WHITE : BLACK;
+    this._currentPlayer = this._currentPlayer === BLACK ? WHITE : BLACK;
     this.clearAllOverlays();
 
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -605,10 +628,10 @@ export class RightPanel {
 
     this.renderer.setSize(containerWidth, containerHeight);
 
-    // 妫嬬洏涓栫晫绌洪棿澶у皬锛? 鍒?BOARD_SIZE-1锛?
+    // 濡娲忔稉鏍櫕缁屾椽妫挎径褍鐨敍? 閸?BOARD_SIZE-1閿?
     const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
 
-    // 鍖呭惈瀹夊叏杈硅窛鐨勬€诲昂瀵?
+    // 閸栧懎鎯堢€瑰鍙忔潏纭呯獩閻ㄥ嫭鈧鏄傜€?
     const totalSize = boardWorldSize + (RightPanel.GRID_PADDING * 2);
 
     const aspect = containerWidth / containerHeight;
@@ -617,11 +640,11 @@ export class RightPanel {
     let frustumHalfHeight: number;
 
     if (aspect > 1) {
-      // 瀹藉睆锛氶珮搴︿负鍩哄噯锛屽搴﹁嚜閫傚簲
+      // 鐎硅棄鐫嗛敍姘剁彯鎼达缚璐熼崺鍝勫櫙閿涘苯顔旀惔锕佸殰闁倸绨?
       frustumHalfHeight = totalSize / 2;
       frustumHalfWidth = frustumHalfHeight * aspect;
     } else {
-      // 绔栧睆鎴栨鏂瑰舰锛氬搴︿负鍩哄噯锛岄珮搴﹁嚜閫傚簲
+      // 缁旀牕鐫嗛幋鏍劀閺傜懓鑸伴敍姘啍鎼达缚璐熼崺鍝勫櫙閿涘矂鐝惔锕佸殰闁倸绨?
       frustumHalfWidth = totalSize / 2;
       frustumHalfHeight = frustumHalfWidth / aspect;
     }

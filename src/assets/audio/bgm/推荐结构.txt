@@ -1,0 +1,13 @@
+src/
+├── assets/
+│   └── audio/
+│       ├── bgm/
+│       │   ├── menu.mp3        # 标题界面背景音乐
+│       │   ├── game.mp3        # 游戏进行中背景音乐
+│       │   └── victory.mp3     # 胜利音乐（可选）
+│       ── sfx/                # 音效（如果使用外部文件）
+│           ├── click.wav       # 落子音效
+│           ├── win.wav         # 胜利音效
+│           └── hover.wav       # 悬停音效（可选）
+├── audio/
+│   └── AudioManager.ts         # 音频管理器（已存在）

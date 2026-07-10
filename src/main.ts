@@ -1,5 +1,5 @@
 import "./style/main.css";
-import { LIGHT_THEME, DARK_THEME } from "./core/Types";
+import { LIGHT_THEME, DARK_THEME, WHITE } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
@@ -10,6 +10,8 @@ import { SaveManager, type SaveData } from "./core/SaveManager";
 import { LocalStorageAdapter } from "./core/LocalStorageAdapter";
 import type { IStorageAdapter } from "./core/StorageAdapter";
 import { OverlayManager } from "./ui/OverlayManager";
+import { audioManager } from "./audio/AudioManager";
+import { AIEngine } from "./ai/AIEngine";
 
 const AppState = {
     TITLE: "TITLE",
@@ -76,6 +78,12 @@ async function main(): Promise<void> {
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
     leftPanel.renderAllPieces(board, z);
+    audioManager.playSFX("click");
+    setTimeout(() => {
+      if (isAIMode && !isAIThinking && rightPanel.currentPlayer === WHITE) {
+        triggerAIMove();
+      }
+    }, 0);
   };
 
   rightPanel.on3DAuxDataChanged = (data): void => {
@@ -98,6 +106,9 @@ async function main(): Promise<void> {
 
   let focusZ = 0;
   let isColorblindMode = false;
+  let isAIMode = false;
+  let aiEngine: AIEngine | null = null;
+  let isAIThinking = false;
   leftPanel.renderAllPieces(rightPanel.board, focusZ);
 
   const animate = (): void => { leftPanel.render(); rightPanel.render(); requestAnimationFrame(animate); };
@@ -109,8 +120,16 @@ async function main(): Promise<void> {
   const startGame = (): void => {
     if (gameStore.appState === AppState.PLAYING) return;
     hideAllOverlays();
+    if (isAIMode) {
+      const diffSelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
+      aiEngine = new AIEngine(diffSelect?.value as "Easy" | "Medium" | "Hard" || "Easy");
+      isAIThinking = false;
+    } else {
+      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+    }
     gameStore.appState = AppState.PLAYING;
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
+    audioManager.playBGM("game");
     if (startScreen) {
       startScreen.classList.add("fade-out");
       setTimeout(() => { startScreen.style.display = "none"; }, 500);
@@ -120,7 +139,26 @@ async function main(): Promise<void> {
 
 
 
+  const triggerAIMove = async (): Promise<void> => {
+    if (!aiEngine || isAIThinking) return;
+    isAIThinking = true;
+    eventBus.emit(Events.AI_MOVE_REQUEST);
+    try {
+      const move = await aiEngine.think(rightPanel.board);
+      if (move && rightPanel.board.get(move.x, move.y, move.z) === 0) {
+        rightPanel.placeAIPiece(move.x, move.y, move.z);
+        eventBus.emit(Events.PLAY_SOUND, { sound: "click" });
+      }
+    } catch (_err) {
+      // cancelled or no valid moves
+    } finally {
+      isAIThinking = false;
+    }
+  };
+
   const confirmRestart = (): void => {
+    if (aiEngine) aiEngine.cancel();
+    isAIThinking = false;
     rightPanel.board.reset();
     gameStore.setFocusZ(0);
     rightPanel.resetGame();
@@ -456,6 +494,12 @@ async function main(): Promise<void> {
             e.preventDefault();
             { const mode = rightPanel.cycleAuxMode(); leftPanel.setAuxMode(mode); }
             break;
+          case "m": case "M":
+            e.preventDefault();
+            isAIMode = !isAIMode;
+            overlayManager.showToast(isAIMode ? "AI 模式已开启（执白）" : "玩家对战模式");
+            if (!isAIMode && aiEngine) { aiEngine.cancel(); aiEngine = null; isAIThinking = false; }
+            break;
           case "v": case "V":
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
@@ -481,6 +525,42 @@ async function main(): Promise<void> {
     leftPanel.resize(lw, h);
     rightPanel.resize(rw, h);
   });
+
+  // Audio init (first user gesture for browser autoplay policy)
+  const initAudio = (): void => {
+    audioManager.init();
+    audioManager.playBGM("menu");
+    document.removeEventListener("click", initAudio);
+    document.removeEventListener("keydown", initAudio);
+  };
+  document.addEventListener("click", initAudio);
+  document.addEventListener("keydown", initAudio);
+
+  // Wire up start-screen controls
+  const pvpRadio = document.getElementById("mode-pvp") as HTMLInputElement;
+  const pveRadio = document.getElementById("mode-pve") as HTMLInputElement;
+  const difficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
+  const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
+
+  if (pvpRadio && pveRadio) {
+    pvpRadio.addEventListener("change", () => { isAIMode = false; });
+    pveRadio.addEventListener("change", () => { isAIMode = true; });
+  }
+
+  if (difficultySelect) {
+    difficultySelect.addEventListener("change", () => {
+      if (aiEngine) {
+        aiEngine.setDifficulty(difficultySelect.value as "Easy" | "Medium" | "Hard");
+      }
+    });
+  }
+
+  if (volumeSlider) {
+    volumeSlider.addEventListener("input", () => {
+      const val = parseFloat(volumeSlider.value);
+      audioManager.setVolume(val, val * 0.5);
+    });
+  }
 }
 
 main();
