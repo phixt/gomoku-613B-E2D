@@ -1209,3 +1209,48 @@ body.dark-theme .volume-slider::-moz-range-thumb {
     background: #C8E0E4;
     border-color: #1A2629;
 }
+
+/* =========================================
+   右上角回合指示器
+   ========================================= */
+#turn-indicator-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 50; /* 确保在游戏面板之上，但在弹窗之下 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none; /* 关键：允许鼠标点击穿透，不影响游戏操作 */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* 仅在游戏进行中显示 */
+body.in-game #turn-indicator-container {
+    opacity: 1;
+}
+
+#turn-indicator-canvas {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#turn-indicator-text {
+    font-size: 0.9em;
+    color: #2C4A4E;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+body.dark-theme #turn-indicator-text {
+    color: #C8E0E4;
+    background: rgba(26, 38, 41, 0.8);
+}
