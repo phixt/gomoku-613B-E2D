@@ -31,6 +31,7 @@ export const UI_TEXT = {
     EMPTY_SLOT: "空",
     OCCUPIED_SLOT: "已存档",
     QUICK_SAVE_LABEL: "快速存档", // 替代 "快速档"
+    SAVE_SLOT_LABEL: (index: number) => `存档 ${index}`,
 
     // ================= 按钮与菜单 =================
     BTN_START_GAME: "开始游戏",
@@ -93,4 +94,9 @@ export const UI_TEXT = {
     // ================= replay =================
     BTN_REPLAY: "复盘",
     REPLAY_ENTER: "Replay mode - {0} moves",
+
+    // ================= game over =================
+    BLACK_WIN: "黑方获胜！",
+    WHITE_WIN: "白方获胜！",
+    GAME_OVER_SUBTITLE: (moves: number) => `本局共 ${moves} 步`,
 } as const;

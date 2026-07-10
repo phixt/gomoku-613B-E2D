@@ -3,7 +3,7 @@ import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
-import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./core/Config";
+import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX, BOARD_SIZE } from "./core/Config";
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { SaveManager, type SaveData } from "./core/SaveManager";
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
     },
     onDelete: function (index) {
       saveManager.delete(index);
-      overlayManager.showToast("已删除存档 " + (index + 1));
+      overlayManager.showToast(UI_TEXT.DELETE_SUCCESS(index + 1));
     },
     serializeState: function () {return serializeBoardState();},
     onGetSlots: function () {return saveManager.getSlots();},
@@ -117,8 +117,8 @@ async function main(): Promise<void> {
     const title = document.getElementById("victory-title");
     const subtitle = document.getElementById("victory-subtitle");
     if (modal && title && subtitle) {
-      title.textContent = winner === 1 ? UI_TEXT.BLACK_TURN + " - 获胜\uFF01" : UI_TEXT.WHITE_TURN + " - 获胜\uFF01";
-      subtitle.textContent = "本局共 " + moveCount + " 步";
+      title.textContent = winner === 1 ? UI_TEXT.BLACK_WIN : UI_TEXT.WHITE_WIN;
+      subtitle.textContent = UI_TEXT.GAME_OVER_SUBTITLE(moveCount);
       modal.classList.remove("hidden");
     }
   };
@@ -130,7 +130,7 @@ async function main(): Promise<void> {
     rightPanel.updateLastMoveUI(_x, _y, _z);
     leftPanel.updateLastMoveUI(_x, _y, _z);
     currentPlayer = player === 1 ? 2 : 1;
-    overlayManager.showToast(currentPlayer === 1 ? "\u9ed1\u65b9\u56de\u5408" : "\u767d\u65b9\u56de\u5408");
+    overlayManager.showToast(currentPlayer === 1 ? UI_TEXT.BLACK_TURN : UI_TEXT.WHITE_TURN);
     updateTurnIndicator(currentPlayer);
     const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
     if (isPvEMode && currentPlayer === aiColor) {
@@ -279,7 +279,7 @@ async function main(): Promise<void> {
   const triggerAIMove = async (): Promise<void> => {
     if (!aiEngine || isAIThinking) return;
     isAIThinking = true;
-    overlayManager.showToast("AI \u601d\u8003\u4e2d...");
+    overlayManager.showToast(UI_TEXT.AI_THINKING);
     eventBus.emit(Events.AI_MOVE_REQUEST);
     try {
       const move = await aiEngine.think(rightPanel.board);
@@ -321,24 +321,62 @@ async function main(): Promise<void> {
   };
 
   // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
-  const renderSaveSlots = (slots: ReadonlyArray<SaveData | null>): void => {
+  const renderSaveSlots = (): void => {
     const list = document.getElementById("save-slots-list");
     if (!list) {
       console.error("[renderSaveSlots] #save-slots-list NOT FOUND in DOM!");
       return;
     }
     list.innerHTML = "";
+
+    // === Quick Save Slot (always first) ===
+    const quickData = saveManager.getSlots()[QUICK_SAVE_INDEX];
+    const quickDiv = document.createElement("div");
+    quickDiv.className = "save-slot quick-save";
+
+    if (quickData) {
+      const date = new Date(quickData.timestamp);
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      const hh = String(date.getHours()).padStart(2, "0");
+      const min = String(date.getMinutes()).padStart(2, "0");
+      const timeStr = mm + "/" + dd + " " + hh + ":" + min;
+      const modeStr = quickData.gameMode === "pve" ? "PvE" : "PvP";
+      const movesCount = quickData.moves ? quickData.moves.length : 0;
+      const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
+      quickDiv.innerHTML =
+        '<span class="slot-index">' + UI_TEXT.QUICK_SAVE_LABEL + '</span>' +
+        '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
+        '<span class="slot-actions">' +
+          '<button data-action="quick-load">' + UI_TEXT.SLOT_READ + '</button>' +
+          '<button data-action="quick-save">' + UI_TEXT.SLOT_OVERWRITE + '</button>' +
+        '</span>';
+    } else {
+      quickDiv.innerHTML =
+        '<span class="slot-index">' + UI_TEXT.QUICK_SAVE_LABEL + '</span>' +
+        '<span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>' +
+        '<span class="slot-actions">' +
+          '<button data-action="quick-save">' + UI_TEXT.SLOT_QUICK + '</button>' +
+        '</span>';
+    }
+    list.appendChild(quickDiv);
+
+    // === Regular Slots ===
+    const slots = saveManager.getSlots();
     slots.forEach((data, i) => {
+      if (i === QUICK_SAVE_INDEX) return; // already rendered above
       const isEmpty = data === null;
-      const isQuickSave = i === QUICK_SAVE_INDEX;
       const div = document.createElement("div");
-      div.className = "save-slot" + (isEmpty ? " empty" : "") + (isQuickSave ? " quick-save" : "");
+      div.className = "save-slot" + (isEmpty ? " empty" : "");
 
       if (!data) {
-        // Empty slot
-        div.innerHTML = '<span class="slot-index">0' + (i + 1) + '</span> <span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>';
+        div.innerHTML =
+          '<span class="slot-index">' + UI_TEXT.SAVE_SLOT_LABEL(i + 1) + '</span>' +
+          '<span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>' +
+          '<span class="slot-actions">' +
+            '<button data-action="overwrite" data-index="' + i + '">' + UI_TEXT.SLOT_FILL + '</button>' +
+          '</span>';
       } else {
-        // Occupied slot with metadata
         const date = new Date(data.timestamp);
         const mm = String(date.getMonth() + 1).padStart(2, "0");
         const dd = String(date.getDate()).padStart(2, "0");
@@ -348,34 +386,66 @@ async function main(): Promise<void> {
         const modeStr = data.gameMode === "pve" ? "PvE" : "PvP";
         const movesCount = data.moves ? data.moves.length : 0;
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
-
         div.innerHTML =
-          '<span class="slot-index">0' + (i + 1) + '</span>' +
+          '<span class="slot-index">' + UI_TEXT.SAVE_SLOT_LABEL(i + 1) + '</span>' +
           '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
-            '<button class="slot-btn-load">' + UI_TEXT.SLOT_READ + '</button>' +
-            '<button class="slot-btn-replay">' + UI_TEXT.BTN_REPLAY + '</button>' +
-            '<button class="slot-btn-delete">' + UI_TEXT.SLOT_DELETE + '</button>' +
+            '<button data-action="load" data-index="' + i + '">' + UI_TEXT.SLOT_READ + '</button>' +
+            '<button data-action="replay" data-index="' + i + '">' + UI_TEXT.BTN_REPLAY + '</button>' +
+            '<button data-action="overwrite" data-index="' + i + '">' + UI_TEXT.SLOT_OVERWRITE + '</button>' +
+            '<button data-action="delete" data-index="' + i + '">' + UI_TEXT.SLOT_DELETE + '</button>' +
           '</span>';
       }
-
-      // Bind click handlers directly
-      const loadBtn = div.querySelector(".slot-btn-load");
-      if (loadBtn) loadBtn.addEventListener("click", (e) => { e.stopPropagation(); if (data) loadGameFromData(data); });
-      const replayBtn = div.querySelector(".slot-btn-replay");
-      if (replayBtn) replayBtn.addEventListener("click", (e) => { e.stopPropagation(); if (data) startReplay(data); });
-      const deleteBtn = div.querySelector(".slot-btn-delete");
-      if (deleteBtn) deleteBtn.addEventListener("click", (e) => { e.stopPropagation(); overlayManager.showConfirm(UI_TEXT.CONFIRM_TITLE, UI_TEXT.CONFIRM_DELETE(i + 1), () => { saveManager.delete(i); overlayManager.showToast(UI_TEXT.DELETE_SUCCESS(i + 1)); }); });
-
       list.appendChild(div);
     });
+
+    // Event delegation: single listener for all slot buttons
+    list.onclick = (e) => {
+      const target = e.target as HTMLElement;
+      const action = target.getAttribute("data-action");
+      const indexStr = target.getAttribute("data-index");
+      if (!action) return;
+      const index = indexStr !== null ? parseInt(indexStr, 10) : -1;
+
+      switch (action) {
+        case "load":
+          const loadData = saveManager.load(index);
+          if (loadData) loadGameFromData(loadData);
+          break;
+        case "overwrite":
+          const saveData = serializeBoardState();
+          saveManager.save(index, saveData);
+          overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.SAVE_SLOT_LABEL(index + 1)));
+          renderSaveSlots();
+          break;
+        case "replay":
+          const replayData = saveManager.load(index);
+          if (replayData) startReplay(replayData);
+          break;
+        case "delete":
+          if (confirm(UI_TEXT.CONFIRM_DELETE(index + 1))) {
+            saveManager.delete(index);
+            renderSaveSlots();
+          }
+          break;
+        case "quick-load":
+          const quickLoadData = saveManager.quickLoad();
+          if (quickLoadData) loadGameFromData(quickLoadData);
+          break;
+        case "quick-save":
+          const qsData = serializeBoardState();
+          saveManager.quickSave(qsData);
+          overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.QUICK_SAVE_LABEL));
+          renderSaveSlots();
+          break;
+      }
+    };
   };
 
-  eventBus.on(Events.SAVE_UPDATED, (slots: ReadonlyArray<SaveData | null>) => {
-    console.log("[main.ts] SAVE_UPDATED event received, slots:", slots.length, "items");
-    renderSaveSlots(slots);
+  eventBus.on(Events.SAVE_UPDATED, () => {
+    renderSaveSlots();
   });
-  renderSaveSlots(saveManager.getSlots());
+  renderSaveSlots();
 
   const startReplay = (data: SaveData): void => {
     console.log("[Replay] Starting replay for save:", data.id);
@@ -392,8 +462,6 @@ async function main(): Promise<void> {
     }
     isAIThinking = false;
     currentPlayer = 1;
-    // Preserve playerColor from UI selection
-    aiEngine = null;
     rightPanel.board.reset();
     focusZ = 0;
     rightPanel.resetGame();
@@ -462,7 +530,7 @@ async function main(): Promise<void> {
         // Fallback: replay moves for legacy saves
         rightPanel.board.reset();
         for (const move of data.moves) {
-          if (move.x >= 0 && move.x < 13 && move.y >= 0 && move.y < 13 && move.z >= 0 && move.z < LAYER_COUNT) {
+          if (move.x >= 0 && move.x < BOARD_SIZE && move.y >= 0 && move.y < BOARD_SIZE && move.z >= 0 && move.z < LAYER_COUNT) {
             rightPanel.board.set(move.x, move.y, move.z, move.player as any);
           }
         }
@@ -481,6 +549,13 @@ async function main(): Promise<void> {
         currentPlayer = data.currentPlayer;
       }
       playerColor = (data.playerColor === 1 || data.playerColor === 2) ? data.playerColor : 1;
+      // Sync UI radio buttons with loaded playerColor
+      const cwRadio = document.getElementById("color-white") as HTMLInputElement;
+      const cbRadio = document.getElementById("color-black") as HTMLInputElement;
+      if (cwRadio && cbRadio) {
+        cwRadio.checked = playerColor === 2;
+        cbRadio.checked = playerColor === 1;
+      }
 
       // Restore game mode and AI
       if (data.gameMode === "pve") {
@@ -761,7 +836,7 @@ async function main(): Promise<void> {
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
             eventBus.emit(Events.COLORBLIND_MODE_TOGGLED, isColorblindMode);
-            overlayManager.showToast(isColorblindMode ? "色弱模式已开启 (蓝/黄)" : "色弱模式已关闭 (红/绿)");
+            overlayManager.showToast(isColorblindMode ? UI_TEXT.COLORBLIND_ON : UI_TEXT.COLORBLIND_OFF);
             break;
         }
         break;
