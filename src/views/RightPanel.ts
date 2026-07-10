@@ -97,6 +97,8 @@ export class RightPanel {
   private hoverY: number = -1;
   private isColorblindMode: boolean = false;
   private starMat!: THREE.MeshBasicMaterial;
+  private lastMove: { x: number; y: number; z: number } | null = null;
+  private lastMoveRing: THREE.Mesh;
   private _hoverWorldPos: THREE.Vector3 | null = null;
   private isGameActive: () => boolean = () => true;
   private isMyTurn: () => boolean = () => true;
@@ -160,6 +162,19 @@ export class RightPanel {
       m.renderOrder = 999;
       this.gridGroup.add(m);
     });
+    // Last-move highlight ring
+    const ringGeo = new THREE.RingGeometry(0.45, 0.55, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xFF0000,
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: false
+    });
+    this.lastMoveRing = new THREE.Mesh(ringGeo, ringMat);
+    this.lastMoveRing.visible = false;
+    this.lastMoveRing.renderOrder = 998;
+    this.scene.add(this.lastMoveRing);
+
     this.scene.add(this.gridGroup);
     this.pieceGroup = new THREE.Group();
     this.scene.add(this.pieceGroup);
@@ -191,10 +206,11 @@ export class RightPanel {
     // Subscribe to events
     eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
-    eventBus.on(Events.GAME_RESET, () => {this._currentPlayer = 1;this.renderPieces();});
+    eventBus.on(Events.GAME_RESET, () => {this._currentPlayer = 1;this.lastMove = null;this.renderPieces();});
     eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
       this.isColorblindMode = isBlind;
       this.starMat.color.setHex(isBlind ? COLOR_AUX_BLUE : COLOR_AUX_RED);
+      (this.lastMoveRing.material as THREE.MeshBasicMaterial).color.setHex(isBlind ? 0xFFCC00 : 0xFF0000);
       if (this.hoverX >= 0) this.computeHoverOverlays(this.hoverX, this.hoverY);
     });
   }
@@ -258,7 +274,13 @@ export class RightPanel {
   resetGame(): void {
     this.board.reset();
     this._currentPlayer = BLACK;
+    this.lastMove = null;
     this.setFocusZ(0);
+  }
+
+  public updateLastMoveUI(x: number, y: number, z: number): void {
+    this.lastMove = { x, y, z };
+    this.renderPieces();
   }
 
 
@@ -266,6 +288,7 @@ export class RightPanel {
   public placeAIPiece(x: number, y: number, z: number): void {
     if (this.board.get(x, y, z) !== 0) return;
     this.board.set(x, y, z, this._currentPlayer);
+    this.lastMove = { x, y, z };
     this.renderPieces();
     if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
 
@@ -534,6 +557,7 @@ export class RightPanel {
     const gx = this.hoverX,gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
     this.board.set(gx, gy, this.focusZ, this._currentPlayer);
+    this.lastMove = { x: gx, y: gy, z: this.focusZ };
     const actualState = this.board.get(gx, gy, this.focusZ);
     console.log(`[Board] State at (${gx},${gy},${this.focusZ}) is now: ${actualState} (${actualState === BLACK ? "BLACK" : actualState === WHITE ? "WHITE" : "EMPTY"})`);
 
@@ -579,6 +603,14 @@ export class RightPanel {
         mesh.position.set(x, y, 0.01);
         this.pieceGroup.add(mesh);
       }
+    }
+
+    // Show last-move highlight if on the current layer
+    if (this.lastMove && this.lastMove.z === this.focusZ) {
+      this.lastMoveRing.position.set(this.lastMove.x, this.lastMove.y, 0.02);
+      this.lastMoveRing.visible = true;
+    } else {
+      this.lastMoveRing.visible = false;
     }
   }
 

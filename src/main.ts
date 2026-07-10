@@ -100,6 +100,8 @@ async function main(): Promise<void> {
 
   rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
     audioManager.playSFX("click");
+    rightPanel.updateLastMoveUI(_x, _y, _z);
+    leftPanel.updateLastMoveUI(_x, _y, _z);
     currentPlayer = player === 1 ? 2 : 1;
     overlayManager.showToast(currentPlayer === 1 ? "\u9ed1\u65b9\u56de\u5408" : "\u767d\u65b9\u56de\u5408");
     updateTurnIndicator(currentPlayer);

@@ -114,6 +114,8 @@ export class LeftPanel {
   private highlightMarkers3DGroup!: THREE.Group;
   private bluePathGroup!: THREE.Group;
   private hoverMarkerGroup!: THREE.Group;
+  private lastMoveRing: THREE.Mesh;
+
   private container: HTMLElement;
   private focusZ: number = 0;
   private theme: Theme;
@@ -167,6 +169,19 @@ export class LeftPanel {
     this.hoverMarkerGroup.renderOrder = 3;
     this.scene.add(this.hoverMarkerGroup);
 
+    // Last-move highlight ring (3D)
+    const ringGeo = new THREE.RingGeometry(0.45, 0.55, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xFF0000,
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: false
+    });
+    this.lastMoveRing = new THREE.Mesh(ringGeo, ringMat);
+    this.lastMoveRing.visible = false;
+    this.lastMoveRing.renderOrder = 998;
+    this.scene.add(this.lastMoveRing);
+
     this.checkBoundarySafety();
     this.rotateY(2);
 
@@ -175,8 +190,13 @@ export class LeftPanel {
     eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
       this.isColorblindMode = isBlind;
       this.highlightCenterMarker(this.focusZ);
+      (this.lastMoveRing.material as THREE.MeshBasicMaterial).color.setHex(isBlind ? 0xFFCC00 : 0xFF0000);
     });
     eventBus.on(Events.LAYER_CHANGED, (z: number) => {this.focusZ = z;this.highlightFocusLayer(z);});
+    eventBus.on(Events.GAME_RESET, () => {
+
+      if (this.lastMoveRing) this.lastMoveRing.visible = false;
+    });
   }
 
   /** @internal Exposed for cross-panel coordination. */
@@ -548,6 +568,13 @@ export class LeftPanel {
       this._previousSpacing = null;
       this.adjustLayerSpacing(delta);
     }
+  }
+
+  updateLastMoveUI(x: number, y: number, z: number): void {
+
+    const zPos = z * this._layerSpacing;
+    this.lastMoveRing.position.set(x, y, zPos + 0.1);
+    this.lastMoveRing.visible = true;
   }
 
   render(): void {this.renderer.render(this.scene, this.camera);}
