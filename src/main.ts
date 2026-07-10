@@ -330,7 +330,7 @@ async function main(): Promise<void> {
     list.innerHTML = "";
     slots.forEach((data, i) => {
       const isEmpty = data === null;
-      const isQuickSave = i === 5;
+      const isQuickSave = i === QUICK_SAVE_INDEX;
       const div = document.createElement("div");
       div.className = "save-slot" + (isEmpty ? " empty" : "") + (isQuickSave ? " quick-save" : "");
 

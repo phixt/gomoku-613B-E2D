@@ -1356,3 +1356,154 @@ body.dark-theme #btn-victory-restart {
 body.dark-theme #btn-victory-restart:hover {
     background: rgba(200, 224, 228, 0.1);
 }
+
+/* =========================================
+   存档槽位列表样式 (内联按钮版)
+   ========================================= */
+.save-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.save-slot-item {
+    background: #F4F9F4;
+    border: 1px solid #C5D5C0;
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+body.dark-theme .save-slot-item {
+    background: #1A2629;
+    border-color: #3A4A4E;
+}
+
+.save-slot-item:hover {
+    border-color: #2C4A4E;
+    box-shadow: 0 2px 8px rgba(44, 74, 78, 0.1);
+}
+
+.slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: #2C4A4E;
+}
+
+body.dark-theme .slot-header {
+    color: #C8E0E4;
+}
+
+.slot-mode {
+    font-size: 0.85em;
+    color: #6A8A8E;
+    font-weight: normal;
+}
+
+.slot-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    color: #8A9A9E;
+}
+
+.slot-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.slot-actions button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #C5D5C0;
+    color: #2C4A4E;
+    padding: 6px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+body.dark-theme .slot-actions button {
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+}
+
+.slot-actions button:hover:not(:disabled) {
+    background: rgba(44, 74, 78, 0.1);
+}
+
+.slot-actions button.danger {
+    color: #D32F2F;
+    border-color: #FFCDD2;
+}
+
+body.dark-theme .slot-actions button.danger {
+    color: #EF5350;
+    border-color: #5C2A2A;
+}
+
+.slot-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =========================================
+   复盘控制条样式
+   ========================================= */
+#replay-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(244, 249, 244, 0.95);
+    border: 1px solid #C5D5C0;
+    border-radius: 30px;
+    padding: 10px 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+body.dark-theme #replay-controls {
+    background: rgba(26, 38, 41, 0.95);
+    border-color: #3A4A4E;
+}
+
+#replay-controls button {
+    background: transparent;
+    border: 1px solid #2C4A4E;
+    color: #2C4A4E;
+    padding: 6px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+
+body.dark-theme #replay-controls button {
+    border-color: #C8E0E4;
+    color: #C8E0E4;
+}
+
+#replay-step-info {
+    font-size: 0.9em;
+    color: #2C4A4E;
+    min-width: 80px;
+    text-align: center;
+}
+
+body.dark-theme #replay-step-info {
+    color: #C8E0E4;
+}
