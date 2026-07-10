@@ -67,6 +67,7 @@ export class RightPanel {
   public on3DAuxDataChanged: ((data: AuxData3D) => void) | null = null;
   public onHoverChanged: ((x: number, y: number, z: number) => void) | null = null;
   public onPiecePlaced: ((x: number, y: number, z: number, player: number) => void) | null = null;
+  public onGameWonCallback: ((winner: 1 | 2) => void) | null = null;
 
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
@@ -294,13 +295,7 @@ export class RightPanel {
 
     const winner = checkWinner(this.board, x, y, z);
     if (winner !== 0) {
-      setTimeout(() => {
-        alert(winner === BLACK ? "Black wins!" : "White wins!");
-        this.board.reset();
-        this.renderPieces();
-        if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
-        if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
-      }, 50);
+      if (this.onGameWonCallback) this.onGameWonCallback(winner as 1 | 2);
       return;
     }
 
@@ -568,13 +563,7 @@ export class RightPanel {
     console.log(`[Rules] checkWinner returned: ${winner} (${winner === BLACK ? "BLACK" : winner === WHITE ? "WHITE" : "NONE"})`);
 
     if (winner !== 0) {
-      setTimeout(() => {
-        alert(winner === BLACK ? "Black wins!" : "White wins!");
-        this.board.reset();
-        this.renderPieces();
-        if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
-        if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
-      }, 50);
+      if (this.onGameWonCallback) this.onGameWonCallback(winner as 1 | 2);
       return;
     }
 

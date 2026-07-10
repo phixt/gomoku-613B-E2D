@@ -21,6 +21,7 @@ const AppState = {
   GUIDE_FROM_TITLE: "GUIDE_FROM_TITLE",
   PLAYING: "PLAYING",
   PAUSED: "PAUSED",
+  GAME_OVER: "GAME_OVER",
   GUIDE_FROM_GAME: "GUIDE_FROM_GAME"
 } as const;
 type AppState = typeof AppState[keyof typeof AppState];
@@ -94,9 +95,25 @@ async function main(): Promise<void> {
 
   // Turn control and placement callback
   rightPanel.setTurnCallback(() => {
-    // PvP: both players can click (pass-and-play); PvE: only the human's color can click
+    // Block clicks when not actively PLAYING (includes GAME_OVER, PAUSED, etc.)
+    if (gameStore.appState !== AppState.PLAYING) return false;
+    // PvP: both players can click; PvE: only the human's color can click
     return !isPvEMode || currentPlayer === playerColor;
   });
+
+  rightPanel.onGameWonCallback = (winner: 1 | 2): void => {
+    console.log("[Game] Player", winner, "won!");
+    if (aiEngine) { aiEngine.cancel(); }
+    isAIThinking = false;
+    gameStore.appState = AppState.GAME_OVER;
+    audioManager.playSFX("win");
+    const modal = document.getElementById("victory-modal");
+    const title = document.getElementById("victory-title");
+    if (modal && title) {
+      title.textContent = winner === 1 ? UI_TEXT.BLACK_TURN + " - 获胜\uFF01" : UI_TEXT.WHITE_TURN + " - 获胜\uFF01";
+      modal.classList.remove("hidden");
+    }
+  };
 
   rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
     audioManager.playSFX("click");
@@ -263,6 +280,7 @@ async function main(): Promise<void> {
   };
 
   const confirmRestart = (): void => {
+    document.getElementById("victory-modal")?.classList.add("hidden");
     if (aiEngine) aiEngine.cancel();
     isAIThinking = false;
     currentPlayer = 1;
@@ -317,6 +335,7 @@ async function main(): Promise<void> {
   renderSaveSlots(saveManager.getSlots());
 
   const returnToTitle = (): void => {
+    document.getElementById("victory-modal")?.classList.add("hidden");
     if (aiEngine) {
       aiEngine.cancel();
       aiEngine = null;
@@ -494,6 +513,14 @@ async function main(): Promise<void> {
 
   escResume?.addEventListener("click", closeEscMenu);
   escRestart?.addEventListener("click", () => {closeEscMenu();confirmRestart();});
+  document.getElementById("btn-victory-restart")?.addEventListener("click", () => {
+    document.getElementById("victory-modal")?.classList.add("hidden");
+    confirmRestart();
+  });
+  document.getElementById("btn-victory-title")?.addEventListener("click", () => {
+    document.getElementById("victory-modal")?.classList.add("hidden");
+    returnToTitle();
+  });
   escSave?.addEventListener("click", () => {closeEscMenu();saveGame();});
   escTitle?.addEventListener("click", () => {closeEscMenu();returnToTitle();});
   const escLoad = document.getElementById("esc-load");
