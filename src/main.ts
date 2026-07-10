@@ -449,10 +449,84 @@ async function main(): Promise<void> {
 
   const startReplay = (data: SaveData): void => {
     console.log("[Replay] Starting replay for save:", data.id);
-    loadGameFromData(data);
+
+    // 1. Cancel any running AI and clear timers
+    if (aiEngine) { aiEngine.cancel(); }
+    isAIThinking = false;
+
+    // 2. Load board snapshot instantly (DO NOT use loadGameFromData)
+    rightPanel.loadBoardSnapshot(data.boardState);
+
+    // 3. Set strict REPLAY state
     gameStore.appState = AppState.REPLAY;
-    overlayManager.showToast(UI_TEXT.REPLAY_ENTER.replace("{0}", String(data.moves ? data.moves.length : 0)));
-  };
+
+    // 4. Initialize replay data (start at move 0 = empty board)
+    replayState = {
+        moves: [...data.moves],
+        currentIndex: 0
+    };
+
+    // 5. Inject Replay Controls UI
+    let controls = document.getElementById("replay-controls");
+    if (!controls) {
+        controls = document.createElement("div");
+        controls.id = "replay-controls";
+        controls.innerHTML =
+            '<button id="btn-replay-prev">上一步</button>' +
+            '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
+            '<button id="btn-replay-next">下一步</button>' +
+            '<button id="btn-replay-exit">退出</button>';
+        document.body.appendChild(controls);
+
+        document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
+        document.getElementById("btn-replay-next")?.addEventListener("click", () => replayStep(1));
+        document.getElementById("btn-replay-exit")?.addEventListener("click", exitReplay);
+    }
+
+    // 6. Initial render
+    updateReplayUI();
+    overlayManager.showToast("进入复盘模式 - 共 " + data.moves.length + " 步");
+};
+
+let replayState: {
+    moves: Array<{x: number; y: number; z: number; player: 1 | 2}>;
+    currentIndex: number;
+} | null = null;
+
+const replayStep = (direction: number): void => {
+    if (!replayState) return;
+    const newIndex = replayState.currentIndex + direction;
+    if (newIndex < 0 || newIndex > replayState.moves.length) return;
+    replayState.currentIndex = newIndex;
+    updateReplayUI();
+};
+
+const updateReplayUI = (): void => {
+    if (!replayState) return;
+    // Clear board
+    rightPanel.board.reset();
+    // Replay moves up to currentIndex
+    for (let i = 0; i < replayState.currentIndex; i++) {
+        const m = replayState.moves[i];
+        rightPanel.board.set(m.x, m.y, m.z, m.player);
+    }
+    rightPanel.refresh();
+    // Sync 3D view
+    leftPanel.renderAllPieces(rightPanel.board, focusZ);
+    // Update step info text
+    const info = document.getElementById("replay-step-info");
+    if (info) {
+        info.textContent = replayState.currentIndex + " / " + replayState.moves.length;
+    }
+};
+
+const exitReplay = (): void => {
+    console.log("[Replay] Exiting replay mode");
+    const controls = document.getElementById("replay-controls");
+    if (controls) controls.remove();
+    replayState = null;
+    returnToTitle();
+};
 
   const returnToTitle = (): void => {
     document.getElementById("victory-modal")?.classList.add("hidden");
