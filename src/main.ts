@@ -124,6 +124,7 @@ async function main(): Promise<void> {
 
   rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
     moveCount++;
+    moveHistory.push({ x: _x, y: _y, z: _z, player: player as 1 | 2 });
     audioManager.playSFX("click");
     rightPanel.updateLastMoveUI(_x, _y, _z);
     leftPanel.updateLastMoveUI(_x, _y, _z);
@@ -153,6 +154,7 @@ async function main(): Promise<void> {
   let aiEngine: AIEngine | null = null;
   let isAIThinking = false;
   let moveCount = 0;
+  let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
 
   // ── 3D Turn Indicator (isolated scene) ─────────────────
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
@@ -236,6 +238,7 @@ async function main(): Promise<void> {
     hideAllOverlays();
         currentPlayer = 1;
     moveCount = 0;
+    moveHistory = [];
     // CRITICAL: Read player color from UI, DO NOT hardcode to 1
     const cw = document.getElementById("color-white") as HTMLInputElement;
     playerColor = (cw && cw.checked) ? 2 : 1;
@@ -370,24 +373,13 @@ async function main(): Promise<void> {
   };
 
   const serializeBoardState = (): SaveData => {
-    const boardState: number[][][] = [];
-    const moves: Array<{x: number;y: number;z: number;player: 1 | 2;}> = [];
-    const bs = rightPanel.board;
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      const layer: number[][] = [];
-      for (let y = 0; y < 13; y++) {
-        const row: number[] = [];
-        for (let x = 0; x < 13; x++) {
-          const s = bs.get(x, y, z);
-          row.push(s);
-          if (s !== 0) {
-            moves.push({ x, y, z, player: s as 1 | 2 });
-          }
-        }
-        layer.push(row);
-      }
-      boardState.push(layer);
-    }
+    const boardState = rightPanel.getBoardSnapshot();
+    const moves = [...moveHistory];
+    const gameStatus: "playing" | "finished" = gameStore.appState === AppState.GAME_OVER ? "finished" : "playing";
+    const lastMove = moves.length > 0 ? moves[moves.length - 1] : null;
+    const gameWinner: 0 | 1 | 2 = gameStore.appState === AppState.GAME_OVER && lastMove
+      ? (rightPanel.board.get(lastMove.x, lastMove.y, lastMove.z) as 0 | 1 | 2)
+      : 0;
     return {
       id: crypto.randomUUID(),
       version: "2.0.0",
@@ -396,9 +388,10 @@ async function main(): Promise<void> {
       moves,
       rules: "gomoku" as const,
       gameMode: isPvEMode ? "pve" as const : "pvp" as const,
-      status: "playing" as const,
-      winner: 0 as const,
-      currentPlayer: rightPanel.getCurrentPlayer() as 1 | 2,
+      aiDifficulty: aiEngine?.getDifficulty()?.toLowerCase() as "easy" | "medium" | "hard" | undefined,
+      status: gameStatus,
+      winner: gameWinner,
+      currentPlayer: currentPlayer,
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
       boardSize: 13,

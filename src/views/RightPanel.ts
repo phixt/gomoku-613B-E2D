@@ -309,7 +309,22 @@ export class RightPanel {
     if (state === 1 || state === 2) {this._currentPlayer = state;}
   }
 
-
+  /** Capture a full 3D board snapshot for serialization. */
+  getBoardSnapshot(): number[][][] {
+    const snapshot: number[][][] = [];
+    for (let z = 0; z < LAYER_COUNT; z++) {
+      const layer: number[][] = [];
+      for (let y = 0; y < BOARD_SIZE; y++) {
+        const row: number[] = [];
+        for (let x = 0; x < BOARD_SIZE; x++) {
+          row.push(this.board.get(x, y, z));
+        }
+        layer.push(row);
+      }
+      snapshot.push(layer);
+    }
+    return snapshot;
+  }
 
   private clearHighlightMarkers(): void {
     while (this.highlightMarkersGroup.children.length > 0) {
