@@ -1,5 +1,5 @@
-// AIEngine.ts - Heuristic AI opponent for Gomoku 613B-E2D
-// Supports three difficulty levels: Easy (random+block), Medium (2D greedy), Hard (3D greedy)
+// AIEngine.ts - 3D-aware heuristic AI opponent for Gomoku 613B-E2D
+// Three difficulty levels differentiated by search scope, all using 13 3D directions.
 
 import type { Board } from "../core/Board";
 import { BOARD_SIZE, LAYER_COUNT } from "../core/Config";
@@ -12,29 +12,24 @@ export interface AIMove {
   z: number;
 }
 
-// ---- 3D Direction Vectors (13 directions in 3D space) ----
+// ---- 13 Direction Vectors in 3D Space [dx, dy, dz] ----
 const DIRECTIONS_3D: [number, number, number][] = [
-  [1, 0, 0], [0, 1, 0], [0, 0, 1],
-  [1, 1, 0], [1, -1, 0],
-  [1, 0, 1], [1, 0, -1],
-  [0, 1, 1], [0, 1, -1],
-  [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
+  [1, 0, 0], [0, 1, 0], [0, 0, 1],           // X, Y, Z axes
+  [1, 1, 0], [1, -1, 0],                       // XY diagonals
+  [1, 0, 1], [1, 0, -1],                       // XZ diagonals
+  [0, 1, 1], [0, 1, -1],                       // YZ diagonals
+  [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], // 3D space diagonals
 ];
 
-// ---- 2D Direction Vectors (only X, Y, and XY diagonals) ----
-const DIRECTIONS_2D: [number, number, number][] = [
-  [1, 0, 0], [0, 1, 0], [1, 1, 0], [1, -1, 0],
-];
-
-// ---- Heuristic Score Table ----
-const SCORE_FIVE = 100000;
-const SCORE_LIVE_FOUR = 10000;
-const SCORE_RUSH_FOUR = 1000;
-const SCORE_LIVE_THREE = 1000;
-const SCORE_SLEEP_THREE = 100;
-const SCORE_LIVE_TWO = 100;
-const SCORE_SLEEP_TWO = 10;
-const SCORE_ONE = 1;
+// ---- Heuristic Score Table (big gaps to ensure correct priority) ----
+const SCORE_FIVE = 1000000;
+const SCORE_LIVE_FOUR = 100000;
+const SCORE_RUSH_FOUR = 10000;
+const SCORE_LIVE_THREE = 10000;
+const SCORE_SLEEP_THREE = 1000;
+const SCORE_LIVE_TWO = 1000;
+const SCORE_SLEEP_TWO = 100;
+const SCORE_ONE = 10;
 
 export class AIEngine {
   private difficulty: Difficulty;
@@ -62,7 +57,8 @@ export class AIEngine {
   }
 
   // ============================================================
-  //  PUBLIC think() - Main entry point
+  //  PUBLIC think() — all difficulties use DIRECTIONS_3D
+  //  Difficulty is differentiated by candidate scope, not direction set.
   // ============================================================
   async think(board: Board): Promise<AIMove | null> {
     this.cancelled = false;
@@ -74,77 +70,78 @@ export class AIEngine {
     const candidates = this.getCandidates(board);
     if (candidates.length === 0) return null;
 
-    const directions = this.difficulty === "Hard" ? DIRECTIONS_3D : DIRECTIONS_2D;
     const aiPlayer = this.detectAIPlayer(board);
     const opponentPlayer: 1 | 2 = aiPlayer === 1 ? 2 : 1;
 
     let bestMove: AIMove | null = null;
     let bestScore = -Infinity;
 
-    // Evaluate every batchSize candidates, then yield to avoid UI freeze
-    const batchSize = 50;
     for (let i = 0; i < candidates.length; i++) {
       if (this.cancelled) return null;
 
       const move = candidates[i];
-      const attackScore = this.evaluatePoint(board, move.x, move.y, move.z, aiPlayer, directions);
-      const defenseScore = this.evaluatePoint(board, move.x, move.y, move.z, opponentPlayer, directions);
-      const totalScore = attackScore * 1.1 + defenseScore;
+      const attackScore = this.evaluatePoint(board, move.x, move.y, move.z, aiPlayer, DIRECTIONS_3D);
+      const defenseScore = this.evaluatePoint(board, move.x, move.y, move.z, opponentPlayer, DIRECTIONS_3D);
+
+      // Defense weighted higher — blocking opponent's win is top priority
+      const totalScore = attackScore + defenseScore * 1.1;
 
       if (totalScore > bestScore) {
         bestScore = totalScore;
         bestMove = move;
       }
 
-      // Yield every batchSize iterations
-      if (i % batchSize === 0 && i > 0) {
+      // Yield every 30 iterations to prevent UI freeze
+      if (i % 30 === 0 && i > 0) {
         await new Promise<void>((r) => setTimeout(r, 0));
       }
     }
 
-    // Simulate thinking delay based on difficulty
     await new Promise<void>((r) => setTimeout(r, this.getThinkTime()));
-
     return bestMove;
   }
 
   // ============================================================
-  //  EASY: Random move, but block immediate 4-in-a-row threats
+  //  EASY: Random move with immediate 3D threat blocking
   // ============================================================
   private async thinkEasy(board: Board): Promise<AIMove | null> {
-    // First, check if opponent has any 4-in-a-row threat and block it
     const aiPlayer = this.detectAIPlayer(board);
     const opponentPlayer: 1 | 2 = aiPlayer === 1 ? 2 : 1;
+
+    // 1. Block any opponent 4-in-a-row (using 3D directions)
     const blockMove = this.findImmediateThreat(board, opponentPlayer);
     if (blockMove) {
       await new Promise<void>((r) => setTimeout(r, this.getThinkTime()));
       return blockMove;
     }
 
-    // Otherwise random move
-    const emptyCells: AIMove[] = [];
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
-          if (board.get(x, y, z) === 0) emptyCells.push({ x, y, z });
-        }
-      }
+    // 2. Pick a random cell near any existing piece (for a more interesting game)
+    const candidates = this.getNearbyEmptyCells(board, 1);
+    if (candidates.length > 0) {
+      await new Promise<void>((r) => setTimeout(r, this.getThinkTime()));
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
-    if (emptyCells.length === 0) return null;
+
+    // 3. Fallback: pure random
+    const empty: AIMove[] = [];
+    for (let z = 0; z < LAYER_COUNT; z++)
+      for (let y = 0; y < BOARD_SIZE; y++)
+        for (let x = 0; x < BOARD_SIZE; x++)
+          if (board.get(x, y, z) === 0) empty.push({ x, y, z });
+    if (empty.length === 0) return null;
     await new Promise<void>((r) => setTimeout(r, this.getThinkTime()));
-    return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    return empty[Math.floor(Math.random() * empty.length)];
   }
 
   // ============================================================
-  //  Find a cell that blocks opponent's 4-in-a-row
+  //  Find a cell that blocks opponent's 4-in-a-row (3D-aware)
   // ============================================================
   private findImmediateThreat(board: Board, opponent: 1 | 2): AIMove | null {
     for (let z = 0; z < LAYER_COUNT; z++) {
       for (let y = 0; y < BOARD_SIZE; y++) {
         for (let x = 0; x < BOARD_SIZE; x++) {
           if (board.get(x, y, z) !== 0) continue;
-          // Check if placing opponent here would create 4 in a row
-          const score = this.evaluatePoint(board, x, y, z, opponent, DIRECTIONS_2D);
+          const score = this.evaluatePoint(board, x, y, z, opponent, DIRECTIONS_3D);
           if (score >= SCORE_RUSH_FOUR) return { x, y, z };
         }
       }
@@ -153,110 +150,80 @@ export class AIEngine {
   }
 
   // ============================================================
-  //  Detect AI's player number (the one with fewer pieces on board)
+  //  Detect AI's player number (the one with fewer pieces)
   // ============================================================
   private detectAIPlayer(board: Board): 1 | 2 {
-    let count1 = 0, count2 = 0;
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
+    let c1 = 0, c2 = 0;
+    for (let z = 0; z < LAYER_COUNT; z++)
+      for (let y = 0; y < BOARD_SIZE; y++)
         for (let x = 0; x < BOARD_SIZE; x++) {
           const v = board.get(x, y, z);
-          if (v === 1) count1++;
-          else if (v === 2) count2++;
+          if (v === 1) c1++;
+          else if (v === 2) c2++;
         }
-      }
-    }
-    // AI is whichever player has fewer or equal pieces (i.e. the one to move next)
-    return count1 <= count2 ? 1 : 2;
+    return c1 <= c2 ? 1 : 2;
   }
 
   // ============================================================
-  //  Candidate Selection (spatial filtering for performance)
+  //  Candidate Selection — difficulty is differentiated HERE
   // ============================================================
   private getCandidates(board: Board): AIMove[] {
-    const all: AIMove[] = [];
-    const hasPieces = this.boardHasPieces(board);
-
-    if (!hasPieces) {
-      // Empty board: just pick center
-      all.push({ x: 6, y: 6, z: 2 });
-      return all;
+    if (!this.boardHasPieces(board)) {
+      return [{ x: 6, y: 6, z: 2 }];
     }
 
-    const checked = new Set<number>();
+    if (this.difficulty === "Medium") {
+      // Medium: cells within 1 step of any existing piece (all layers)
+      return this.getNearbyEmptyCells(board, 1);
+    }
+
+    // Hard: cells within 2 steps of any existing piece (spatial clustering)
+    return this.getNearbyEmptyCells(board, 2);
+  }
+
+  /** Collect empty cells within `radius` steps of any placed piece. */
+  private getNearbyEmptyCells(board: Board, radius: number): AIMove[] {
+    const visited = new Set<number>();
+    const result: AIMove[] = [];
+    const key = (x: number, y: number, z: number) => x * 10000 + y * 100 + z;
 
     for (let z = 0; z < LAYER_COUNT; z++) {
       for (let y = 0; y < BOARD_SIZE; y++) {
         for (let x = 0; x < BOARD_SIZE; x++) {
-          if (board.get(x, y, z) !== 0) continue;
+          if (board.get(x, y, z) === 0) continue;
 
-          // For Medium: only consider cells on or adjacent to the focus area
-          if (this.difficulty === "Medium") {
-            // Check if this empty cell has any neighbor within 1 step in XY plane
-            let hasNeighbor = false;
-            for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]) {
-              const nx = x + dx, ny = y + dy;
-              if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board.get(nx, ny, z) !== 0) {
-                hasNeighbor = true;
-                break;
+          // Found a piece — add all empty cells within radius
+          for (let dz = -radius; dz <= radius; dz++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              for (let dy = -radius; dy <= radius; dy++) {
+                if (dx === 0 && dy === 0 && dz === 0) continue;
+                const nx = x + dx, ny = y + dy, nz = z + dz;
+                if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE || nz < 0 || nz >= LAYER_COUNT) continue;
+                if (board.get(nx, ny, nz) !== 0) continue;
+                const k = key(nx, ny, nz);
+                if (visited.has(k)) continue;
+                visited.add(k);
+                result.push({ x: nx, y: ny, z: nz });
               }
             }
-            if (!hasNeighbor) continue;
-          }
-
-          // For Hard: need the cell to be within 2 steps of any piece (checked below)
-          if (this.difficulty === "Hard") {
-            let near = false;
-            for (let dz = -2; dz <= 2 && !near; dz++) {
-              for (let dy = -2; dy <= 2 && !near; dy++) {
-                for (let dx = -2; dx <= 2 && !near; dx++) {
-                  if (dx === 0 && dy === 0 && dz === 0) continue;
-                  const nx = x + dx, ny = y + dy, nz = z + dz;
-                  if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && nz >= 0 && nz < LAYER_COUNT) {
-                    if (board.get(nx, ny, nz) !== 0) near = true;
-                  }
-                }
-              }
-            }
-            if (!near) continue;
-          }
-
-          const key = x * 10000 + y * 100 + z;
-          if (!checked.has(key)) {
-            checked.add(key);
-            all.push({ x, y, z });
           }
         }
       }
     }
 
-    // If no candidates found (shouldn't happen), fallback to all empty cells
-    if (all.length === 0) {
-      for (let z = 0; z < LAYER_COUNT; z++) {
-        for (let y = 0; y < BOARD_SIZE; y++) {
-          for (let x = 0; x < BOARD_SIZE; x++) {
-            if (board.get(x, y, z) === 0) all.push({ x, y, z });
-          }
-        }
-      }
-    }
-
-    return all;
+    return result;
   }
 
   private boardHasPieces(board: Board): boolean {
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let z = 0; z < LAYER_COUNT; z++)
+      for (let y = 0; y < BOARD_SIZE; y++)
+        for (let x = 0; x < BOARD_SIZE; x++)
           if (board.get(x, y, z) !== 0) return true;
-        }
-      }
-    }
     return false;
   }
 
   // ============================================================
-  //  Core Heuristic Evaluator
+  //  Core Heuristic Evaluator (3D, all 13 directions)
   // ============================================================
   private evaluatePoint(
     board: Board,
@@ -267,38 +234,25 @@ export class AIEngine {
     let totalScore = 0;
 
     for (const [dx, dy, dz] of directions) {
-      // Count consecutive pieces in positive direction
-      let count = 1; // The piece we would place
+      let count = 1;   // The piece we would place
       let openEnds = 0;
 
       // Scan forward
       let fx = x + dx, fy = y + dy, fz = z + dz;
       while (fx >= 0 && fx < BOARD_SIZE && fy >= 0 && fy < BOARD_SIZE && fz >= 0 && fz < LAYER_COUNT) {
         const v = board.get(fx, fy, fz);
-        if (v === player) {
-          count++;
-          fx += dx; fy += dy; fz += dz;
-        } else if (v === 0) {
-          openEnds++;
-          break;
-        } else {
-          break;
-        }
+        if (v === player) { count++; fx += dx; fy += dy; fz += dz; }
+        else if (v === 0) { openEnds++; break; }
+        else break;
       }
 
       // Scan backward
       let bx = x - dx, by = y - dy, bz = z - dz;
       while (bx >= 0 && bx < BOARD_SIZE && by >= 0 && by < BOARD_SIZE && bz >= 0 && bz < LAYER_COUNT) {
         const v = board.get(bx, by, bz);
-        if (v === player) {
-          count++;
-          bx -= dx; by -= dy; bz -= dz;
-        } else if (v === 0) {
-          openEnds++;
-          break;
-        } else {
-          break;
-        }
+        if (v === player) { count++; bx -= dx; by -= dy; bz -= dz; }
+        else if (v === 0) { openEnds++; break; }
+        else break;
       }
 
       totalScore += this.patternScore(count, openEnds);
@@ -310,28 +264,19 @@ export class AIEngine {
   private patternScore(count: number, openEnds: number): number {
     if (count >= 5) return SCORE_FIVE;
     switch (count) {
-      case 4:
-        return openEnds === 2 ? SCORE_LIVE_FOUR : openEnds === 1 ? SCORE_RUSH_FOUR : 0;
-      case 3:
-        return openEnds === 2 ? SCORE_LIVE_THREE : openEnds === 1 ? SCORE_SLEEP_THREE : 0;
-      case 2:
-        return openEnds === 2 ? SCORE_LIVE_TWO : openEnds === 1 ? SCORE_SLEEP_TWO : 0;
-      case 1:
-        return openEnds >= 1 ? SCORE_ONE : 0;
-      default:
-        return 0;
+      case 4: return openEnds === 2 ? SCORE_LIVE_FOUR : openEnds === 1 ? SCORE_RUSH_FOUR : 0;
+      case 3: return openEnds === 2 ? SCORE_LIVE_THREE : openEnds === 1 ? SCORE_SLEEP_THREE : 0;
+      case 2: return openEnds === 2 ? SCORE_LIVE_TWO : openEnds === 1 ? SCORE_SLEEP_TWO : 0;
+      case 1: return openEnds >= 1 ? SCORE_ONE : 0;
+      default: return 0;
     }
   }
 
-  /** Return thinking delay in ms based on difficulty. */
   private getThinkTime(): number {
     switch (this.difficulty) {
-      case "Easy":
-        return 200 + Math.random() * 300;
-      case "Medium":
-        return 100 + Math.random() * 200;
-      case "Hard":
-        return 50 + Math.random() * 150;
+      case "Easy":   return 200 + Math.random() * 300;
+      case "Medium":  return 100 + Math.random() * 200;
+      case "Hard":    return 50 + Math.random() * 150;
     }
   }
 }
