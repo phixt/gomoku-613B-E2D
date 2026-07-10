@@ -67,6 +67,8 @@ export const UI_TEXT = {
     SETTING_BLACK: "执黑 (先手)",
     SETTING_WHITE: "执白 (后手)",
     SETTING_VOLUME: "音量",
+    MUTE_ON: "已静音",
+    MUTE_OFF: "已取消静音",
 
     // ================= 快捷键说明 =================
     KEY_Q: "旋转 3D 视角",

@@ -590,6 +590,19 @@ async function main(): Promise<void> {
 
   // ===== Slot Action Menu Listeners =====
   window.addEventListener("keydown", (e: KeyboardEvent) => {
+  // Global mute toggle (M) - works in ALL states
+  if (e.code === "KeyM") {
+    e.preventDefault();
+    const wasMuted = audioManager.muted;
+    audioManager.mute();
+    overlayManager.showToast(wasMuted ? UI_TEXT.MUTE_OFF : UI_TEXT.MUTE_ON);
+    // Sync the volume-value text with mute state
+    if (volumeValueText) {
+      volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : UI_TEXT.MUTE_ON;
+    }
+    return;
+  }
+
     // Theme toggle works regardless of game state
     if (e.key === "t" || e.key === "T") {
       e.preventDefault();
@@ -694,22 +707,7 @@ async function main(): Promise<void> {
             e.preventDefault();
             {const mode = rightPanel.cycleAuxMode();leftPanel.setAuxMode(mode);}
             break;
-          case "m":case "M":
-            e.preventDefault();
-            isPvEMode = !isPvEMode;
-            overlayManager.showToast(isPvEMode ? UI_TEXT.SETTING_PVE + " - " + UI_TEXT.SETTING_WHITE : UI_TEXT.SETTING_PVP);
-            const colorGroup = document.getElementById("player-color-group");
-            if (colorGroup) {
-              if (isPvEMode) colorGroup.classList.remove("hidden");else
-              colorGroup.classList.add("hidden");
-            }
-            if (!isPvEMode) {
-              if (aiEngine) {aiEngine.cancel();aiEngine = null;isAIThinking = false;}
-            } else {
-              const aiCol: 1 | 2 = playerColor === 1 ? 2 : 1;
-              if (currentPlayer === aiCol) triggerAIMove();
-            }
-            break;
+
           case "v":case "V":
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
@@ -751,6 +749,7 @@ async function main(): Promise<void> {
   const pveRadio = document.getElementById("mode-pve") as HTMLInputElement;
   const difficultySelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
   const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
+  const volumeValueText = document.getElementById("volume-value");
 
   const updateModeUI = (): void => {
     isPvEMode = pveRadio?.checked ?? false;
@@ -790,12 +789,30 @@ async function main(): Promise<void> {
     });
   }
 
-  if (volumeSlider) {
-    volumeSlider.addEventListener("input", () => {
-      const val = parseFloat(volumeSlider.value);
-      audioManager.setVolume(val, val * 0.5);
-    });
-  }
+  // 1. Define the core volume update function
+  const updateVolume = (): void => {
+    if (!volumeSlider) return;
+
+    // Get current slider value (0-100)
+    const val = parseInt(volumeSlider.value, 10);
+
+    // Update the text display next to the slider in real time
+    if (volumeValueText) {
+      volumeValueText.textContent = `${val}%`;
+    }
+
+    // Convert to 0.0-1.0 and sync to AudioManager (both SFX and BGM)
+    const volumeRatio = val / 100;
+    audioManager.setVolume(volumeRatio, volumeRatio);
+
+    console.log("[Audio] Volume updated to " + val + "%");
+  };
+
+  // 2. Bind real-time drag event (use 'input', not 'change')
+  volumeSlider?.addEventListener("input", updateVolume);
+
+  // 3. Run once on init so volume and text are in sync on page load
+  updateVolume();
 
   // Wire player color radios
   const blackRadio = document.getElementById("color-black") as HTMLInputElement;
