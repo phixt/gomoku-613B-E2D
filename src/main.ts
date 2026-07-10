@@ -1,4 +1,4 @@
-﻿import "./style/main.css";
+import "./style/main.css";
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
