@@ -14,6 +14,7 @@ import { audioManager } from "./audio/AudioManager";
 import { AIEngine } from "./ai/AIEngine";
 import * as THREE from "three";
 import { resourceManager } from "./utils/ResourceManager";
+import { UI_TEXT } from "./core/TextConstants";
 
 const AppState = {
   TITLE: "TITLE",
@@ -161,15 +162,27 @@ async function main(): Promise<void> {
     indicatorScene.add(indicatorMesh);
   }
 
-  const updateTurnIndicator = (player: 1 | 2): void => {
+    const updateTurnIndicator = (player: 1 | 2, isThinking: boolean = false): void => {
     const textEl = document.getElementById("turn-indicator-text");
+    const containerEl = document.getElementById("turn-indicator-container");
     if (textEl) {
-      textEl.textContent = player === 1 ? "黑方回合" : "白方回合";
+      if (isThinking) {
+        textEl.textContent = UI_TEXT.AI_THINKING;
+        textEl.classList.add("thinking");
+        if (containerEl) containerEl.classList.add("thinking");
+      } else {
+        textEl.textContent = player === 1 ? UI_TEXT.BLACK_TURN : UI_TEXT.WHITE_TURN;
+        textEl.classList.remove("thinking");
+        if (containerEl) containerEl.classList.remove("thinking");
+      }
     }
-    if (indicatorMesh && indicatorBlackMat && indicatorWhiteMat) {
+    if (indicatorMesh && !isThinking && indicatorBlackMat && indicatorWhiteMat) {
       indicatorMesh.material = player === 1 ? indicatorBlackMat : indicatorWhiteMat;
     }
   };
+  // Fulfill HTML contract: Inject initial turn text (Black always starts)
+  updateTurnIndicator(1);
+  console.log("[Init] Turn indicator text initialized.");
   leftPanel.renderAllPieces(rightPanel.board, focusZ);
 
   const animate = (): void => {
@@ -193,14 +206,19 @@ async function main(): Promise<void> {
   const startGame = (): void => {
     if (gameStore.appState === AppState.PLAYING) return;
     hideAllOverlays();
-    currentPlayer = 1;
-    playerColor = 1;
+        currentPlayer = 1;
+    // CRITICAL: Read player color from UI, DO NOT hardcode to 1
+    const cw = document.getElementById("color-white") as HTMLInputElement;
+    playerColor = (cw && cw.checked) ? 2 : 1;
+    console.log("[Game] startGame() Player color:", playerColor === 1 ? "Black" : "White");
     if (isPvEMode) {
       const diffSelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
       aiEngine = new AIEngine(diffSelect?.value as "Easy" | "Medium" | "Hard" || "Easy");
       isAIThinking = false;
+      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+      console.log("[Game] AI initialized. AI color:", aiColor === 1 ? "Black" : "White");
     } else {
-      if (aiEngine) {aiEngine.cancel();aiEngine = null;}
+      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
     }
     gameStore.appState = AppState.PLAYING;
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
@@ -246,6 +264,9 @@ async function main(): Promise<void> {
     if (aiEngine) aiEngine.cancel();
     isAIThinking = false;
     currentPlayer = 1;
+    // Re-read player color from UI on restart
+    const cw2 = document.getElementById("color-white") as HTMLInputElement;
+    playerColor = (cw2 && cw2.checked) ? 2 : 1;
     rightPanel.board.reset();
     gameStore.setFocusZ(0);
     rightPanel.resetGame();
@@ -294,10 +315,13 @@ async function main(): Promise<void> {
   renderSaveSlots(saveManager.getSlots());
 
   const returnToTitle = (): void => {
-    if (aiEngine) aiEngine.cancel();
+    if (aiEngine) {
+      aiEngine.cancel();
+      aiEngine = null;
+    }
     isAIThinking = false;
     currentPlayer = 1;
-    playerColor = 1;
+    // Preserve playerColor from UI selection
     aiEngine = null;
     rightPanel.board.reset();
     focusZ = 0;
@@ -696,8 +720,9 @@ async function main(): Promise<void> {
   const whiteRadio = document.getElementById("color-white") as HTMLInputElement;
 
   const onPlayerColorChange = (): void => {
-    if (blackRadio && blackRadio.checked) playerColor = 1;else
+    if (blackRadio && blackRadio.checked) playerColor = 1; else
     if (whiteRadio && whiteRadio.checked) playerColor = 2;
+    console.log("[UI] Player color changed to:", playerColor === 1 ? "Black" : "White");
     // If game is running and it is now the AI's turn, trigger immediately
     if (gameStore.appState === AppState.PLAYING && isPvEMode) {
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
