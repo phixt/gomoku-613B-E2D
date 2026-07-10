@@ -238,6 +238,17 @@
 
     <!-- 全局遮罩（保持原样） -->
     <div id="global-backdrop" class="hidden"></div>
+    <!-- 获胜结算模态框 -->
+    <div id="victory-modal" class="hidden modal-overlay">
+        <div class="modal-content victory-content">
+            <h2 id="victory-title" class="victory-title">黑方获胜！</h2>
+            <p id="victory-subtitle" class="victory-subtitle">本局共 0 步</p>
+            <div class="modal-actions">
+                <button id="btn-victory-restart" class="btn-primary">再来一局</button>
+                <button id="btn-victory-title" class="btn-secondary">返回标题</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

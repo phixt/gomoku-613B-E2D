@@ -1276,3 +1276,55 @@ body.dark-theme #turn-indicator-text {
     from { transform: scale(1); opacity: 0.8; }
     to { transform: scale(1.1); opacity: 1; }
 }
+
+/* 获胜弹窗专属样式 */
+.victory-content {
+    background: linear-gradient(135deg, #F4F9F4 0%, #E0F0E0 100%);
+    border: 2px solid #4CAF50;
+    box-shadow: 0 10px 40px rgba(76, 175, 80, 0.3);
+    text-align: center;
+    padding: 40px 50px;
+}
+
+body.dark-theme .victory-content {
+    background: linear-gradient(135deg, #1A2629 0%, #2A3A3E 100%);
+    border-color: #81C784;
+    box-shadow: 0 10px 40px rgba(129, 199, 132, 0.2);
+}
+
+.victory-title {
+    font-size: 2.2em;
+    color: #2E7D32;
+    margin-bottom: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+body.dark-theme .victory-title {
+    color: #81C784;
+}
+
+.victory-subtitle {
+    font-size: 1.1em;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+body.dark-theme .victory-subtitle {
+    color: #AAA;
+}
+
+.btn-primary {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+}
