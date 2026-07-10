@@ -1,6 +1,6 @@
 [package]
 name = "gomokue2d"
-version = "0.5.0"
+version = "0.6.0"
 description = "Gomoku game 6x6x13 with tauri"
 authors = ["phixt"]
 license = ""
