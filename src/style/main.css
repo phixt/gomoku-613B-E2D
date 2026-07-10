@@ -1473,7 +1473,8 @@ body.dark-theme .slot-actions button.danger {
     display: flex;
     gap: 15px;
     align-items: center;
-    z-index: 100;
+    z-index: 10000;
+    pointer-events: auto;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 

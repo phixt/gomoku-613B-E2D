@@ -423,10 +423,10 @@ async function main(): Promise<void> {
           if (replayData) startReplay(replayData);
           break;
         case "delete":
-          if (confirm(UI_TEXT.CONFIRM_DELETE(index + 1))) {
+          showConfirmDialog(UI_TEXT.CONFIRM_DELETE(index + 1), () => {
             saveManager.delete(index);
             renderSaveSlots();
-          }
+          });
           break;
         case "quick-load":
           const quickLoadData = saveManager.quickLoad();
@@ -447,7 +447,37 @@ async function main(): Promise<void> {
   });
   renderSaveSlots();
 
-  const startReplay = (data: SaveData): void => {
+  let confirmCallback: (() => void) | null = null;
+
+const showConfirmDialog = (message: string, onConfirm: () => void): void => {
+    const dialog = document.getElementById("confirm-dialog");
+    const msgEl = document.getElementById("confirm-message");
+    const yesBtn = document.getElementById("confirm-yes");
+    const noBtn = document.getElementById("confirm-no");
+
+    if (!dialog || !msgEl || !yesBtn || !noBtn) return;
+
+    msgEl.textContent = message;
+    confirmCallback = onConfirm;
+    dialog.classList.remove("hidden");
+
+    // Re-bind Yes button
+    const newYesBtn = yesBtn.cloneNode(true) as HTMLButtonElement;
+    const newNoBtn = noBtn.cloneNode(true) as HTMLButtonElement;
+    yesBtn.parentNode?.replaceChild(newYesBtn, yesBtn);
+    noBtn.parentNode?.replaceChild(newNoBtn, noBtn);
+
+    newYesBtn.addEventListener("click", () => {
+        dialog.classList.add("hidden");
+        if (confirmCallback) confirmCallback();
+    });
+
+    newNoBtn.addEventListener("click", () => {
+        dialog.classList.add("hidden");
+        confirmCallback = null;
+    });
+};
+const startReplay = (data: SaveData): void => {
     console.log("[Replay] Starting replay for save:", data.id);
 
     // 1. Cancel any running AI and clear timers
@@ -914,10 +944,21 @@ const exitReplay = (): void => {
             break;
         }
         break;
+
+      case AppState.REPLAY:
+        if (e.code === "Escape" || e.code === "KeyR") {
+          e.preventDefault();
+          exitReplay();
+        } else if (e.code === "ArrowLeft") {
+          e.preventDefault();
+          replayStep(-1);
+        } else if (e.code === "ArrowRight") {
+          e.preventDefault();
+          replayStep(1);
+        }
+        break;
     }
   });
-
-
   leftEl.addEventListener("wheel", (e: WheelEvent) => {
     if (gameStore.appState !== AppState.PLAYING) return;
     e.preventDefault();
