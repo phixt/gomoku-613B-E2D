@@ -2,15 +2,42 @@ import type { IStorageAdapter } from "./StorageAdapter";
 import { eventBus, Events } from "./EventBus";
 
 export interface SaveData {
-  version: string;
-  timestamp: number;
-  boardSize: number;
-  layers: number;
-  layerSpacing: number;
-  moves: Array<{x: number;y: number;z: number;player: number;}>;
-  focusZ: number;
-  isDarkTheme: boolean;
-  currentPlayer: number;
+  // ================= 1. 核心标识 =================
+  id: string;              // 唯一存档ID (UUID或时间戳+随机数)，用于管理/分享
+  version: string;         // 存档结构版本号 (如 "2.0.0")，用于迁移兼容
+  timestamp: number;       // 创建/最后修改时间
+  
+  // ================= 2. 棋盘快照 (性能优化) =================
+  // moves 用于复盘，boardState 用于“秒开”渲染和合法性校验
+  // 3D 数组: [z][x][y] -> 0(空), 1(黑), 2(白)
+  boardState: number[][][]; 
+  
+  // ================= 3. 对局历史 (复盘/禁手/悔棋核心) =================
+  moves: Array<{
+    x: number; 
+    y: number; 
+    z: number; 
+    player: 1 | 2; 
+    timestamp?: number;    // 可选：记录每步耗时，用于高级复盘分析
+    evaluation?: number;   // 可选：AI 评估分数 (未来功能)
+  }>;
+  
+  // ================= 4. 规则与配置 (禁手/联机同步刚需) =================
+  rules: 'gomoku' | 'renju' | 'swap2'; // 当前对局规则
+  gameMode: 'pvp' | 'pve';
+  aiDifficulty?: 'easy' | 'medium' | 'hard';
+  
+  // ================= 5. 状态与元数据 =================
+  status: 'playing' | 'finished' | 'paused';
+  winner?: 1 | 2 | 0;      // 0=平局或无结果
+  currentPlayer: 1 | 2;    // 下一手该谁
+  focusZ: number;          // 存档时的视角层级
+  isDarkTheme: boolean;    // 主题偏好
+  
+  // 3D 物理配置 (防止未来默认值变更导致旧存档错位)
+  boardSize: number;       // 13
+  layers: number;          // 6
+  layerSpacing: number;    // 层间距
 }
 
 export interface SlotEntry {
