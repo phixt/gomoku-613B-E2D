@@ -577,7 +577,13 @@ export class LeftPanel {
     this.lastMoveRing.visible = true;
   }
 
-  render(): void {this.renderer.render(this.scene, this.camera);}
+  render(): void {
+    // Billboard effect: always face the camera so the ring is a perfect circle
+    if (this.lastMoveRing && this.lastMoveRing.visible) {
+      this.lastMoveRing.lookAt(this.camera.position);
+    }
+    this.renderer.render(this.scene, this.camera);
+  }
 
   resize(width?: number, height?: number): void {
     const w = (width ?? this.container.clientWidth) || window.innerWidth * 0.5;
