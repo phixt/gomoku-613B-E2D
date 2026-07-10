@@ -1,4 +1,5 @@
 import type { IStorageAdapter } from "./StorageAdapter";
+import { SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./Config";
 import { eventBus, Events } from "./EventBus";
 
 export interface SaveData {
@@ -45,10 +46,9 @@ export interface SlotEntry {
   data: SaveData | null;
 }
 
-export const GENERAL_SLOT_COUNT = 5;
-export const QUICK_SAVE_INDEX = 5;
-export const TOTAL_SLOTS = 6;
-
+// Derived from imported Config.ts constants
+export const TOTAL_SLOTS = SAVE_SLOT_COUNT;
+export const GENERAL_SLOT_COUNT = SAVE_SLOT_COUNT - 1;
 const STORAGE_KEY = "gomoku_saves_v3";
 
 export class SaveManager {

@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   var overlayManager = new OverlayManager({
     onSave: function (index, data) {
       saveManager.save(index, data);
-      overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(index === 5 ? UI_TEXT.QUICK_SAVE_LABEL : String(index + 1)));
+      overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(index === QUICK_SAVE_INDEX ? UI_TEXT.QUICK_SAVE_LABEL : String(index + 1)));
     },
     onLoad: function (data) {
       loadGameFromData(data);
