@@ -26,34 +26,34 @@ function buildLayerGridGeometry(): THREE.BufferGeometry {
 
 
 function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasTexture {
-  const size = 64, canvas = document.createElement("canvas");
-  canvas.width = size; canvas.height = size;
+  const size = 64,canvas = document.createElement("canvas");
+  canvas.width = size;canvas.height = size;
   const ctx = canvas.getContext("2d")!;
-  const cx = size / 2, cy = size / 2, r = size / 2 - 2;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.closePath();
+  const cx = size / 2,cy = size / 2,r = size / 2 - 2;
+  ctx.beginPath();ctx.arc(cx, cy, r, 0, Math.PI * 2);ctx.closePath();
 
   if (isGhost) {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#222222"); g.addColorStop(1, "#000000");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#000000"; ctx.lineWidth = 2.5; ctx.stroke();
+      g.addColorStop(0, "#444444");g.addColorStop(0.5, "#222222");g.addColorStop(1, "#000000");
+      ctx.fillStyle = g;ctx.fill();ctx.strokeStyle = "#000000";ctx.lineWidth = 2.5;ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#F0E8E0"); g.addColorStop(0.5, "#D0C8C0"); g.addColorStop(1, "#A09A95");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#555555"; ctx.lineWidth = 2.5; ctx.stroke();
+      g.addColorStop(0, "#F0E8E0");g.addColorStop(0.5, "#D0C8C0");g.addColorStop(1, "#A09A95");
+      ctx.fillStyle = g;ctx.fill();ctx.strokeStyle = "#555555";ctx.lineWidth = 2.5;ctx.stroke();
     }
   } else {
     if (isBlack) {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#444444"); g.addColorStop(0.5, "#000000"); g.addColorStop(1, "#000000");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#111111"; ctx.lineWidth = 2; ctx.stroke();
+      g.addColorStop(0, "#444444");g.addColorStop(0.5, "#000000");g.addColorStop(1, "#000000");
+      ctx.fillStyle = g;ctx.fill();ctx.strokeStyle = "#111111";ctx.lineWidth = 2;ctx.stroke();
     } else {
       const g = ctx.createRadialGradient(cx * 0.3 + size * 0.2, cy * 0.3 + size * 0.2, 0, cx, cy, r);
-      g.addColorStop(0, "#FFFFFF"); g.addColorStop(0.5, "#C0D0D0"); g.addColorStop(1, "#90A0A0");
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = "#90A0A0"; ctx.lineWidth = 2; ctx.stroke();
+      g.addColorStop(0, "#FFFFFF");g.addColorStop(0.5, "#C0D0D0");g.addColorStop(1, "#90A0A0");
+      ctx.fillStyle = g;ctx.fill();ctx.strokeStyle = "#90A0A0";ctx.lineWidth = 2;ctx.stroke();
     }
   }
-  const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true; return tex;
+  const tex = new THREE.CanvasTexture(canvas);tex.needsUpdate = true;return tex;
 }
 
 
@@ -83,7 +83,7 @@ export class RightPanel {
   private container: HTMLElement;
   private focusZ: number = 0;
   private _currentPlayer: CellState = BLACK;
-  public get currentPlayer(): CellState { return this._currentPlayer; }
+  public get currentPlayer(): CellState {return this._currentPlayer;}
   private theme: Theme;
   private auxMode: AuxMode = AuxMode.ALL;
   private blackTex: THREE.CanvasTexture;
@@ -141,23 +141,23 @@ export class RightPanel {
 
     // --- Star points for board navigation ---
     const starPositions = [
-        { x: 6, y: 6 },
-        { x: 1, y: 1 }, { x: 1, y: 11 },
-        { x: 11, y: 1 }, { x: 11, y: 11 }
-    ];
+    { x: 6, y: 6 },
+    { x: 1, y: 1 }, { x: 1, y: 11 },
+    { x: 11, y: 1 }, { x: 11, y: 11 }];
+
     const starGeo = new THREE.CircleGeometry(0.12, 32);
     const starMat = new THREE.MeshBasicMaterial({
-        color: 0xCC0000,
-        side: THREE.DoubleSide,
-        transparent: true,
-        depthWrite: false,
-        depthTest: true,
+      color: 0xCC0000,
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: false,
+      depthTest: true
     });
-    starPositions.forEach(p => {
-        const m = new THREE.Mesh(starGeo, starMat);
-        m.position.set(p.x, p.y, 0.1);
-        m.renderOrder = 999;
-        this.gridGroup.add(m);
+    starPositions.forEach((p) => {
+      const m = new THREE.Mesh(starGeo, starMat);
+      m.position.set(p.x, p.y, 0.1);
+      m.renderOrder = 999;
+      this.gridGroup.add(m);
     });
     this.scene.add(this.gridGroup);
     this.pieceGroup = new THREE.Group();
@@ -177,7 +177,7 @@ export class RightPanel {
 
     container.appendChild(this.renderer.domElement);
 
-    this.boundResize = (): void => { this.resize(); };
+    this.boundResize = (): void => {this.resize();};
     window.addEventListener("resize", this.boundResize);
 
     this.boundMouseMove = (e: MouseEvent): void => this.handleMouseMove(e);
@@ -185,12 +185,12 @@ export class RightPanel {
     this.renderer.domElement.addEventListener("mousemove", this.boundMouseMove);
     this.renderer.domElement.addEventListener("click", this.boundClick);
 
-    requestAnimationFrame(() => { requestAnimationFrame(() => { this.resize(); }); });
+    requestAnimationFrame(() => {requestAnimationFrame(() => {this.resize();});});
 
     // Subscribe to events
     eventBus.on(Events.THEME_TOGGLED, (isDark: boolean) => this.applyTheme(isDark));
     eventBus.on(Events.LAYER_CHANGED, (z: number) => this.setFocusZ(z));
-    eventBus.on(Events.GAME_RESET, () => { this._currentPlayer = 1; this.renderPieces(); });
+    eventBus.on(Events.GAME_RESET, () => {this._currentPlayer = 1;this.renderPieces();});
     eventBus.on(Events.COLORBLIND_MODE_TOGGLED, (isBlind: boolean) => {
       this.isColorblindMode = isBlind;
       if (this.hoverX >= 0) this.computeHoverOverlays(this.hoverX, this.hoverY);
@@ -212,12 +212,12 @@ export class RightPanel {
 
   private handleMouseMove = (e: MouseEvent): void => {
     const rect = this.renderer.domElement.getBoundingClientRect();
-    const w = rect.width || 1, h = rect.height || 1;
-    const ndcX = ((e.clientX - rect.left) / w) * 2 - 1;
+    const w = rect.width || 1,h = rect.height || 1;
+    const ndcX = (e.clientX - rect.left) / w * 2 - 1;
     const ndcY = -((e.clientY - rect.top) / h) * 2 + 1;
     const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
     vec.unproject(this.camera);
-    const gx = Math.round(vec.x), gy = Math.round(vec.y);
+    const gx = Math.round(vec.x),gy = Math.round(vec.y);
 
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) {
       this.hideGhostPiece();
@@ -283,10 +283,10 @@ export class RightPanel {
     this._currentPlayer = this._currentPlayer === BLACK ? WHITE : BLACK;
     this.clearAllOverlays();
   }
-  getCurrentPlayer(): CellState { return this.currentPlayer; }
+  getCurrentPlayer(): CellState {return this.currentPlayer;}
 
   setCurrentPlayer(state: CellState): void {
-    if (state === 1 || state === 2) { this._currentPlayer = state; }
+    if (state === 1 || state === 2) {this._currentPlayer = state;}
   }
 
 
@@ -294,7 +294,7 @@ export class RightPanel {
   private clearHighlightMarkers(): void {
     while (this.highlightMarkersGroup.children.length > 0) {
       const c = this.highlightMarkersGroup.children[0];
-      if (c instanceof THREE.Mesh) { c.geometry.dispose(); if (c.material instanceof THREE.Material) c.material.dispose(); }
+      if (c instanceof THREE.Mesh) {c.geometry.dispose();if (c.material instanceof THREE.Material) c.material.dispose();}
       this.highlightMarkersGroup.remove(c);
     }
   }
@@ -310,7 +310,7 @@ export class RightPanel {
 
 
   private computeHoverOverlays(hx: number, hy: number): void {
-  
+
     if (!(this.auxMode & 0b10)) {
       this.clearAllOverlays();
       if (this.on3DAuxDataChanged) this.on3DAuxDataChanged({ lines: [], points: [] });
@@ -324,13 +324,13 @@ export class RightPanel {
 
     this.clearHighlightMarkers();
 
-  
+
     for (const [dx, dy] of DIRS_2D) {
       this.scanDirection2D(hx, hy, dx, dy, z, pos2D, col2D, pts3D);
       this.scanDirection2D(hx, hy, -dx, -dy, z, pos2D, col2D, pts3D);
     }
 
-  
+
     const include3D = !!(this.auxMode & 0b01);
     if (include3D) {
       for (const [dx, dy, dz] of DIRECTIONS_3D.map((d) => [d.x, d.y, d.z])) {
@@ -339,7 +339,7 @@ export class RightPanel {
       }
     }
 
-  
+
     // Fully recreate LineSegments to avoid WebGL buffer state issues
     this.scene.remove(this.hoverAuxLines2D);
     this.hoverAuxLines2D.geometry.dispose();
@@ -361,55 +361,55 @@ export class RightPanel {
       this.scene.add(this.hoverAuxLines2D);
     }
 
-  
+
     if (this.on3DAuxDataChanged) {
       this.on3DAuxDataChanged({ lines: lines3D, points: pts3D });
     }
   }
 
-  /**
-   * Scan a single 2D direction with noise reduction:
-   * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge is reached without finding a stone 闂?draw nothing (noise cancelled).
-   * If first non-empty is ally 闂?green from hover to that stone, continue forward.
-   * If first non-empty is enemy 闂?red from hover to that stone, stop.
-   */
+
+
+
+
+
+
+
   private scanDirection2D(
-    hx: number, hy: number, dx: number, dy: number, z: number,
-    pos2D: number[], col2D: number[], pts3D: HighlightPoint3D[],
-  ): void {
-  
+  hx: number, hy: number, dx: number, dy: number, z: number,
+  pos2D: number[], col2D: number[], pts3D: HighlightPoint3D[])
+  : void {
+
     const maxSteps = 4;
     let firstStep = 1;
     while (true) {
-      const px = hx + dx * firstStep, py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return; 
+      const px = hx + dx * firstStep,py = hy + dy * firstStep;
+      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return;
       if (firstStep > maxSteps) return; // exceeded search range
-            const s = this.board.get(px, py, z);
+      const s = this.board.get(px, py, z);
       if (s !== 0) break;
       firstStep++;
     }
 
-  
+
     let step = firstStep;
-    let prevX = hx, prevY = hy;
+    let prevX = hx,prevY = hy;
     while (true) {
       if (step > maxSteps) break; // exceeded search range
-            const px = hx + dx * step, py = hy + dy * step;
+      const px = hx + dx * step,py = hy + dy * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) break;
       const s = this.board.get(px, py, z);
 
       const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? this.getSelfColor() : (isAlly ? this.getSelfColor() : this.getEnemyColor());
+      const color = s === 0 ? this.getSelfColor() : isAlly ? this.getSelfColor() : this.getEnemyColor();
 
-    
+
       if (s !== 0) {
         // Enemy lines at Z=0.03 (top), ally lines at Z=0.02
         const lineZ = z * LAYER_SPACING + (isAlly ? 0.02 : 0.03);
         pos2D.push(prevX, prevY, lineZ, px, py, lineZ);
         for (let i = 0; i < 2; i++) {
-          const r = ((color >> 16) & 0xff) / 255;
-          const g = ((color >> 8) & 0xff) / 255;
+          const r = (color >> 16 & 0xff) / 255;
+          const g = (color >> 8 & 0xff) / 255;
           const b = (color & 0xff) / 255;
           col2D.push(r, g, b);
         }
@@ -422,63 +422,63 @@ export class RightPanel {
       }
 
       if (!isAlly) {
-      
+
         this.addHighlightMarker(px, py, color);
         pts3D.push({ x: px, y: py, z: z, color }); // logical Z index
         break;
       }
 
-    
-      prevX = px; prevY = py;
+
+      prevX = px;prevY = py;
       step++;
     }
     // Marker at last valid piece when maxSteps terminated the loop
     if (prevX !== hx || prevY !== hy) {
       this.addHighlightMarker(prevX, prevY, this.getSelfColor());
-      pts3D.push({ x: prevX, y: prevY, z: z, color: this.getSelfColor() }) // logical Z index;
+      pts3D.push({ x: prevX, y: prevY, z: z, color: this.getSelfColor() }); // logical Z index;
     }
   }
 
-  /**
-   * Scan a single 3D direction with noise reduction.
-   * Skip empty cells until the FIRST non-empty cell is found.
-   * If board edge reached without finding a stone 闂?draw nothing.
-   */
+
+
+
+
+
   private scanDirection3D(
-    hx: number, hy: number, hz: number,
-    dx: number, dy: number, dz: number,
-    lines3D: Line3DData[], pts3D: HighlightPoint3D[],
-  ): void {
+  hx: number, hy: number, hz: number,
+  dx: number, dy: number, dz: number,
+  lines3D: Line3DData[], pts3D: HighlightPoint3D[])
+  : void {
 
     const maxSteps = 4;
     let firstStep = 1;
     while (true) {
-      const px = hx + dx * firstStep, py = hy + dy * firstStep, pz = hz + dz * firstStep;
+      const px = hx + dx * firstStep,py = hy + dy * firstStep,pz = hz + dz * firstStep;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) return;
       if (firstStep > maxSteps) return; // exceeded search range
-            const s = this.board.get(px, py, pz);
+      const s = this.board.get(px, py, pz);
       if (s !== 0) break;
       firstStep++;
     }
 
 
     let step = firstStep;
-    let prevX = hx, prevY = hy, prevZ = hz;
+    let prevX = hx,prevY = hy,prevZ = hz;
     while (true) {
       if (step > maxSteps) break; // exceeded search range
-            const px = hx + dx * step, py = hy + dy * step, pz = hz + dz * step;
+      const px = hx + dx * step,py = hy + dy * step,pz = hz + dz * step;
       if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) break;
       const s = this.board.get(px, py, pz);
 
       const isAlly = s === this.currentPlayer;
-      const color = s === 0 ? this.getSelfColor() : (isAlly ? this.getSelfColor() : this.getEnemyColor());
+      const color = s === 0 ? this.getSelfColor() : isAlly ? this.getSelfColor() : this.getEnemyColor();
 
       if (s !== 0) {
-      lines3D.push({
-        startX: prevX, startY: prevY, startZ: prevZ, // logical Z index
-        endX: px, endY: py, endZ: pz, // logical Z index
-        color,
-      });
+        lines3D.push({
+          startX: prevX, startY: prevY, startZ: prevZ, // logical Z index
+          endX: px, endY: py, endZ: pz, // logical Z index
+          color
+        });
       }
 
       if (s === 0) {
@@ -492,7 +492,7 @@ export class RightPanel {
         break;
       }
 
-      prevX = px; prevY = py; prevZ = pz;
+      prevX = px;prevY = py;prevZ = pz;
       step++;
     }
     // Green marker at last valid piece when maxSteps terminated the loop
@@ -503,7 +503,7 @@ export class RightPanel {
 
 
 
-  private hideGhostPiece(): void { if (this.ghostMesh) this.ghostMesh.visible = false; }
+  private hideGhostPiece(): void {if (this.ghostMesh) this.ghostMesh.visible = false;}
 
   private showGhostPiece(gx: number, gy: number): void {
     const isBlack = this.currentPlayer === BLACK;
@@ -511,14 +511,14 @@ export class RightPanel {
       const geo = resourceManager.getGeometry("piece");
       const mat = new THREE.MeshBasicMaterial({
         map: isBlack ? this.blackGhostTex : this.whiteGhostTex,
-        transparent: true, opacity: GHOST_OPACITY, side: THREE.DoubleSide, depthWrite: false,
+        transparent: true, opacity: GHOST_OPACITY, side: THREE.DoubleSide, depthWrite: false
       });
       this.ghostMesh = new THREE.Mesh(geo, mat);
       this.pieceGroup.add(this.ghostMesh);
     }
     const mat = this.ghostMesh.material as THREE.MeshBasicMaterial;
     const neededTex = isBlack ? this.blackGhostTex : this.whiteGhostTex;
-    if (mat.map !== neededTex) { mat.map = neededTex; mat.needsUpdate = true; }
+    if (mat.map !== neededTex) {mat.map = neededTex;mat.needsUpdate = true;}
     this.ghostMesh.position.set(gx, gy, 0.01);
     this.ghostMesh.visible = true;
   }
@@ -529,7 +529,7 @@ export class RightPanel {
     if (!this.isGameActive()) return;
     if (!this.isMyTurn()) return;
     if (!this.hoverValid) return;
-    const gx = this.hoverX, gy = this.hoverY;
+    const gx = this.hoverX,gy = this.hoverY;
     if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
     this.board.set(gx, gy, this.focusZ, this._currentPlayer);
     const actualState = this.board.get(gx, gy, this.focusZ);
@@ -557,13 +557,13 @@ export class RightPanel {
     this.clearAllOverlays();
 
     const rect = this.renderer.domElement.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2, midY = rect.top + rect.height / 2;
+    const midX = rect.left + rect.width / 2,midY = rect.top + rect.height / 2;
     this.handleMouseMove(new MouseEvent("mousemove", { clientX: midX, clientY: midY }));
   };
 
 
 
-    private renderPieces(): void {
+  private renderPieces(): void {
     this.pieceGroup.clear();
     this.ghostMesh = null;
 
@@ -583,7 +583,7 @@ export class RightPanel {
   /** Public refresh - re-renders pieces without exposing renderPieces directly */
   public refresh(): void {
     this.renderPieces();
-  }  private applyFocusZ(): void {
+  }private applyFocusZ(): void {
     const zPos = this.focusZ * LAYER_SPACING;
     this.camera.position.set(CENTER, CENTER, zPos + 50);
     this.camera.up.set(0, 1, 0);
@@ -631,7 +631,7 @@ export class RightPanel {
     this.updateTheme(theme);
   }
 
-  render(): void { this.renderer.render(this.scene, this.camera); }
+  render(): void {this.renderer.render(this.scene, this.camera);}
 
   resize(width?: number, height?: number): void {
     const containerWidth = width ?? this.container.clientWidth;
@@ -639,11 +639,11 @@ export class RightPanel {
 
     this.renderer.setSize(containerWidth, containerHeight);
 
-    // 婵☆偄顑囧ú蹇旂▔閺嶎偅娅曠紒灞炬そ濡寧寰勮閻剟鏁? 闁?BOARD_SIZE-1闁?
+
     const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
 
-    // 闁告牕鎳庨幆鍫⑩偓鐟邦槸閸欏繑娼忕涵鍛崺闁汇劌瀚埀顒冾嚙閺勫倻鈧?
-    const totalSize = boardWorldSize + (RightPanel.GRID_PADDING * 2);
+
+    const totalSize = boardWorldSize + RightPanel.GRID_PADDING * 2;
 
     const aspect = containerWidth / containerHeight;
 
@@ -651,11 +651,11 @@ export class RightPanel {
     let frustumHalfHeight: number;
 
     if (aspect > 1) {
-      // 閻庣妫勯惈鍡涙晬濮樺墎褰幖杈剧細鐠愮喖宕洪崫鍕珯闁挎稑鑻鏃€鎯旈敃浣告闂侇偄鍊哥花?
+
       frustumHalfHeight = totalSize / 2;
       frustumHalfWidth = frustumHalfHeight * aspect;
     } else {
-      // 缂佹梹鐗曢惈鍡涘箣閺嶎煈鍔€闁哄倻鎳撻懜浼存晬濮橆剦鍟嶉幖杈剧細鐠愮喖宕洪崫鍕珯闁挎稑鐭傞悵顔芥償閿曚礁娈伴梺顐㈠€哥花?
+
       frustumHalfWidth = totalSize / 2;
       frustumHalfHeight = frustumHalfWidth / aspect;
     }

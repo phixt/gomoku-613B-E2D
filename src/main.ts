@@ -16,11 +16,11 @@ import * as THREE from "three";
 import { resourceManager } from "./utils/ResourceManager";
 
 const AppState = {
-    TITLE: "TITLE",
-    GUIDE_FROM_TITLE: "GUIDE_FROM_TITLE",
-    PLAYING: "PLAYING",
-    PAUSED: "PAUSED",
-    GUIDE_FROM_GAME: "GUIDE_FROM_GAME"
+  TITLE: "TITLE",
+  GUIDE_FROM_TITLE: "GUIDE_FROM_TITLE",
+  PLAYING: "PLAYING",
+  PAUSED: "PAUSED",
+  GUIDE_FROM_GAME: "GUIDE_FROM_GAME"
 } as const;
 type AppState = typeof AppState[keyof typeof AppState];
 
@@ -62,20 +62,20 @@ async function main(): Promise<void> {
   const rightPanel = new RightPanel(rightEl, currentTheme);
   rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
   var overlayManager = new OverlayManager({
-    onSave: function(index, data) {
+    onSave: function (index, data) {
       saveManager.save(index, data);
       overlayManager.showToast("已保存到存档 " + (index === 5 ? "快速档" : String(index + 1)));
     },
-    onLoad: function(data) {
+    onLoad: function (data) {
       loadGameFromData(data);
     },
-    onDelete: function(index) {
+    onDelete: function (index) {
       saveManager.delete(index);
       overlayManager.showToast("已删除存档 " + (index + 1));
     },
-    serializeState: function() { return serializeBoardState(); },
-    onGetSlots: function() { return saveManager.getSlots(); },
-    onLoadByIndex: function(index) { return saveManager.load(index); },
+    serializeState: function () {return serializeBoardState();},
+    onGetSlots: function () {return saveManager.getSlots();},
+    onLoadByIndex: function (index) {return saveManager.load(index);}
   });
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
@@ -87,8 +87,8 @@ async function main(): Promise<void> {
   };
 
   rightPanel.onHoverChanged = (x, y, z): void => {
-    if (x >= 0) leftPanel.updateHoverMarker(x, y, z);
-    else leftPanel.clearHoverMarker();
+    if (x >= 0) leftPanel.updateHoverMarker(x, y, z);else
+    leftPanel.clearHoverMarker();
   };
 
   // Turn control and placement callback
@@ -115,7 +115,7 @@ async function main(): Promise<void> {
     leftPanel.resize(lw, h);
     rightPanel.resize(rw, h);
   };
-  requestAnimationFrame(() => { requestAnimationFrame(forceCorrectSize); });
+  requestAnimationFrame(() => {requestAnimationFrame(forceCorrectSize);});
 
   let focusZ = 0;
   let isColorblindMode = false;
@@ -142,7 +142,7 @@ async function main(): Promise<void> {
     indicatorRenderer = new THREE.WebGLRenderer({
       canvas: indicatorCanvas,
       alpha: true,
-      antialias: true,
+      antialias: true
     });
     indicatorRenderer.setSize(64, 64);
     indicatorRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -200,7 +200,7 @@ async function main(): Promise<void> {
       aiEngine = new AIEngine(diffSelect?.value as "Easy" | "Medium" | "Hard" || "Easy");
       isAIThinking = false;
     } else {
-      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+      if (aiEngine) {aiEngine.cancel();aiEngine = null;}
     }
     gameStore.appState = AppState.PLAYING;
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
@@ -218,7 +218,7 @@ async function main(): Promise<void> {
 
     if (startScreen) {
       startScreen.classList.add("fade-out");
-      setTimeout(() => { startScreen.style.display = "none"; }, 500);
+      setTimeout(() => {startScreen.style.display = "none";}, 500);
     }
     setTimeout(forceCorrectSize, 550);
   };
@@ -236,9 +236,9 @@ async function main(): Promise<void> {
         rightPanel.placeAIPiece(move.x, move.y, move.z);
       }
     } catch (_err) {
+
       // cancelled or no valid moves
-    } finally {
-      isAIThinking = false;
+    } finally {isAIThinking = false;
     }
   };
 
@@ -264,8 +264,8 @@ async function main(): Promise<void> {
     if (escMenu) escMenu.classList.add("hidden");
   };
 
-        // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
-    const renderSaveSlots = (slots: ReadonlyArray<SaveData | null>): void => {
+  // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
+  const renderSaveSlots = (slots: ReadonlyArray<SaveData | null>): void => {
     const list = document.getElementById("save-slots-list");
     if (!list) {
       console.error("[renderSaveSlots] #save-slots-list NOT FOUND in DOM!");
@@ -278,7 +278,7 @@ async function main(): Promise<void> {
       const isQuickSave = i === 5;
       const div = document.createElement("div");
       div.className = "save-slot" + (isEmpty ? " empty" : "") + (isQuickSave ? " quick-save" : "");
-      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${isEmpty ? "空" : (`已存档 (${new Date(data!.timestamp).toLocaleTimeString()})`)}</span>`;
+      div.innerHTML = `<span class="slot-index">0${i + 1}</span> <span class="slot-info">${isEmpty ? "空" : `已存档 (${new Date(data!.timestamp).toLocaleTimeString()})`}</span>`;
       div.addEventListener("click", (e: MouseEvent) => {
         overlayManager.showSlotMenu(i, e);
       });
@@ -314,7 +314,7 @@ async function main(): Promise<void> {
   };
 
   const serializeBoardState = (): SaveData => {
-    const moves: Array<{ x: number; y: number; z: number; player: number }> = [];
+    const moves: Array<{x: number;y: number;z: number;player: number;}> = [];
     for (let z = 0; z < LAYER_COUNT; z++) {
       for (let y = 0; y < 13; y++) {
         for (let x = 0; x < 13; x++) {
@@ -334,13 +334,13 @@ async function main(): Promise<void> {
       moves,
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
-      currentPlayer: rightPanel.getCurrentPlayer(),
+      currentPlayer: rightPanel.getCurrentPlayer()
     };
   };
 
   const loadGameFromData = (data: SaveData): void => {
     try {
-      if (!data || !data.moves) { overlayManager.showToast("无效的存档数据", true); return; }
+      if (!data || !data.moves) {overlayManager.showToast("无效的存档数据", true);return;}
       rightPanel.board.reset();
       focusZ = data.focusZ ?? 0;
       for (const move of data.moves) {
@@ -384,7 +384,7 @@ async function main(): Promise<void> {
     // Find first empty slot, or overwrite quick save slot if all full
     let targetIndex = -1;
     for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
-      if (saveManager.getSlots()[i] === null) { targetIndex = i; break; }
+      if (saveManager.getSlots()[i] === null) {targetIndex = i;break;}
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
     saveManager.save(targetIndex, data);
@@ -398,7 +398,7 @@ async function main(): Promise<void> {
     });
   };
 
-  
+
 
 
   if (startBtn) startBtn.addEventListener("click", startGame);
@@ -443,12 +443,12 @@ async function main(): Promise<void> {
     const btnP = document.getElementById("guide-btn-primary");
     const btnS = document.getElementById("guide-btn-secondary");
     if (gameStore.appState === AppState.GUIDE_FROM_TITLE) {
-      if (btnP) { btnP.textContent = "开始游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); startGame(); }); }
-      if (btnS) { btnS.textContent = "返回标题"; btnS.addEventListener("click", backToTitle); }
+      if (btnP) {btnP.textContent = "开始游戏";btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
+      if (btnS) {btnS.textContent = "返回标题";btnS.addEventListener("click", backToTitle);}
     } else {
-      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
-      if (btnP) { btnP.textContent = "开始新游戏"; btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
-      if (btnS) { btnS.textContent = "回到游戏"; btnS.addEventListener("click", backToGame); }
+      if (btnP) {btnP.textContent = "开始新游戏";btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
+      if (btnP) {btnP.textContent = "开始新游戏";btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
+      if (btnS) {btnS.textContent = "回到游戏";btnS.addEventListener("click", backToGame);}
     }
   };
 
@@ -467,22 +467,22 @@ async function main(): Promise<void> {
   });
 
   escResume?.addEventListener("click", closeEscMenu);
-  escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
-  escSave?.addEventListener("click", () => { closeEscMenu(); saveGame(); });
-  escTitle?.addEventListener("click", () => { closeEscMenu(); returnToTitle(); });
+  escRestart?.addEventListener("click", () => {closeEscMenu();confirmRestart();});
+  escSave?.addEventListener("click", () => {closeEscMenu();saveGame();});
+  escTitle?.addEventListener("click", () => {closeEscMenu();returnToTitle();});
   const escLoad = document.getElementById("esc-load");
   escLoad?.addEventListener("click", () => {
     closeEscMenu();
     const idx = saveManager.getLatestIndex();
     if (idx >= 0) {
       const data = saveManager.load(idx);
-      if (data) { loadGameFromData(data); }
+      if (data) {loadGameFromData(data);}
     } else {
       overlayManager.showToast("没有可读取的存档", true);
     }
   });
 
-    // ===== Slot Action Menu Listeners =====
+  // ===== Slot Action Menu Listeners =====
   window.addEventListener("keydown", (e: KeyboardEvent) => {
     // Theme toggle works regardless of game state
     if (e.key === "t" || e.key === "T") {
@@ -507,7 +507,7 @@ async function main(): Promise<void> {
           const idx = saveManager.getLatestIndex();
           if (idx >= 0) {
             const data = saveManager.load(idx);
-            if (data) { loadGameFromData(data); }
+            if (data) {loadGameFromData(data);}
           } else {
             overlayManager.showToast("没有可读取的存档", true);
           }
@@ -516,95 +516,95 @@ async function main(): Promise<void> {
         break;
 
       case AppState.GUIDE_FROM_GAME:
-      case AppState.PAUSED: {
-        e.preventDefault();
-        e.stopPropagation();
-        switch (e.code) {
-          case "Escape":
-            if (gameStore.appState === AppState.GUIDE_FROM_GAME) {
-              gameStore.appState = AppState.PLAYING;
-              guideScreen?.classList.add("hidden");
-            } else {
+      case AppState.PAUSED:{
+          e.preventDefault();
+          e.stopPropagation();
+          switch (e.code) {
+            case "Escape":
+              if (gameStore.appState === AppState.GUIDE_FROM_GAME) {
+                gameStore.appState = AppState.PLAYING;
+                guideScreen?.classList.add("hidden");
+              } else {
+                closeEscMenu();
+              }
+              break;
+            case "KeyR":closeEscMenu();confirmRestart();break;
+            case "KeyS":closeEscMenu();saveGame();break;
+            case "KeyL":{
+                closeEscMenu();
+                const idx = saveManager.getLatestIndex();
+                if (idx >= 0) {
+                  const data = saveManager.load(idx);
+                  if (data) {loadGameFromData(data);}
+                } else {
+                  overlayManager.showToast("没有可读取的存档", true);
+                }
+                break;
+              }
+            case "KeyG":
               closeEscMenu();
-            }
-            break;
-          case "KeyR": closeEscMenu(); confirmRestart(); break;
-          case "KeyS": closeEscMenu(); saveGame(); break;
-          case "KeyL": {
-            closeEscMenu();
-            const idx = saveManager.getLatestIndex();
-            if (idx >= 0) {
-              const data = saveManager.load(idx);
-              if (data) { loadGameFromData(data); }
-            } else {
-              overlayManager.showToast("没有可读取的存档", true);
-            }
-            break;
+              gameStore.appState = AppState.GUIDE_FROM_GAME;
+              guideScreen?.classList.remove("hidden");
+              updateGuideButtons();
+              break;
+            case "KeyB":closeEscMenu();returnToTitle();break;
           }
-          case "KeyG":
-            closeEscMenu();
-            gameStore.appState = AppState.GUIDE_FROM_GAME;
-            guideScreen?.classList.remove("hidden");
-            updateGuideButtons();
-            break;
-          case "KeyB": closeEscMenu(); returnToTitle(); break;
+          return;
         }
-        return;
-      }
 
       case AppState.PLAYING:
         switch (e.key) {
-          case "a": case "A":
+          case "a":case "A":
             e.preventDefault();
             focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
             eventBus.emit(Events.LAYER_CHANGED, focusZ);
             leftPanel.renderAllPieces(rightPanel.board, focusZ);
             break;
-          case "d": case "D":
+          case "d":case "D":
             e.preventDefault();
             focusZ = (focusZ + 1) % LAYER_COUNT;
             eventBus.emit(Events.LAYER_CHANGED, focusZ);
             leftPanel.renderAllPieces(rightPanel.board, focusZ);
             break;
-          case "q": case "Q": e.preventDefault(); leftPanel.rotateY(1); break;
-          case "e": case "E": e.preventDefault(); leftPanel.rotateY(-1); break;
-          case "f": case "F": e.preventDefault(); rightPanel.toggleMirror(); break;
-          case "w": case "W": e.preventDefault(); leftPanel.zoom(1); break;
-          case "s": case "S": e.preventDefault(); leftPanel.zoom(-1); break;
-          case "z": case "Z":
+          case "q":case "Q":e.preventDefault();leftPanel.rotateY(1);break;
+          case "e":case "E":e.preventDefault();leftPanel.rotateY(-1);break;
+          case "f":case "F":e.preventDefault();rightPanel.toggleMirror();break;
+          case "w":case "W":e.preventDefault();leftPanel.zoom(1);break;
+          case "s":case "S":e.preventDefault();leftPanel.zoom(-1);break;
+          case "z":case "Z":
             e.preventDefault();
             console.log("KeyZ pressed");
             leftPanel.adjustLayerSpacing(-0.5);
             break;
-          case "c": case "C":
+          case "c":case "C":
             e.preventDefault();
             console.log("KeyC pressed");
             leftPanel.adjustLayerSpacing(0.5);
             break;
-          case "r": case "R": e.preventDefault(); openEscMenu(); break;
-          case "Escape": e.preventDefault(); openEscMenu(); break;
-          case "x": case "X": e.preventDefault(); leftPanel.toggleLayerSpacing(); break;
-          case "h": case "H":
+          case "r":case "R":e.preventDefault();openEscMenu();break;
+          case "Escape":e.preventDefault();openEscMenu();break;
+          case "x":case "X":e.preventDefault();leftPanel.toggleLayerSpacing();break;
+          case "h":case "H":
             e.preventDefault();
-            { const mode = rightPanel.cycleAuxMode(); leftPanel.setAuxMode(mode); }
+            {const mode = rightPanel.cycleAuxMode();leftPanel.setAuxMode(mode);}
             break;
-          case "m": case "M":
+          case "m":case "M":
             e.preventDefault();
             isPvEMode = !isPvEMode;
             overlayManager.showToast(isPvEMode ? "AI 模式已开启（执白）" : "玩家对战模式");
             const colorGroup = document.getElementById("player-color-group");
             if (colorGroup) {
-              if (isPvEMode) colorGroup.classList.remove("hidden");
-              else colorGroup.classList.add("hidden");
+              if (isPvEMode) colorGroup.classList.remove("hidden");else
+              colorGroup.classList.add("hidden");
             }
             if (!isPvEMode) {
-              if (aiEngine) { aiEngine.cancel(); aiEngine = null; isAIThinking = false; }
+              if (aiEngine) {aiEngine.cancel();aiEngine = null;isAIThinking = false;}
             } else {
               const aiCol: 1 | 2 = playerColor === 1 ? 2 : 1;
               if (currentPlayer === aiCol) triggerAIMove();
             }
             break;
-          case "v": case "V":
+          case "v":case "V":
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
             eventBus.emit(Events.COLORBLIND_MODE_TOGGLED, isColorblindMode);
@@ -696,8 +696,8 @@ async function main(): Promise<void> {
   const whiteRadio = document.getElementById("color-white") as HTMLInputElement;
 
   const onPlayerColorChange = (): void => {
-    if (blackRadio && blackRadio.checked) playerColor = 1;
-    else if (whiteRadio && whiteRadio.checked) playerColor = 2;
+    if (blackRadio && blackRadio.checked) playerColor = 1;else
+    if (whiteRadio && whiteRadio.checked) playerColor = 2;
     // If game is running and it is now the AI's turn, trigger immediately
     if (gameStore.appState === AppState.PLAYING && isPvEMode) {
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
@@ -712,4 +712,3 @@ async function main(): Promise<void> {
 }
 
 main();
-

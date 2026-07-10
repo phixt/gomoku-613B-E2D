@@ -26,7 +26,7 @@ class AudioManager {
   private constructor() {
     this.preloadAll();
     // Listen for PLAY_SOUND events from anywhere
-    eventBus.on(Events.PLAY_SOUND, (payload: { sound: SoundName; bgm?: BGMTrack }) => {
+    eventBus.on(Events.PLAY_SOUND, (payload: {sound: SoundName;bgm?: BGMTrack;}) => {
       if (payload.bgm) {
         this.playBGM(payload.bgm);
       } else if (payload.sound) {
@@ -45,11 +45,11 @@ class AudioManager {
   // ── WAV generation (simple tones) ──────────────────────────
 
   private generateWavURI(
-    frequency: number,
-    duration: number,
-    volume: number,
-    type: "sine" | "square" | "triangle" = "sine"
-  ): string {
+  frequency: number,
+  duration: number,
+  volume: number,
+  type: "sine" | "square" | "triangle" = "sine")
+  : string {
     const sampleRate = 22050;
     const numSamples = Math.floor(sampleRate * duration);
     const buffer = new ArrayBuffer(44 + numSamples * 2);
@@ -85,7 +85,7 @@ class AudioManager {
           sample = Math.sin(2 * Math.PI * frequency * t) >= 0 ? 0.5 : -0.5;
           break;
         case "triangle":
-          sample = (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * frequency * t));
+          sample = 2 / Math.PI * Math.asin(Math.sin(2 * Math.PI * frequency * t));
           break;
         default:
           sample = Math.sin(2 * Math.PI * frequency * t);
@@ -114,7 +114,7 @@ class AudioManager {
     this.sfxCache["win"] = new Audio(
       this.generateWavURI(880, 0.35, 0.6, "triangle")
     );
-// Use a fallback tone for sawtooth (approximate with triangle)
+    // Use a fallback tone for sawtooth (approximate with triangle)
     this.sfxCache["lose"] = new Audio(
       this.generateWavURI(180, 0.4, 0.5, "triangle")
     );
@@ -222,10 +222,10 @@ class AudioManager {
   mute(): void {
     this.isMuted = !this.isMuted;
     if (this.isMuted) {
-      Object.values(this.sfxCache).forEach((a) => { a.volume = 0; });
+      Object.values(this.sfxCache).forEach((a) => {a.volume = 0;});
       if (this.currentBGM) this.currentBGM.volume = 0;
     } else {
-      Object.values(this.sfxCache).forEach((a) => { a.volume = this.sfxVolume; });
+      Object.values(this.sfxCache).forEach((a) => {a.volume = this.sfxVolume;});
       if (this.currentBGM) this.currentBGM.volume = this.bgmVolume;
     }
   }

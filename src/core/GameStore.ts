@@ -14,7 +14,7 @@ const initialState: GameState = {
   currentPlayer: 1,
   isDarkTheme: false,
   layerSpacing: DEFAULT_LAYER_SPACING,
-  appState: "TITLE",
+  appState: "TITLE"
 };
 
 class GameStore {
@@ -59,12 +59,12 @@ class GameStore {
     eventBus.emit(Events.GAME_RESET);
   }
 
-  get focusZ(): number { return this.state.focusZ; }
-  get currentPlayer(): 1 | 2 { return this.state.currentPlayer; }
-  get isDarkTheme(): boolean { return this.state.isDarkTheme; }
-  get layerSpacing(): number { return this.state.layerSpacing; }
-  get appState(): string { return this.state.appState; }
-  set appState(val: string) { this.setState({ appState: val }); }
+  get focusZ(): number {return this.state.focusZ;}
+  get currentPlayer(): 1 | 2 {return this.state.currentPlayer;}
+  get isDarkTheme(): boolean {return this.state.isDarkTheme;}
+  get layerSpacing(): number {return this.state.layerSpacing;}
+  get appState(): string {return this.state.appState;}
+  set appState(val: string) {this.setState({ appState: val });}
 }
 
 export const gameStore = new GameStore();
