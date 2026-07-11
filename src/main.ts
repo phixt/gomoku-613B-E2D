@@ -313,11 +313,13 @@ async function main(): Promise<void> {
     rightPanel.resetGame();
     leftPanel.renderAllPieces(rightPanel.board, gameStore.focusZ);
     closeEscMenu();
+    audioManager.playBGM("game");
     eventBus.emit(Events.GAME_RESET);
   };
 
   const openEscMenu = (): void => {
     gameStore.appState = AppState.PAUSED;
+    audioManager.playBGM("pause");
     if (escMenu) escMenu.classList.remove("hidden");
   };
 
@@ -758,6 +760,7 @@ const exitReplay = (): void => {
         gs?.classList.add("hidden");
         gameStore.appState = AppState.PLAYING;
         updateTurnIndicator(currentPlayer);
+        audioManager.playBGM("game");
 
         forceCorrectSize();
         isReplayMode = false;
@@ -821,6 +824,7 @@ const exitReplay = (): void => {
     hideAllOverlays();
     startScreen?.classList.remove("hidden");
     gameStore.appState = AppState.TITLE;
+    audioManager.playBGM("menu");
     rightPanel.refresh();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
@@ -832,6 +836,7 @@ const exitReplay = (): void => {
     rightPanel.refresh();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
     gameStore.appState = AppState.PLAYING;
+    audioManager.playBGM("game");
   };
 
   const updateGuideButtons = (): void => {
@@ -868,7 +873,7 @@ const exitReplay = (): void => {
     updateGuideButtons();
   });
 
-  escResume?.addEventListener("click", closeEscMenu);
+  escResume?.addEventListener("click", () => { closeEscMenu(); audioManager.playBGM("game"); });
   escRestart?.addEventListener("click", () => {closeEscMenu();confirmRestart();});
   document.getElementById("btn-victory-restart")?.addEventListener("click", () => {
     document.getElementById("victory-modal")?.classList.add("hidden");
@@ -992,6 +997,7 @@ const exitReplay = (): void => {
               closeEscMenu();
               gameStore.appState = AppState.GUIDE_FROM_GAME;
               guideScreen?.classList.remove("hidden");
+              audioManager.playBGM("guide");
               updateGuideButtons();
               break;
             case "KeyB":closeEscMenu();returnToTitle();break;
