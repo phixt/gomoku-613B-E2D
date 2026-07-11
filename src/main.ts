@@ -8,6 +8,7 @@ import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { SaveManager, type SaveData } from "./core/SaveManager";
 import { LocalStorageAdapter } from "./core/LocalStorageAdapter";
+import { isTauri } from "@tauri-apps/api/core";
 import type { IStorageAdapter } from "./core/StorageAdapter";
 import { OverlayManager } from "./ui/OverlayManager";
 import { audioManager } from "./audio/AudioManager";
@@ -35,7 +36,7 @@ async function main(): Promise<void> {
 
   // Initialize storage adapter based on environment
   let adapter: IStorageAdapter;
-  if (import.meta.env.VITE_IS_TAURI) {
+  if (isTauri()) {
     console.log("[Init] Running in Tauri environment, loading TauriStoreAdapter...");
     try {
       const { TauriStoreAdapter } = await import("./core/TauriStoreAdapter");

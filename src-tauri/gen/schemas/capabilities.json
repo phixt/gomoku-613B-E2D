@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"enables the default permissions","local":true,"windows":["main"],"permissions":["core:default"]}}
+{"default":{"identifier":"default","description":"Default capabilities for the main window","local":true,"windows":["main"],"permissions":["core:default","store:default","store:allow-get","store:allow-set","store:allow-save","store:allow-load","store:allow-clear","store:allow-delete","store:allow-keys","store:allow-values","store:allow-entries"]}}

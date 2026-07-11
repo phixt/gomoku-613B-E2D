@@ -1,4 +1,4 @@
-import { Store } from "@tauri-apps/plugin-store";
+﻿import { Store } from "@tauri-apps/plugin-store";
 import type { IStorageAdapter } from "./StorageAdapter";
 
 /** Tauri environment adapter using @tauri-apps/plugin-store. */
@@ -9,18 +9,14 @@ export class TauriStoreAdapter implements IStorageAdapter {
   /** Load all keys from disk into in-memory cache. Must be called before read. */
   public async init(): Promise<void> {
     this.store = await Store.load("saves.json");
-    try {
-      const keys = await this.store.keys();
-      for (const key of keys) {
-        const val = await this.store.get<string>(key);
-        if (val !== undefined && val !== null) {
-          this.cache.set(key, val);
-        }
+    const keys = await this.store.keys();
+    for (const key of keys) {
+      const val = await this.store.get<string>(key);
+      if (val !== undefined && val !== null) {
+        this.cache.set(key, val);
       }
-      console.log("[TauriStoreAdapter] Loaded from disk, keys:", keys.length);
-    } catch (e) {
-      console.error("[TauriStoreAdapter] Failed to load from disk", e);
     }
+    console.log("[TauriStoreAdapter] ✅ Loaded from disk, keys:", keys.length);
   }
 
   /** Synchronous read from in-memory cache. */
