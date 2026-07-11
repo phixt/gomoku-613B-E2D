@@ -12,7 +12,15 @@ export class OverlayManager {
   private confirmYes: HTMLElement;
   private confirmNo: HTMLElement;
 
+  private inputDialog: HTMLElement;
+  private inputTitle: HTMLElement;
+  private inputMsg: HTMLElement;
+  private inputField: HTMLInputElement;
+  private inputYes: HTMLElement;
+  private inputNo: HTMLElement;
+
   private _pendingConfirm: (() => void) | null = null;
+  private _pendingInput: ((value: string) => void) | null = null;
 
   constructor(callbacks: {
     onSave: (index: number, data: SaveData) => void;
@@ -28,6 +36,7 @@ export class OverlayManager {
     if (!backdrop) throw new Error("Missing #global-backdrop");
     this.backdrop = backdrop;
 
+    // Confirm dialog
     const dialog = document.getElementById("confirm-dialog");
     if (!dialog) throw new Error("Missing #confirm-dialog");
     this.confirmDialog = dialog;
@@ -44,6 +53,25 @@ export class OverlayManager {
     this.confirmYes   = yes;
     this.confirmNo    = no;
 
+    // Input dialog
+    const inputDialog = document.getElementById("input-dialog");
+    if (!inputDialog) throw new Error("Missing #input-dialog");
+    this.inputDialog = inputDialog;
+
+    const inputTitle = document.getElementById("input-dialog-title");
+    const inputMsg   = document.getElementById("input-dialog-message");
+    const inputField = document.getElementById("input-dialog-field") as HTMLInputElement;
+    const inputYes   = document.getElementById("input-dialog-yes");
+    const inputNo    = document.getElementById("input-dialog-no");
+    if (!inputTitle || !inputMsg || !inputField || !inputYes || !inputNo) {
+      throw new Error("Missing input-dialog child elements");
+    }
+    this.inputTitle = inputTitle;
+    this.inputMsg   = inputMsg;
+    this.inputField = inputField;
+    this.inputYes   = inputYes;
+    this.inputNo    = inputNo;
+
     this.backdrop.onclick = () => this.closeAll();
     this.confirmYes.onclick = () => {
       const fn = this._pendingConfirm;
@@ -55,36 +83,78 @@ export class OverlayManager {
   }
 
   // ===========================================================
-  // DEBUG  IMPORT PIPELINE
-  // Uses browser prompt() - no HTML <input> to set autocomplete.
-  // If stale values reappear, check browser prompt auto-fill
-  // (Chrome sometimes caches prompt answers per origin).
-  // Raw input is logged to console for debugging.
+  //  IMPORT PIPELINE  (custom modal, no prompt/alert)
   // ===========================================================
+
   public tryFillSlot(index: number): void {
-    const input = prompt(UI_TEXT.PASTE_PLACEHOLDER, "");
-    console.log("[Fill] Raw input (JSON-escaped):", JSON.stringify(input));
-    if (!input || !input.trim()) return;
+    this.showInputDialog(
+      UI_TEXT.SLOT_FILL,
+      UI_TEXT.PASTE_PLACEHOLDER,
+      (inputValue: string) => {
+        if (!inputValue || !inputValue.trim()) {
+          this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+          return;
+        }
+        console.log("[Fill] Raw input (JSON-escaped):", JSON.stringify(inputValue));
+        const parsedData = SaveManager.tryParseSaveData(inputValue.trim());
+        if (!parsedData) {
+          console.error("[Import] Blocked: Invalid structure");
+          this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+          return;
+        }
+        const validationError = SaveManager.validateSaveData(parsedData);
+        if (validationError) {
+          console.error("[Import] Blocked: Validation failed -", validationError);
+          this.showToast(
+            validationError === "SAVE_INVALID_DIMENSIONS"
+              ? UI_TEXT.SAVE_INVALID_DIMENSIONS
+              : UI_TEXT.SAVE_INVALID_STRUCTURE,
+            true
+          );
+          return;
+        }
+        this.onSave(index, parsedData);
+        this.showToast(UI_TEXT.SAVE_SUCCESS(index + 1));
+      }
+    );
+  }
 
-    const parsedData = SaveManager.tryParseSaveData(input.trim());
-    if (!parsedData) {
-      console.error("[Import] Blocked: Invalid structure");
-      this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
-      return;
-    }
+  // ---- Input dialog ----
 
-    const validationError = SaveManager.validateSaveData(parsedData);
-    if (validationError) {
-      const errorMsgs: Record<string, string> = {
-        "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
-        "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
-      };
-      console.error("[Import] Blocked: Validation failed -", validationError);
-      this.showToast(errorMsgs[validationError] || validationError, true);
-      return;
-    }
+  public showInputDialog(
+    title: string,
+    message: string,
+    onSubmit: (value: string) => void
+  ): void {
+    this.inputTitle.textContent = title;
+    this.inputMsg.textContent = message;
+    this.inputField.value = "";
+    this.inputField.focus();
+    this._pendingInput = onSubmit;
 
-    this.onSave(index, parsedData);
+    // Re-bind buttons (cloneNode to prevent duplicate listeners)
+    const newYes = this.inputYes.cloneNode(true) as HTMLElement;
+    const newNo  = this.inputNo.cloneNode(true) as HTMLElement;
+    this.inputYes.parentNode?.replaceChild(newYes, this.inputYes);
+    this.inputNo.parentNode?.replaceChild(newNo, this.inputNo);
+    this.inputYes = newYes;
+    this.inputNo  = newNo;
+
+    this.inputYes.onclick = () => {
+      this.inputDialog.classList.add("hidden");
+      this.backdrop.classList.add("hidden");
+      const fn = this._pendingInput;
+      this._pendingInput = null;
+      if (fn) fn(this.inputField.value);
+    };
+    this.inputNo.onclick = () => {
+      this.inputDialog.classList.add("hidden");
+      this.backdrop.classList.add("hidden");
+      this._pendingInput = null;
+    };
+
+    this.backdrop.classList.remove("hidden");
+    this.inputDialog.classList.remove("hidden");
   }
 
   // ---- Confirm dialog ----
@@ -118,6 +188,8 @@ export class OverlayManager {
   public closeAll(): void {
     this.backdrop.classList.add("hidden");
     this.confirmDialog.classList.add("hidden");
+    this.inputDialog.classList.add("hidden");
     this._pendingConfirm = null;
+    this._pendingInput = null;
   }
 }

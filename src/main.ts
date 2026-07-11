@@ -426,10 +426,17 @@ async function main(): Promise<void> {
           if (loadData) loadGameFromData(loadData);
           break;
         case "overwrite":
-          const saveData = serializeBoardState();
-          saveManager.save(index, saveData);
-          overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.SAVE_SLOT_LABEL(index + 1)));
-          renderSaveSlots();
+          const targetSlotData = saveManager.load(index);
+          if (!targetSlotData) {
+            overlayManager.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+            break;
+          }
+          showConfirmDialog(UI_TEXT.CONFIRM_OVERWRITE(index + 1), () => {
+            const currentSaveData = serializeBoardState();
+            saveManager.save(index, currentSaveData);
+            overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.SAVE_SLOT_LABEL(index + 1)));
+            renderSaveSlots();
+          });
           break;
         case "replay":
           const replayData = saveManager.load(index);
