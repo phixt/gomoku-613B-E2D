@@ -86,30 +86,30 @@ export class OverlayManager {
       this.onSave(5, this.serializeState());
       this.closeAll();
     };
-
-    this.btnFill.onclick = () => {
+      
+        this.btnFill.onclick = () => {
       const input = prompt(UI_TEXT.PASTE_PLACEHOLDER);
       if (!input || !input.trim()) { this.closeAll(); return; }
-      try {
-        const json = decodeURIComponent(atob(input.trim()));
-        const decoded = JSON.parse(json);
-        const saveError = SaveManager.validateSaveData(decoded);
-        if (saveError) {
-          const errorMsgs: Record<string, string> = {
-            "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
-            "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
-          };
-          this.showToast(errorMsgs[saveError] || saveError, true);
-        } else {
-          this.onSave(this.currentSlotIndex, decoded as SaveData);
-        }
-      } catch {
+      const saveData = SaveManager.tryParseSaveData(input.trim());
+      if (!saveData) {
         this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+        this.closeAll();
+        return;
+      }
+      const dimensionError = SaveManager.validateSaveData(saveData);
+      if (dimensionError) {
+        const errorMsgs: Record<string, string> = {
+          "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
+          "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
+        };
+        this.showToast(errorMsgs[dimensionError] || dimensionError, true);
+      } else {
+        this.onSave(this.currentSlotIndex, saveData);
       }
       this.closeAll();
     };
 
-    this.btnDelete.onclick = () => {
+this.btnDelete.onclick = () => {
       this.closeSlotMenu();
       this.showConfirm(UI_TEXT.CONFIRM_TITLE, UI_TEXT.CONFIRM_DELETE(this.currentSlotIndex + 1), () => {
         this.onDelete(this.currentSlotIndex);

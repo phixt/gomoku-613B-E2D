@@ -221,20 +221,41 @@ export class SaveManager {
 
   static serializeToBase64(data: SaveData): string {
     try {
-      const json = JSON.stringify(data);
-      return btoa(encodeURIComponent(json));
+      return btoa(JSON.stringify(data));
     } catch {
       return "";
     }
   }
 
-  static deserializeFromBase64(base64: string): SaveData | null {
+  /**
+   * Fail-fast parse pipeline for Base64-encoded save data.
+   * Returns null for any invalid input ? never a partial/empty save.
+   */
+  static tryParseSaveData(input: string): SaveData | null {
+    if (!input || !input.trim()) return null;
+
+    let decoded: string;
     try {
-      const json = decodeURIComponent(atob(base64));
-      return JSON.parse(json) as SaveData;
+      decoded = atob(input.trim());
     } catch {
       return null;
     }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const data = parsed as Record<string, unknown>;
+    if (!data.version || !Array.isArray(data.moves)) return null;
+    if (typeof data.boardSize !== "number" || data.boardSize <= 0) return null;
+    if (typeof data.layers !== "number" || data.layers <= 0) return null;
+
+    return parsed as SaveData;
   }
 }
 

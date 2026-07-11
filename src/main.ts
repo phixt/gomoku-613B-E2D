@@ -796,7 +796,7 @@ const exitReplay = (): void => {
     saveManager.save(targetIndex, data);
     const slotName = targetIndex === QUICK_SAVE_INDEX ? UI_TEXT.QUICK_SAVE_LABEL : String(targetIndex + 1);
     overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(slotName));
-    const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const base64 = btoa(JSON.stringify(data));
     navigator.clipboard.writeText(base64).then(() => {
       console.log("[Save] Copied to clipboard");
     }).catch(() => {
