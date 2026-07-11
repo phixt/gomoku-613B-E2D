@@ -207,7 +207,7 @@ export class LeftPanel {
 
 
   private checkBoundarySafety(): void {
-    const target = new THREE.Vector3(6, 6, CENTER_Z);
+    const target = new THREE.Vector3(CENTER, CENTER, CENTER_Z);
     const dist = this.camera.position.distanceTo(target);
     const vh = 2 * dist * Math.tan(this.camera.fov * Math.PI / 360);
     if (vh < BOARD_SIZE) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${BOARD_SIZE}.`);
@@ -300,7 +300,7 @@ export class LeftPanel {
 
   public rotateY(direction: number): void {
     const angle = direction * Math.PI / 2;
-    const target = new THREE.Vector3(6, 6, CENTER_Z);
+    const target = new THREE.Vector3(CENTER, CENTER, CENTER_Z);
     const offset = this.camera.position.clone().sub(target);
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
     this.camera.position.copy(target).add(offset);

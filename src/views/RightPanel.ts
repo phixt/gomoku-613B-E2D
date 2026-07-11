@@ -126,7 +126,7 @@ export class RightPanel {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(-7, 7, 7, -7, 0.1, 1000);
+    this.camera = new THREE.OrthographicCamera((-BOARD_SIZE / 2), (BOARD_SIZE / 2), (BOARD_SIZE / 2), (-BOARD_SIZE / 2), 0.1, 1000);
     this.camera.position.set(CENTER, CENTER, 50);
     this.camera.lookAt(CENTER, CENTER, 0);
 

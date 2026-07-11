@@ -1,5 +1,6 @@
 import type { SaveData } from "../core/SaveManager";
 import { SaveManager } from "../core/SaveManager";
+import { UI_TEXT } from "../core/TextConstants";
 
 export class OverlayManager {
   private onSave: (index: number, data: SaveData) => void;
@@ -87,20 +88,23 @@ export class OverlayManager {
     };
 
     this.btnFill.onclick = () => {
-      const input = prompt("?? Base64 ?????");
-      if (input) {
-        try {
-          const json = decodeURIComponent(atob(input));
-          const decoded = JSON.parse(json);
-          const saveError = SaveManager.validateSaveData(decoded);
-          if (saveError) {
-            alert("????????" + saveError);
-          } else {
-            this.onSave(this.currentSlotIndex, decoded as SaveData);
-          }
-        } catch {
-          alert("????????????");
+      const input = prompt(UI_TEXT.PASTE_PLACEHOLDER);
+      if (!input || !input.trim()) { this.closeAll(); return; }
+      try {
+        const json = decodeURIComponent(atob(input.trim()));
+        const decoded = JSON.parse(json);
+        const saveError = SaveManager.validateSaveData(decoded);
+        if (saveError) {
+          const errorMsgs: Record<string, string> = {
+            "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
+            "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
+          };
+          this.showToast(errorMsgs[saveError] || saveError, true);
+        } else {
+          this.onSave(this.currentSlotIndex, decoded as SaveData);
         }
+      } catch {
+        this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
       }
       this.closeAll();
     };
