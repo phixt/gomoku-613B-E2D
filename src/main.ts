@@ -564,11 +564,13 @@ const updateReplayUI = (): void => {
         rightPanel.board.set(m.x, m.y, m.z, m.player);
     }
     rightPanel.refresh();
-    // Show last move ring for current replay step (skip step 0 = empty board)
+    // Show last move ring for current replay step (skip step 0 = empty board, bounds-safe)
     if (replayState.currentIndex > 0) {
       const prevMv = replayState.moves[replayState.currentIndex - 1];
-      rightPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
-      leftPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
+      if (prevMv.x >= 0 && prevMv.x < BOARD_SIZE && prevMv.y >= 0 && prevMv.y < BOARD_SIZE && prevMv.z >= 0 && prevMv.z < LAYER_COUNT) {
+        rightPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
+        leftPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
+      }
     }
     // Sync 3D view with current focus layer
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
@@ -724,11 +726,13 @@ const exitReplay = (): void => {
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
       eventBus.emit(Events.GAME_RESET);
       
-      // Restore last move ring from save data
+      // Restore last move ring from save data (bounds-safe)
       if (data.moves && data.moves.length > 0) {
         const lastMv = data.moves[data.moves.length - 1];
-        rightPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
-        leftPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
+        if (lastMv.x >= 0 && lastMv.x < BOARD_SIZE && lastMv.y >= 0 && lastMv.y < BOARD_SIZE && lastMv.z >= 0 && lastMv.z < LAYER_COUNT) {
+          rightPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
+          leftPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
+        }
       }
 
       // State-aware transition

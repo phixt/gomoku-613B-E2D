@@ -9,12 +9,13 @@ import { resourceManager } from "../utils/ResourceManager";
 // Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER_Z = (LAYER_COUNT - 1) * LAYER_SPACING / 2;
+const CENTER = (BOARD_SIZE - 1) / 2;
 
 const VERTS_PER_LAYER = 26 * 2;
 
 const AUX_PTS: [number, number][] = [
 [0, 0], [BOARD_SIZE - 1, 0], [0, BOARD_SIZE - 1],
-[BOARD_SIZE - 1, BOARD_SIZE - 1], [6, 6]];
+[BOARD_SIZE - 1, BOARD_SIZE - 1], [CENTER, CENTER]];
 
 
 //  Canvas piece texture 
@@ -156,7 +157,7 @@ export class LeftPanel {
     this.camera = new THREE.PerspectiveCamera(15, w / h, 0.1, 200);
     this.camera.up.set(0, 1, 0);
     this.camera.position.set(20, 8, 40);
-    this.camera.lookAt(6, 6, CENTER_Z);
+    this.camera.lookAt(CENTER, CENTER, CENTER_Z);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(w, h);
@@ -241,7 +242,7 @@ export class LeftPanel {
         resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 })
       );
-      sphere.position.set(6, 6, layer * s);
+      sphere.position.set(CENTER, CENTER, layer * s);
       sphere.userData = { layer };
       this.markerGroup.add(sphere);
     }
@@ -335,7 +336,7 @@ export class LeftPanel {
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       }
 
-      this.camera.lookAt(6, 6, CENTER_Z);
+      this.camera.lookAt(CENTER, CENTER, CENTER_Z);
       this.camera.updateProjectionMatrix();
     } else {
 
@@ -353,11 +354,14 @@ export class LeftPanel {
     const s = this._layerSpacing;
     this.piecesGroup.clear();
     const scale = 0.8;
-    for (let z = 0; z < LAYER_COUNT; z++) {
+    // Clamp loops to configured bounds (safe against runtime config changes)
+    const maxZ = Math.min(LAYER_COUNT, board.layers);
+    const maxXY = Math.min(BOARD_SIZE, board.size);
+    for (let z = 0; z < maxZ; z++) {
       const zPos = z * s;
       const isFocus = z === focusZ;
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
+      for (let y = 0; y < maxXY; y++) {
+        for (let x = 0; x < maxXY; x++) {
           const state = board.get(x, y, z);
           if (state === 0) continue;
           const mat = isFocus ?
@@ -533,7 +537,7 @@ export class LeftPanel {
         resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 })
       );
-      sphere.position.set(6, 6, layer * s);
+      sphere.position.set(CENTER, CENTER, layer * s);
       sphere.userData = { layer };
       this.markerGroup.add(sphere);
     }
@@ -554,7 +558,7 @@ export class LeftPanel {
 
     // Sync camera lookAt to new Z center
     const newCenterZ = (LAYER_COUNT - 1) * this._layerSpacing / 2;
-    this.camera.lookAt(6, 6, newCenterZ);
+    this.camera.lookAt(CENTER, CENTER, newCenterZ);
     this.checkBoundarySafety();
   }
 
@@ -571,7 +575,8 @@ export class LeftPanel {
   }
 
   updateLastMoveUI(x: number, y: number, z: number): void {
-
+    // Boundary check: reject out-of-range coordinates (phantom ring prevention)
+    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || z < 0 || z >= LAYER_COUNT) return;
     const zPos = z * this._layerSpacing;
     this.lastMoveRing.position.set(x, y, zPos + 0.1);
     this.lastMoveRing.visible = true;

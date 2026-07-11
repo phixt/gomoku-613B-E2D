@@ -144,10 +144,13 @@ export class RightPanel {
     this.gridGroup.add(this.gridSegments);
 
     // --- Star points for board navigation ---
+    const starOffset = Math.max(1, Math.floor(BOARD_SIZE / 5));
     const starPositions = [
-    { x: 6, y: 6 },
-    { x: 1, y: 1 }, { x: 1, y: 11 },
-    { x: 11, y: 1 }, { x: 11, y: 11 }];
+    { x: CENTER, y: CENTER },
+    { x: starOffset, y: starOffset },
+    { x: starOffset, y: BOARD_SIZE - 1 - starOffset },
+    { x: BOARD_SIZE - 1 - starOffset, y: starOffset },
+    { x: BOARD_SIZE - 1 - starOffset, y: BOARD_SIZE - 1 - starOffset }];
 
     const starGeo = new THREE.CircleGeometry(0.12, 32);
     this.starMat = new THREE.MeshBasicMaterial({
@@ -280,6 +283,8 @@ export class RightPanel {
   }
 
   public updateLastMoveUI(x: number, y: number, z: number): void {
+    // Boundary check: reject out-of-range coordinates
+    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || z < 0 || z >= LAYER_COUNT) return;
     this.lastMove = { x, y, z };
     this.renderPieces();
   }
@@ -625,8 +630,10 @@ export class RightPanel {
       }
     }
 
-    // Show last-move highlight if on the current layer
-    if (this.lastMove && this.lastMove.z === this.focusZ) {
+    // Show last-move highlight if on the current layer (bounds-safe)
+    if (this.lastMove && this.lastMove.z === this.focusZ
+        && this.lastMove.x >= 0 && this.lastMove.x < BOARD_SIZE
+        && this.lastMove.y >= 0 && this.lastMove.y < BOARD_SIZE) {
       this.lastMoveRing.position.set(this.lastMove.x, this.lastMove.y, 0.02);
       this.lastMoveRing.visible = true;
     } else {

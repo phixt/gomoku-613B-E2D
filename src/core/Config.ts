@@ -1,4 +1,10 @@
 export const BOARD_SIZE = 13;
+
+// Runtime validation: board size must be odd for a proper center point
+if (BOARD_SIZE % 2 !== 1) {
+  throw new Error("BOARD_SIZE must be an odd number (got " + BOARD_SIZE + ")");
+}
+
 export const LAYER_COUNT = 6;
 export const DEFAULT_LAYER_SPACING = 3.5;
 export const MIN_LAYER_SPACING = 2.0;
