@@ -86,14 +86,18 @@ export class OverlayManager {
     };
 
     this.btnFill.onclick = () => {
-      const input = prompt('粘贴 Base64 存档数据：');
+      const input = prompt("粘贴 Base64 存档数据：");
       if (input) {
         try {
           const json = decodeURIComponent(atob(input));
-          const decoded = JSON.parse(json) as SaveData;
-          this.onSave(this.currentSlotIndex, decoded);
+          const decoded = JSON.parse(json);
+          if (!this.validateSaveData(decoded)) {
+            alert("无效的存档数据：数据结构不符合要求");
+          } else {
+            this.onSave(this.currentSlotIndex, decoded as SaveData);
+          }
         } catch {
-          alert('无效的存档数据');
+          alert("无效的存档数据：无法解析");
         }
       }
       this.closeAll();
@@ -172,4 +176,39 @@ export class OverlayManager {
     this.confirmDialog.classList.add('hidden');
     this._pendingConfirm = null;
   }
+
+  private validateSaveData(data: any): data is SaveData {
+    if (!data || typeof data !== "object") return false;
+    if (!data.id || !data.version) return false;
+    if (!Array.isArray(data.moves)) return false;
+    if (!Array.isArray(data.boardState)) return false;
+    if (data.boardState.length !== 6) return false;
+    for (const layer of data.boardState) {
+      if (!Array.isArray(layer) || layer.length !== 13) return false;
+      for (const row of layer) {
+        if (!Array.isArray(row) || row.length !== 13) return false;
+      }
+    }
+    for (const move of data.moves) {
+      if (typeof move.x !== "number" || typeof move.y !== "number" || typeof move.z !== "number") return false;
+      if (move.player !== 1 && move.player !== 2) return false;
+      if (move.x < 0 || move.x >= 13 || move.y < 0 || move.y >= 13 || move.z < 0 || move.z >= 6) return false;
+    }
+    // Validate boardState consistency with moves
+    let pieceCount = 0;
+    for (const layer of data.boardState) {
+      for (const row of layer) {
+        for (const cell of row) {
+          if (cell === 1 || cell === 2) pieceCount++;
+        }
+      }
+    }
+    if (pieceCount !== data.moves.length) {
+      console.warn("[Validate] Board pieces (" + pieceCount + ") mismatch moves (" + data.moves.length + ")");
+      return false;
+    }
+    return true;
+  }
+
+
 }

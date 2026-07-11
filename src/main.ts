@@ -490,6 +490,16 @@ const startReplay = (data: SaveData): void => {
     // 2. Load board snapshot instantly (DO NOT use loadGameFromData)
     // (loadBoardSnapshot handled by updateReplayUI)
 
+
+    // 2.5 Hide start-screen and guide-screen overlays
+    const replaySS = document.getElementById("start-screen");
+    const replayGS = document.getElementById("guide-screen");
+    if (replaySS) {
+      replaySS.style.display = "";
+      replaySS.classList.add("hidden");
+    }
+    replayGS?.classList.add("hidden");
+    forceCorrectSize();
     // 3. Set strict REPLAY state
     isReplayMode = true;
     gameStore.appState = AppState.PLAYING;
@@ -540,7 +550,7 @@ const updateReplayUI = (): void => {
     if (!replayState) return;
     // Clear board and reset last move ring
     rightPanel.board.reset();
-    rightPanel.loadBoardSnapshot(Array(LAYER_COUNT).fill(null).map(() => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0))));
+    // Board already reset above; skip redundant empty snapshot load
     // Replay moves up to currentIndex
     for (let i = 0; i < replayState.currentIndex; i++) {
         const m = replayState.moves[i];
@@ -635,6 +645,8 @@ const exitReplay = (): void => {
       if (data.layerSpacing != null && data.layerSpacing >= 2.0 && data.layerSpacing <= 6.0) {
         leftPanel.restoreCameraState(focusZ, data.layerSpacing);
       }
+      // Sync RightPanel focus layer
+      rightPanel.setFocusZ(focusZ);
 
       // Instant-load board snapshot
       if (data.boardState && Array.isArray(data.boardState)) {
