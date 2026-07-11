@@ -241,6 +241,9 @@ async function main(): Promise<void> {
     if (gameStore.appState === AppState.PLAYING) return;
     hideAllOverlays();
         currentPlayer = 1;
+        // Reset board state for clean new game
+        rightPanel.board.reset();
+        rightPanel.resetGame();
     moveCount = 0;
     moveHistory = [];
     // CRITICAL: Read player color from UI, DO NOT hardcode to 1
@@ -500,6 +503,9 @@ const startReplay = (data: SaveData): void => {
     }
     replayGS?.classList.add("hidden");
     forceCorrectSize();
+    // Clear any residual lastMove ring from previous game
+    rightPanel.resetGame();
+    
     // 3. Set strict REPLAY state
     isReplayMode = true;
     gameStore.appState = AppState.PLAYING;
@@ -530,7 +536,7 @@ const startReplay = (data: SaveData): void => {
 
     // 6. Initial render
     updateReplayUI();
-    overlayManager.showToast("进入复盘模式 - 共 " + data.moves.length + " 步");
+    overlayManager.showToast(UI_TEXT.REPLAY_ENTER.replace("{0}", String(data.moves.length)));
 };
 
 let replayState: {
@@ -548,7 +554,7 @@ const replayStep = (direction: number): void => {
 
 const updateReplayUI = (): void => {
     if (!replayState) return;
-    // Clear board and reset last move ring
+    // Clear board for replay (board data only; lastMove already cleared in startReplay)
     rightPanel.board.reset();
     // Board already reset above; skip redundant empty snapshot load
     // Replay moves up to currentIndex
@@ -574,6 +580,7 @@ const exitReplay = (): void => {
     const controls = document.getElementById("replay-controls");
     if (controls) controls.remove();
     replayState = null;
+    overlayManager.showToast(UI_TEXT.REPLAY_EXIT);
     returnToTitle();
 };
 
@@ -777,7 +784,9 @@ const exitReplay = (): void => {
 
   const backToGame = (): void => {
     hideAllOverlays();
-    gameStore.appState = AppState.PLAYING;
+    // Refresh board to ensure pieces render after returning from guide screen
+    rightPanel.refresh();
+    leftPanel.renderAllPieces(rightPanel.board, focusZ);
     gameStore.appState = AppState.PLAYING;
   };
 
@@ -795,7 +804,6 @@ const exitReplay = (): void => {
       if (btnP) {btnP.textContent = UI_TEXT.BTN_START_GAME;btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
       if (btnS) {btnS.textContent = UI_TEXT.BTN_BACK;btnS.addEventListener("click", backToTitle);}
     } else {
-      if (btnP) {btnP.textContent = UI_TEXT.BTN_NEW_GAME;btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
       if (btnP) {btnP.textContent = UI_TEXT.BTN_NEW_GAME;btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
       if (btnS) {btnS.textContent = UI_TEXT.BTN_RESUME;btnS.addEventListener("click", backToGame);}
     }

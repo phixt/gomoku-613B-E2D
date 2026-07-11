@@ -93,7 +93,7 @@ export const UI_TEXT = {
 
     // ================= replay =================
     BTN_REPLAY: "复盘",
-    REPLAY_ENTER: "Replay mode - {0} moves",
+    REPLAY_ENTER: "复盘模式 - 共 {0} 步",
     REPLAY_EXIT: "已退出复盘模式",
 
     // ================= save validation =================
