@@ -382,7 +382,7 @@ async function main(): Promise<void> {
           '<span class="slot-index">' + UI_TEXT.SAVE_SLOT_LABEL(i + 1) + '</span>' +
           '<span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>' +
           '<span class="slot-actions">' +
-            '<button data-action="overwrite" data-index="' + i + '">' + UI_TEXT.SLOT_FILL + '</button>' +
+            '<button data-action="fill" data-index="' + i + '">' + UI_TEXT.SLOT_FILL + '</button>' +
           '</span>';
       } else {
         const date = new Date(data.timestamp);
@@ -416,6 +416,11 @@ async function main(): Promise<void> {
       const index = indexStr !== null ? parseInt(indexStr, 10) : -1;
 
       switch (action) {
+        case "fill":
+          console.log("[Main] Fill button clicked, calling overlayManager.tryFillSlot, index:", index);
+          overlayManager.tryFillSlot(index);
+          renderSaveSlots();
+          break;
         case "load":
           const loadData = saveManager.load(index);
           if (loadData) loadGameFromData(loadData);
