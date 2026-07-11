@@ -23,7 +23,8 @@ export class OverlayManager {
     onLoadByIndex: (index: number) => SaveData | null;
   }) {
     this.onSave = callbacks.onSave;
-        const backdrop = document.getElementById("global-backdrop");
+
+    const backdrop = document.getElementById("global-backdrop");
     if (!backdrop) throw new Error("Missing #global-backdrop");
     this.backdrop = backdrop;
 
@@ -53,45 +54,40 @@ export class OverlayManager {
     this.confirmNo.onclick = () => this.closeAll();
   }
 
-  // ---- Public: fill a slot from clipboard (prompt -> parse -> validate -> save) ----
-
-  // ???????????????????????????????????????????????????????????
-  // DEBUG  IMPORT PIPELINE
-  // Uses browser prompt()  no HTML <input> to set autocomplete on.
-  // If stale values reappear, check browser prompt auto-fill
-  // (Chrome sometimes caches prompt answers per origin).
-  // To rule out timing issues, the raw input is logged below.
-  // ???????????????????????????????????????????????????????????
   // ===========================================================
   // DEBUG  IMPORT PIPELINE
-  // Uses browser prompt()  no HTML <input> to set autocomplete on.
+  // Uses browser prompt() - no HTML <input> to set autocomplete.
   // If stale values reappear, check browser prompt auto-fill
   // (Chrome sometimes caches prompt answers per origin).
-  // To rule out timing issues, the raw input is logged below.
+  // Raw input is logged to console for debugging.
   // ===========================================================
   public tryFillSlot(index: number): void {
-    // Force empty default to reduce chance of browser auto-filling old value
     const input = prompt(UI_TEXT.PASTE_PLACEHOLDER, "");
     console.log("[Fill] Raw input (JSON-escaped):", JSON.stringify(input));
     if (!input || !input.trim()) return;
-    const saveData = SaveManager.tryParseSaveData(input.trim());
-    if (!saveData) {
+
+    const parsedData = SaveManager.tryParseSaveData(input.trim());
+    if (!parsedData) {
+      console.error("[Import] Blocked: Invalid structure");
       this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
       return;
     }
-    const dimensionError = SaveManager.validateSaveData(saveData);
-    if (dimensionError) {
-      const msgs: Record<string, string> = {
+
+    const validationError = SaveManager.validateSaveData(parsedData);
+    if (validationError) {
+      const errorMsgs: Record<string, string> = {
         "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
         "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
       };
-      this.showToast(msgs[dimensionError] || dimensionError, true);
+      console.error("[Import] Blocked: Validation failed -", validationError);
+      this.showToast(errorMsgs[validationError] || validationError, true);
       return;
     }
-    this.onSave(index, saveData);
+
+    this.onSave(index, parsedData);
   }
 
-// ---- Confirm dialog ----
+  // ---- Confirm dialog ----
 
   public showConfirm(title: string, message: string, onYes: () => void): void {
     this.confirmTitle.textContent = title;
