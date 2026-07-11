@@ -93,8 +93,8 @@ export const UI_TEXT = {
 
     // ================= replay =================
     BTN_REPLAY: "复盘",
-    BTN_REPLAY_PREV: "上一步",
-    BTN_REPLAY_NEXT: "下一步",
+    BTN_REPLAY_PREV: "←上一步",
+    BTN_REPLAY_NEXT: "下一步→",
     BTN_REPLAY_EXIT: "退出",
     REPLAY_ENTER: "复盘模式 - 共 {0} 步",
     REPLAY_EXIT: "已退出复盘模式",

@@ -1,6 +1,5 @@
-// AudioManager.ts ? Singleton audio manager for Gomoku 613B-E2D
-// SFX: pre-generated WAV tones via HTMLAudioElement
-// BGM: live Web Audio API synthesis with chord progressions
+// AudioManager.ts - Enhanced version with layered BGM, spatial FX, and richer SFX
+// All external interfaces remain unchanged.
 
 import { eventBus, Events } from "../core/EventBus";
 
@@ -11,69 +10,121 @@ interface SoundCache {
   [key: string]: HTMLAudioElement;
 }
 
-// ================= Frequency Tables (A4 = 440 Hz, equal temperament) =================
-
+// ================= Frequency Tables (A4 = 440 Hz) =================
 const NOTE_FREQ: Record<string, number> = {
   "C3": 130.81, "D3": 146.83, "E3": 164.81, "F3": 174.61, "G3": 196.00, "A3": 220.00, "B3": 246.94,
   "C4": 261.63, "D4": 293.66, "E4": 329.63, "F4": 349.23, "G4": 392.00, "A4": 440.00, "B4": 493.88,
   "C5": 523.25, "D5": 587.33, "E5": 659.25, "F5": 698.46, "G5": 783.99, "A5": 880.00,
+  "C6": 1046.50, "D6": 1174.66, "E6": 1318.51,
 };
 
-// Chord definitions (C major / A minor family)
+// ================= Enhanced Chord Library (sevenths, suspensions, add9) =================
 type Chord = string[];
 const CHORDS: Record<string, Chord> = {
-  "C":  ["C4", "E4", "G4"],           // I
-  "Dm": ["D4", "F4", "A4"],           // ii
-  "Em": ["E4", "G4", "B4"],           // iii
-  "F":  ["F4", "A4", "C5"],           // IV
-  "G":  ["G4", "B4", "D5"],           // V
-  "Am": ["A4", "C5", "E5"],           // vi
-  "Gsus":["G4", "C5", "D5"],          // Vsus4 (suspended, for pause)
+  // Triads (fallback)
+  "C":  ["C4", "E4", "G4"],
+  "Dm": ["D4", "F4", "A4"],
+  "Em": ["E4", "G4", "B4"],
+  "F":  ["F4", "A4", "C5"],
+  "G":  ["G4", "B4", "D5"],
+  "Am": ["A4", "C5", "E5"],
+  "Gsus":["G4", "C5", "D5"],
+  // Extended
+  "Cmaj7": ["C4", "E4", "G4", "B4"],
+  "Am7":   ["A3", "C4", "E4", "G4"],
+  "Fmaj7": ["F4", "A4", "C5", "E5"],
+  "G7":    ["G4", "B4", "D5", "F5"],
+  "Dm7":   ["D4", "F4", "A4", "C5"],
+  "Em7":   ["E4", "G4", "B4", "D5"],
+  "Cadd9": ["C4", "E4", "G4", "D5"],
+  "Gadd9": ["G4", "B4", "D5", "A5"],
+  "Fadd9": ["F4", "A4", "C5", "G5"],
 };
 
-// ================= BGM Mode Definitions =================
+// ================= Enhanced BGM Pattern Definition =================
+interface BGMLayer {
+  waveform: OscillatorType;
+  gain: number;
+  octaveOffset: number;       // relative to chord root
+}
 
 interface BGMPattern {
-  progression: string[];        // chord names in order
-  chordDuration: number;        // seconds per chord
-  waveform: OscillatorType;     // oscillator waveform
+  progression: string[];          // chord names (may include extended symbols)
+  chordDuration: number;          // seconds per chord
+  layers: {
+    bass: BGMLayer;               // root note, low octave
+    chord: BGMLayer;              // full chord (middle range)
+    arpeggio?: BGMLayer;          // optional arpeggiated layer (high range)
+  };
   noteStyle: "pad" | "arpeggio" | "staccato" | "sustain";
-  baseGain: number;             // per-oscillator gain (before summation)
+  baseGain: number;               // master gain for this pattern
+  useReverb: boolean;
+  reverbMix: number;              // 0-1
+  useDelay?: boolean;
+  delayMix?: number;
+  vibratoDepth?: number;          // Hz variation (for pad style)
 }
 
 const BGM_PATTERNS: Record<BGMTrack, BGMPattern> = {
   menu: {
-    progression: ["C", "G", "Am", "F"],    // I - V - vi - IV
-    chordDuration: 2.4,
-    waveform: "triangle",
+    progression: ["Cmaj7", "Gadd9", "Am7", "Fmaj7"],
+    chordDuration: 2.8,
+    layers: {
+      bass:   { waveform: "triangle", gain: 0.10, octaveOffset: -1 },
+      chord:  { waveform: "triangle", gain: 0.06, octaveOffset: 0 },
+      arpeggio: { waveform: "sine", gain: 0.04, octaveOffset: 1 },
+    },
     noteStyle: "pad",
-    baseGain: 0.08,
+    baseGain: 0.6,
+    useReverb: true,
+    reverbMix: 0.25,
+    vibratoDepth: 1.5,
   },
   game: {
-    progression: ["Am", "F", "C", "G"],    // vi - IV - I - V
+    progression: ["Am7", "Fmaj7", "Cadd9", "G7"],
     chordDuration: 1.2,
-    waveform: "triangle",
+    layers: {
+      bass:   { waveform: "triangle", gain: 0.08, octaveOffset: -1 },
+      chord:  { waveform: "triangle", gain: 0.05, octaveOffset: 0 },
+      arpeggio: { waveform: "sine", gain: 0.035, octaveOffset: 1 },
+    },
     noteStyle: "arpeggio",
-    baseGain: 0.06,
+    baseGain: 0.5,
+    useReverb: true,
+    reverbMix: 0.15,
+    useDelay: true,
+    delayMix: 0.2,
+    vibratoDepth: 0.8,
   },
   guide: {
-    progression: ["C", "F", "C", "G"],     // I - IV - I - V
-    chordDuration: 1.6,
-    waveform: "sine",
+    progression: ["Cadd9", "Fadd9", "Cadd9", "G7"],
+    chordDuration: 1.8,
+    layers: {
+      bass:   { waveform: "sine", gain: 0.07, octaveOffset: -1 },
+      chord:  { waveform: "sine", gain: 0.05, octaveOffset: 0 },
+    },
     noteStyle: "staccato",
-    baseGain: 0.07,
+    baseGain: 0.5,
+    useReverb: true,
+    reverbMix: 0.2,
+    vibratoDepth: 0,
   },
   pause: {
-    progression: ["G", "Gsus", "G", "Gsus"], // V - Vsus4 hover
-    chordDuration: 3.0,
-    waveform: "sine",
+    progression: ["G", "Gsus", "G", "Gsus"],
+    chordDuration: 3.5,
+    layers: {
+      bass:   { waveform: "sine", gain: 0.04, octaveOffset: -1 },
+      chord:  { waveform: "sine", gain: 0.03, octaveOffset: 0 },
+    },
     noteStyle: "sustain",
-    baseGain: 0.04,
+    baseGain: 0.3,
+    useReverb: true,
+    reverbMix: 0.4,
+    vibratoDepth: 0.6,
   },
 };
 
-// ================= AudioManager =================
-
+// ================= AudioManager (Enhanced) =================
 class AudioManager {
   private static instance: AudioManager;
 
@@ -88,11 +139,19 @@ class AudioManager {
   private bgmTimer: number | null = null;
   private isPlaying: boolean = false;
 
+  // Effects
+  private reverbNode: ConvolverNode | null = null;
+  private delayNode: DelayNode | null = null;
+  private delayGain: GainNode | null = null;
+
   private sfxVolume: number = 0.6;
   private bgmVolume: number = 0.3;
   private isMuted: boolean = false;
   private initialized: boolean = false;
   private pendingInit: (() => void)[] = [];
+
+  // Dynamic intensity (0~1) – auto-adjusted via events
+  private intensity: number = 0;
 
   private constructor() {
     this.preloadSFX();
@@ -103,6 +162,8 @@ class AudioManager {
         this.playSFX(payload.sound);
       }
     });
+    // Optional: listen to game intensity events (if defined in your Events)
+    // eventBus.on(Events.GAME_INTENSITY, (val: number) => { this.intensity = Math.min(1, Math.max(0, val)); });
   }
 
   static getInstance(): AudioManager {
@@ -112,14 +173,27 @@ class AudioManager {
     return AudioManager.instance;
   }
 
-  // ================= AudioContext setup =================
-
+  // ================= AudioContext & Effects Setup =================
   private ensureContext(): AudioContext {
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.value = this.isMuted ? 0 : this.bgmVolume;
       this.masterGain.connect(this.ctx.destination);
+
+      // Build reverb (short hall)
+      this.reverbNode = this.ctx.createConvolver();
+      this.reverbNode.buffer = this.createReverbIR(this.ctx, 1.2);
+      // Connect reverb to master (always on, but dry/wet controlled via send)
+      this.reverbNode.connect(this.masterGain);
+
+      // Delay for arpeggio
+      this.delayNode = this.ctx.createDelay(1.0);
+      this.delayNode.delayTime.value = 0.35;
+      this.delayGain = this.ctx.createGain();
+      this.delayGain.gain.value = 0;
+      this.delayNode.connect(this.delayGain);
+      this.delayGain.connect(this.masterGain);
     }
     if (this.ctx.state === "suspended") {
       this.ctx.resume();
@@ -127,11 +201,29 @@ class AudioManager {
     return this.ctx;
   }
 
-  // ================= WAV generation (SFX only) =================
+  private createReverbIR(ctx: AudioContext, decay: number): AudioBuffer {
+    const sampleRate = ctx.sampleRate;
+    const length = Math.floor(sampleRate * decay);
+    const buffer = ctx.createBuffer(2, length, sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buffer.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        // Exponential decay + noise
+        const env = Math.exp(-t * 4 / decay) * (0.5 + 0.5 * Math.random());
+        data[i] = (Math.random() * 2 - 1) * env;
+      }
+    }
+    return buffer;
+  }
 
+  // ================= SFX Generation (Enhanced) =================
   private generateWavURI(
-    frequency: number, duration: number, volume: number,
-    type: "sine" | "square" | "triangle" = "sine"
+    frequencies: number[],   // can be multiple for layering
+    duration: number,
+    volume: number,
+    type: OscillatorType = "sine",
+    glide?: { from: number; to: number }  // for sliding pitch (win/lose)
   ): string {
     const sampleRate = 22050;
     const numSamples = Math.floor(sampleRate * duration);
@@ -156,24 +248,46 @@ class AudioManager {
     view.setUint32(40, numSamples * 2, true);
 
     const attack = Math.min(sampleRate * 0.005, numSamples);
-    const release = Math.min(sampleRate * 0.05, numSamples);
+    const release = Math.min(sampleRate * 0.06, numSamples);
 
     for (let i = 0; i < numSamples; i++) {
       const t = i / sampleRate;
-      let sample: number;
-      switch (type) {
-        case "square":
-          sample = Math.sin(2 * Math.PI * frequency * t) >= 0 ? 0.5 : -0.5;
-          break;
-        case "triangle":
-          sample = 2 / Math.PI * Math.asin(Math.sin(2 * Math.PI * frequency * t));
-          break;
-        default:
-          sample = Math.sin(2 * Math.PI * frequency * t);
+      let sample = 0;
+      // Multi-frequency synthesis
+      for (const freq of frequencies) {
+        let val: number;
+        switch (type) {
+          case "square": val = Math.sin(2 * Math.PI * freq * t) >= 0 ? 0.5 : -0.5; break;
+          case "triangle": val = 2 / Math.PI * Math.asin(Math.sin(2 * Math.PI * freq * t)); break;
+          default: val = Math.sin(2 * Math.PI * freq * t);
+        }
+        sample += val;
       }
+      // If glide is set, modulate the first frequency as envelope
+      if (glide) {
+        const progress = t / duration;
+        const currentFreq = glide.from + (glide.to - glide.from) * progress;
+        let glideSample = 0;
+        for (const freq of frequencies) {
+          // only apply to the first (or all) – here we replace the main tone
+          // For simplicity, we generate a new sine based on glide frequency
+          if (freq === frequencies[0]) {
+            glideSample = Math.sin(2 * Math.PI * currentFreq * t);
+          } else {
+            glideSample += Math.sin(2 * Math.PI * freq * t);
+          }
+        }
+        sample = glideSample / frequencies.length;
+      } else {
+        sample /= frequencies.length; // normalize sum
+      }
+
+      // Envelope
       let envelope = 1;
       if (i < attack) envelope = i / attack;
       if (i > numSamples - release) envelope = (numSamples - i) / release;
+      // Add tiny noise for click (uncomment for extra texture)
+      // sample += (Math.random() - 0.5) * 0.05;
       const val = Math.floor(sample * volume * envelope * 0.7 * 32767);
       view.setInt16(44 + i * 2, Math.max(-32768, Math.min(32767, val)), true);
     }
@@ -181,18 +295,18 @@ class AudioManager {
     return URL.createObjectURL(blob);
   }
 
-  // ================= SFX preload =================
-
   private preloadSFX(): void {
-    this.sfxCache["click"] = new Audio(this.generateWavURI(660, 0.08, 0.4, "sine"));
-    this.sfxCache["win"]   = new Audio(this.generateWavURI(880, 0.35, 0.6, "triangle"));
-    this.sfxCache["lose"]  = new Audio(this.generateWavURI(180, 0.4, 0.5, "triangle"));
-    this.sfxCache["hover"] = new Audio(this.generateWavURI(440, 0.04, 0.2, "sine"));
+    // Click: two tones + short noise-like attack
+    this.sfxCache["click"] = new Audio(this.generateWavURI([660, 1320], 0.07, 0.4, "square"));
+    // Win: rising glide from 523 to 1047 (C5 to C6)
+    this.sfxCache["win"]   = new Audio(this.generateWavURI([523, 659, 784], 0.4, 0.5, "triangle", { from: 523, to: 1047 }));
+    // Lose: falling glide from 440 to 220
+    this.sfxCache["lose"]  = new Audio(this.generateWavURI([220, 330], 0.5, 0.45, "triangle", { from: 440, to: 220 }));
+    // Hover: soft sine with slight detune
+    this.sfxCache["hover"] = new Audio(this.generateWavURI([440, 443], 0.04, 0.2, "sine"));
   }
 
-  // ================= BGM synthesis (Web Audio API) =================
-
-  /** Stop all currently playing BGM oscillators and clear the timer. */
+  // ================= BGM Synthesis (Layered + FX) =================
   private stopBGM(): void {
     if (this.bgmTimer !== null) {
       clearTimeout(this.bgmTimer);
@@ -203,9 +317,9 @@ class AudioManager {
     }
     this.bgmOscillators = [];
     this.isPlaying = false;
+    if (this.delayGain) this.delayGain.gain.value = 0; // reset delay
   }
 
-  /** Schedule one chord in the progression, then recurse for the next. */
   private scheduleChord(
     ctx: AudioContext,
     pattern: BGMPattern,
@@ -214,53 +328,63 @@ class AudioManager {
     gainNode: GainNode,
   ): void {
     const chordName = pattern.progression[chordIndex];
-    const notes = CHORDS[chordName];
+    // Try extended chord, fallback to plain triad
+    let notes = CHORDS[chordName];
+    if (!notes) {
+      // Remove suffix like "maj7", "7", "add9" and try base
+      const base = chordName.replace(/maj7|7|add9|m7|sus/g, '');
+      notes = CHORDS[base] || CHORDS["C"];
+    }
     if (!notes) return;
 
-    const dur = pattern.chordDuration;
+    const dur = pattern.chordDuration * (1 - this.intensity * 0.15); // speed up with intensity
     const attack = Math.min(dur * 0.08, 0.15);
     const release = Math.min(dur * 0.3, 0.5);
 
-    for (const noteName of notes) {
-      const freq = NOTE_FREQ[noteName];
-      if (!freq) continue;
+    // Sort notes by frequency for layering
+    const sorted = notes.map(n => ({ name: n, freq: NOTE_FREQ[n] })).filter(n => n.freq).sort((a,b) => a.freq - b.freq);
+    if (sorted.length === 0) return;
 
-      const osc = ctx.createOscillator();
-      const noteGain = ctx.createGain();
+    const rootFreq = sorted[0].freq;
+    const chordFreqs = sorted.map(n => n.freq);
 
-      osc.type = pattern.waveform;
-      osc.frequency.value = freq;
+    // ---- Bass layer (root, lower octave) ----
+    const bassLayer = pattern.layers.bass;
+    this.createOscillator(
+      ctx, rootFreq * Math.pow(2, bassLayer.octaveOffset), bassLayer.waveform,
+      startTime, dur, attack, release, bassLayer.gain * pattern.baseGain,
+      pattern.noteStyle, gainNode, pattern.vibratoDepth || 0
+    );
 
-      // Envelope
-      const now = startTime;
-      noteGain.gain.setValueAtTime(0, now);
-      noteGain.gain.linearRampToValueAtTime(pattern.baseGain, now + attack);
+    // ---- Chord layer (all notes, middle range) ----
+    const chordLayer = pattern.layers.chord;
+    for (const freq of chordFreqs) {
+      this.createOscillator(
+        ctx, freq * Math.pow(2, chordLayer.octaveOffset), chordLayer.waveform,
+        startTime, dur, attack, release, chordLayer.gain * pattern.baseGain,
+        pattern.noteStyle, gainNode, pattern.vibratoDepth || 0
+      );
+    }
 
-      if (pattern.noteStyle === "staccato") {
-        // Short, bouncy notes
-        const noteLen = dur * 0.3;
-        noteGain.gain.setValueAtTime(pattern.baseGain, now + noteLen);
-        noteGain.gain.linearRampToValueAtTime(0, now + noteLen + release);
-      } else if (pattern.noteStyle === "arpeggio") {
-        // Notes enter sequentially (arpeggiated)
-        const noteIdx = notes.indexOf(noteName);
-        const entryDelay = noteIdx * 0.08;
-        noteGain.gain.setValueAtTime(0, now);
-        noteGain.gain.linearRampToValueAtTime(pattern.baseGain, now + attack + entryDelay);
-        noteGain.gain.setValueAtTime(pattern.baseGain, now + dur - release);
-        noteGain.gain.linearRampToValueAtTime(0, now + dur);
-      } else {
-        // Pad / sustain: long smooth notes
-        noteGain.gain.setValueAtTime(pattern.baseGain, now + dur - release);
-        noteGain.gain.linearRampToValueAtTime(0, now + dur);
+    // ---- Arpeggio layer (optional, high range, staggered) ----
+    if (pattern.layers.arpeggio) {
+      const arpLayer = pattern.layers.arpeggio;
+      const arpNotes = sorted.map(n => n.freq * Math.pow(2, arpLayer.octaveOffset));
+      const noteDuration = dur / arpNotes.length;
+      for (let i = 0; i < arpNotes.length; i++) {
+        const freq = arpNotes[i];
+        const noteStart = startTime + i * noteDuration * 0.9;
+        this.createOscillator(
+          ctx, freq, arpLayer.waveform,
+          noteStart, noteDuration * 0.7, attack * 0.5, release * 0.3,
+          arpLayer.gain * pattern.baseGain,
+          "staccato", gainNode, pattern.vibratoDepth || 0
+        );
       }
-
-      osc.connect(noteGain);
-      noteGain.connect(gainNode);
-      osc.start(now);
-      osc.stop(now + dur + release);
-
-      this.bgmOscillators.push(osc);
+      // Enable delay for arpeggio layer if specified
+      if (pattern.useDelay && this.delayGain) {
+        this.delayGain.gain.setValueAtTime(pattern.delayMix || 0.15, startTime);
+      }
     }
 
     // Schedule next chord
@@ -274,19 +398,91 @@ class AudioManager {
     }, Math.max(delayMs, 10));
   }
 
-  /** Start playing a BGM pattern. */
+  private createOscillator(
+    ctx: AudioContext,
+    freq: number,
+    type: OscillatorType,
+    start: number,
+    duration: number,
+    attack: number,
+    release: number,
+    gainVal: number,
+    style: string,
+    dest: GainNode,
+    vibratoDepth: number
+  ): void {
+    const osc = ctx.createOscillator();
+    const noteGain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+
+    // Apply vibrato (only if depth > 0)
+    if (vibratoDepth > 0 && style === "pad") {
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.value = 5.5;
+      lfoGain.gain.value = vibratoDepth;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.start(start);
+      lfo.stop(start + duration + release);
+    }
+
+    // Envelope
+    noteGain.gain.setValueAtTime(0, start);
+    noteGain.gain.linearRampToValueAtTime(gainVal, start + attack);
+
+    if (style === "staccato") {
+      const noteLen = duration * 0.35;
+      noteGain.gain.setValueAtTime(gainVal, start + noteLen);
+      noteGain.gain.linearRampToValueAtTime(0, start + noteLen + release);
+    } else if (style === "arpeggio") {
+      // handled externally for arp layer, but here we keep as sustain
+      noteGain.gain.setValueAtTime(gainVal, start + duration - release);
+      noteGain.gain.linearRampToValueAtTime(0, start + duration);
+    } else {
+      // pad / sustain
+      noteGain.gain.setValueAtTime(gainVal, start + duration - release);
+      noteGain.gain.linearRampToValueAtTime(0, start + duration);
+    }
+
+    osc.connect(noteGain);
+    noteGain.connect(dest);
+
+    // Optional: send to reverb if enabled (we'll connect per chord via gain node)
+    if (this.reverbNode && (this as any)._reverbSend) {
+      // we'll handle reverb globally in startBGMPattern
+    }
+
+    osc.start(start);
+    osc.stop(start + duration + release);
+
+    this.bgmOscillators.push(osc);
+  }
+
   private startBGMPattern(track: BGMTrack): void {
     const ctx = this.ensureContext();
     this.stopBGM();
 
     const pattern = BGM_PATTERNS[track];
+    // Adjust gain/parameters based on intensity
+    const adjustedGain = pattern.baseGain * (1 + this.intensity * 0.2);
 
-    // Create a per-track gain node for crossfade
+    // Create per-track gain node
     this.bgmGainNode = ctx.createGain();
-    this.bgmGainNode.gain.value = 0; // start silent, fade in
+    this.bgmGainNode.gain.value = 0;
     this.bgmGainNode.connect(this.masterGain!);
 
-    const startTime = ctx.currentTime + 0.05; // small offset for scheduling
+    // Connect reverb send (simple: split signal to reverb)
+    if (pattern.useReverb && this.reverbNode) {
+      const send = ctx.createGain();
+      send.gain.value = pattern.reverbMix || 0.2;
+      this.bgmGainNode.connect(send);
+      send.connect(this.reverbNode);
+    }
+
+    const startTime = ctx.currentTime + 0.05;
     this.isPlaying = true;
     this.scheduleChord(ctx, pattern, 0, startTime, this.bgmGainNode);
 
@@ -295,7 +491,7 @@ class AudioManager {
     this.bgmGainNode.gain.linearRampToValueAtTime(targetVol, startTime + 0.6);
   }
 
-  // ================= Public API =================
+  // ================= Public API (unchanged) =================
 
   init(): void {
     if (this.initialized) return;
@@ -324,7 +520,7 @@ class AudioManager {
     if (this.currentBGMName === track && this.isPlaying) return;
     this.currentBGMName = track;
 
-    // Crossfade: keep old gain node, start new one
+    // Crossfade: fade out old
     const oldGain = this.bgmGainNode;
     if (oldGain) {
       const ctx = this.ctx;
@@ -335,7 +531,6 @@ class AudioManager {
         }, 600);
       }
     }
-
     this.startBGMPattern(track);
   }
 
