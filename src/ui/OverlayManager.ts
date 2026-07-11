@@ -77,7 +77,7 @@ export class OverlayManager {
 
     this.btnOverwrite.onclick = () => {
       this.closeSlotMenu();
-      this.showConfirm('覆盖确认', '确定要覆盖存档 ' + (this.currentSlotIndex + 1) + ' 吗？', () => {
+      this.showConfirm(UI_TEXT.CONFIRM_TITLE, UI_TEXT.CONFIRM_OVERWRITE(this.currentSlotIndex + 1), () => {
         this.onSave(this.currentSlotIndex, this.serializeState());
       });
     };
@@ -111,7 +111,7 @@ export class OverlayManager {
 
     this.btnDelete.onclick = () => {
       this.closeSlotMenu();
-      this.showConfirm('删除确认', '确定要删除存档 ' + (this.currentSlotIndex + 1) + ' 吗？此操作不可恢复。', () => {
+      this.showConfirm(UI_TEXT.CONFIRM_TITLE, UI_TEXT.CONFIRM_DELETE(this.currentSlotIndex + 1), () => {
         this.onDelete(this.currentSlotIndex);
       });
     };
