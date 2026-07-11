@@ -564,6 +564,12 @@ const updateReplayUI = (): void => {
         rightPanel.board.set(m.x, m.y, m.z, m.player);
     }
     rightPanel.refresh();
+    // Show last move ring for current replay step (skip step 0 = empty board)
+    if (replayState.currentIndex > 0) {
+      const prevMv = replayState.moves[replayState.currentIndex - 1];
+      rightPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
+      leftPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
+    }
     // Sync 3D view with current focus layer
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
     // Also update RightPanel focus layer to match
@@ -717,6 +723,13 @@ const exitReplay = (): void => {
       // Sync 3D view
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
       eventBus.emit(Events.GAME_RESET);
+      
+      // Restore last move ring from save data
+      if (data.moves && data.moves.length > 0) {
+        const lastMv = data.moves[data.moves.length - 1];
+        rightPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
+        leftPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
+      }
 
       // State-aware transition
       if (gameStore.appState === AppState.TITLE || gameStore.appState === AppState.GUIDE_FROM_TITLE) {
