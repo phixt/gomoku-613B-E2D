@@ -865,6 +865,7 @@ const exitReplay = (): void => {
     gameStore.appState = AppState.GUIDE_FROM_TITLE;
     hideAllOverlays();
     guideScreen?.classList.remove("hidden");
+    audioManager.playBGM("guide");
     updateGuideButtons();
   });
 
@@ -872,6 +873,7 @@ const exitReplay = (): void => {
     closeEscMenu();
     gameStore.appState = AppState.GUIDE_FROM_GAME;
     guideScreen?.classList.remove("hidden");
+    audioManager.playBGM("guide");
     updateGuideButtons();
   });
 
