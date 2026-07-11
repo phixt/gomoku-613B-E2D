@@ -14,7 +14,7 @@ import { audioManager } from "./audio/AudioManager";
 import { AIEngine } from "./ai/AIEngine";
 import * as THREE from "three";
 import { resourceManager } from "./utils/ResourceManager";
-import { UI_TEXT } from "./core/TextConstants";
+import { i18n } from "./core/I18n";
 
 const AppState = {
   TITLE: "TITLE",
@@ -72,14 +72,14 @@ async function main(): Promise<void> {
   var overlayManager = new OverlayManager({
     onSave: function (index, data) {
       saveManager.save(index, data);
-      overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(index === QUICK_SAVE_INDEX ? UI_TEXT.QUICK_SAVE_LABEL : String(index + 1)));
+      overlayManager.showToast(i18n.t("SAVE_SUCCESS", index === QUICK_SAVE_INDEX ? i18n.t("QUICK_SAVE_LABEL") : String(index + 1)));
     },
     onLoad: function (data) {
       loadGameFromData(data);
     },
     onDelete: function (index) {
       saveManager.delete(index);
-      overlayManager.showToast(UI_TEXT.DELETE_SUCCESS(index + 1));
+      overlayManager.showToast(i18n.t("DELETE_SUCCESS", index + 1));
     },
     serializeState: function () {return serializeBoardState();},
     onGetSlots: function () {return saveManager.getSlots();},
@@ -119,8 +119,8 @@ async function main(): Promise<void> {
     const title = document.getElementById("victory-title");
     const subtitle = document.getElementById("victory-subtitle");
     if (modal && title && subtitle) {
-      title.textContent = winner === 1 ? UI_TEXT.BLACK_WIN : UI_TEXT.WHITE_WIN;
-      subtitle.textContent = UI_TEXT.GAME_OVER_SUBTITLE(moveCount);
+      title.textContent = winner === 1 ? i18n.t("BLACK_WIN") : i18n.t("WHITE_WIN");
+      subtitle.textContent = i18n.t("GAME_OVER_SUBTITLE", moveCount);
       modal.classList.remove("hidden");
     }
   };
@@ -132,7 +132,7 @@ async function main(): Promise<void> {
     rightPanel.updateLastMoveUI(_x, _y, _z);
     leftPanel.updateLastMoveUI(_x, _y, _z);
     currentPlayer = player === 1 ? 2 : 1;
-    overlayManager.showToast(currentPlayer === 1 ? UI_TEXT.BLACK_TURN : UI_TEXT.WHITE_TURN);
+    overlayManager.showToast(currentPlayer === 1 ? i18n.t("BLACK_TURN") : i18n.t("WHITE_TURN"));
     updateTurnIndicator(currentPlayer);
     const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
     if (isPvEMode && currentPlayer === aiColor) {
@@ -201,11 +201,11 @@ async function main(): Promise<void> {
     const containerEl = document.getElementById("turn-indicator-container");
     if (textEl) {
       if (isThinking) {
-        textEl.textContent = UI_TEXT.AI_THINKING;
+        textEl.textContent = i18n.t("AI_THINKING");
         textEl.classList.add("thinking");
         if (containerEl) containerEl.classList.add("thinking");
       } else {
-        textEl.textContent = player === 1 ? UI_TEXT.BLACK_TURN : UI_TEXT.WHITE_TURN;
+        textEl.textContent = player === 1 ? i18n.t("BLACK_TURN") : i18n.t("WHITE_TURN");
         textEl.classList.remove("thinking");
         if (containerEl) containerEl.classList.remove("thinking");
       }
@@ -285,7 +285,7 @@ async function main(): Promise<void> {
   const triggerAIMove = async (): Promise<void> => {
     if (!aiEngine || isAIThinking) return;
     isAIThinking = true;
-    overlayManager.showToast(UI_TEXT.AI_THINKING);
+    overlayManager.showToast(i18n.t("AI_THINKING"));
     eventBus.emit(Events.AI_MOVE_REQUEST);
     try {
       const move = await aiEngine.think(rightPanel.board);
@@ -353,18 +353,18 @@ async function main(): Promise<void> {
       const movesCount = quickData.moves ? quickData.moves.length : 0;
       const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
       quickDiv.innerHTML =
-        '<span class="slot-index">' + UI_TEXT.QUICK_SAVE_LABEL + '</span>' +
+        '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
         '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
         '<span class="slot-actions">' +
-          '<button data-action="quick-load">' + UI_TEXT.SLOT_READ + '</button>' +
-          '<button data-action="quick-save">' + UI_TEXT.SLOT_OVERWRITE + '</button>' +
+          '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
+          '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
         '</span>';
     } else {
       quickDiv.innerHTML =
-        '<span class="slot-index">' + UI_TEXT.QUICK_SAVE_LABEL + '</span>' +
-        '<span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>' +
+        '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
+        '<span class="slot-info">' + i18n.t("EMPTY_SLOT") + '</span>' +
         '<span class="slot-actions">' +
-          '<button data-action="quick-save">' + UI_TEXT.SLOT_QUICK + '</button>' +
+          '<button data-action="quick-save">' + i18n.t("SLOT_QUICK") + '</button>' +
         '</span>';
     }
     list.appendChild(quickDiv);
@@ -379,10 +379,10 @@ async function main(): Promise<void> {
 
       if (!data) {
         div.innerHTML =
-          '<span class="slot-index">' + UI_TEXT.SAVE_SLOT_LABEL(i + 1) + '</span>' +
-          '<span class="slot-info">' + UI_TEXT.EMPTY_SLOT + '</span>' +
+          '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
+          '<span class="slot-info">' + i18n.t("EMPTY_SLOT") + '</span>' +
           '<span class="slot-actions">' +
-            '<button data-action="fill" data-index="' + i + '">' + UI_TEXT.SLOT_FILL + '</button>' +
+            '<button data-action="fill" data-index="' + i + '">' + i18n.t("SLOT_FILL") + '</button>' +
           '</span>';
       } else {
         const date = new Date(data.timestamp);
@@ -395,13 +395,13 @@ async function main(): Promise<void> {
         const movesCount = data.moves ? data.moves.length : 0;
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
         div.innerHTML =
-          '<span class="slot-index">' + UI_TEXT.SAVE_SLOT_LABEL(i + 1) + '</span>' +
+          '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
           '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
-            '<button data-action="load" data-index="' + i + '">' + UI_TEXT.SLOT_READ + '</button>' +
-            '<button data-action="replay" data-index="' + i + '">' + UI_TEXT.BTN_REPLAY + '</button>' +
-            '<button data-action="overwrite" data-index="' + i + '">' + UI_TEXT.SLOT_OVERWRITE + '</button>' +
-            '<button data-action="delete" data-index="' + i + '">' + UI_TEXT.SLOT_DELETE + '</button>' +
+            '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
+            '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +
+            '<button data-action="overwrite" data-index="' + i + '">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
+            '<button data-action="delete" data-index="' + i + '">' + i18n.t("SLOT_DELETE") + '</button>' +
           '</span>';
       }
       list.appendChild(div);
@@ -428,13 +428,13 @@ async function main(): Promise<void> {
         case "overwrite":
           const targetSlotData = saveManager.load(index);
           if (!targetSlotData) {
-            overlayManager.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+            overlayManager.showToast(i18n.t("SAVE_INVALID_STRUCTURE"), true);
             break;
           }
-          showConfirmDialog(UI_TEXT.CONFIRM_OVERWRITE(index + 1), () => {
+          showConfirmDialog(i18n.t("CONFIRM_OVERWRITE", index + 1), () => {
             const currentSaveData = serializeBoardState();
             saveManager.save(index, currentSaveData);
-            overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.SAVE_SLOT_LABEL(index + 1)));
+            overlayManager.showToast(i18n.t("SAVE_SUCCESS", i18n.t("SAVE_SLOT_LABEL", index + 1)));
             renderSaveSlots();
           });
           break;
@@ -443,7 +443,7 @@ async function main(): Promise<void> {
           if (replayData) startReplay(replayData);
           break;
         case "delete":
-          showConfirmDialog(UI_TEXT.CONFIRM_DELETE(index + 1), () => {
+          showConfirmDialog(i18n.t("CONFIRM_DELETE", index + 1), () => {
             saveManager.delete(index);
             renderSaveSlots();
           });
@@ -455,7 +455,7 @@ async function main(): Promise<void> {
         case "quick-save":
           const qsData = serializeBoardState();
           saveManager.quickSave(qsData);
-          overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(UI_TEXT.QUICK_SAVE_LABEL));
+          overlayManager.showToast(i18n.t("SAVE_SUCCESS", i18n.t("QUICK_SAVE_LABEL")));
           renderSaveSlots();
           break;
       }
@@ -539,10 +539,10 @@ const startReplay = (data: SaveData): void => {
         controls = document.createElement("div");
         controls.id = "replay-controls";
         controls.innerHTML =
-            '<button id="btn-replay-prev">' + UI_TEXT.BTN_REPLAY_PREV + '</button>' +
+            '<button id="btn-replay-prev">' + i18n.t("BTN_REPLAY_PREV") + '</button>' +
             '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
-            '<button id="btn-replay-next">' + UI_TEXT.BTN_REPLAY_NEXT + '</button>' +
-            '<button id="btn-replay-exit">' + UI_TEXT.BTN_REPLAY_EXIT + '</button>';
+            '<button id="btn-replay-next">' + i18n.t("BTN_REPLAY_NEXT") + '</button>' +
+            '<button id="btn-replay-exit">' + i18n.t("BTN_REPLAY_EXIT") + '</button>';
         document.body.appendChild(controls);
 
         document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
@@ -552,7 +552,7 @@ const startReplay = (data: SaveData): void => {
 
     // 6. Initial render
     updateReplayUI();
-    overlayManager.showToast(UI_TEXT.REPLAY_ENTER.replace("{0}", String(data.moves.length)));
+    overlayManager.showToast(i18n.t("REPLAY_ENTER").replace("{0}", String(data.moves.length)));
 };
 
 let replayState: {
@@ -604,7 +604,7 @@ const exitReplay = (): void => {
     const controls = document.getElementById("replay-controls");
     if (controls) controls.remove();
     replayState = null;
-    overlayManager.showToast(UI_TEXT.REPLAY_EXIT);
+    overlayManager.showToast(i18n.t("REPLAY_EXIT"));
     returnToTitle();
 };
 
@@ -661,14 +661,14 @@ const exitReplay = (): void => {
 
   const loadGameFromData = (data: SaveData): void => {
     try {
-      if (!data) {overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);return;}
+      if (!data) {overlayManager.showToast(i18n.t("INVALID_SAVE"), true);return;}
       
       // === Deep validation pipeline ===
       const saveError = SaveManager.validateSaveData(data);
       if (saveError) {
         const errorMsgs: Record<string, string> = {
-          "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
-          "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
+          "SAVE_INVALID_STRUCTURE": i18n.t("SAVE_INVALID_STRUCTURE"),
+          "SAVE_INVALID_DIMENSIONS": i18n.t("SAVE_INVALID_DIMENSIONS"),
         };
         overlayManager.showToast(errorMsgs[saveError] || saveError, true);
         console.error("[Load] Validation failed:", saveError);
@@ -719,7 +719,7 @@ const exitReplay = (): void => {
         }
         rightPanel.refresh();
       } else {
-        overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);
+        overlayManager.showToast(i18n.t("INVALID_SAVE"), true);
         return;
       }
 
@@ -781,7 +781,7 @@ const exitReplay = (): void => {
       } else if (gameStore.appState === AppState.PAUSED || gameStore.appState === AppState.GUIDE_FROM_GAME) {
         closeEscMenu();
       }
-      overlayManager.showToast(UI_TEXT.SAVE_LOADED);
+      overlayManager.showToast(i18n.t("SAVE_LOADED"));
 
       // Handle AI turn edge case after loading
       if (isPvEMode) {
@@ -793,7 +793,7 @@ const exitReplay = (): void => {
       }
     } catch (err) {
       console.error("[Load] Failed:", err);
-      overlayManager.showToast(UI_TEXT.SAVE_FAILED, true);
+      overlayManager.showToast(i18n.t("SAVE_FAILED"), true);
     }
   };
 
@@ -806,8 +806,8 @@ const exitReplay = (): void => {
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
     saveManager.save(targetIndex, data);
-    const slotName = targetIndex === QUICK_SAVE_INDEX ? UI_TEXT.QUICK_SAVE_LABEL : String(targetIndex + 1);
-    overlayManager.showToast(UI_TEXT.SAVE_SUCCESS(slotName));
+    const slotName = targetIndex === QUICK_SAVE_INDEX ? i18n.t("QUICK_SAVE_LABEL") : String(targetIndex + 1);
+    overlayManager.showToast(i18n.t("SAVE_SUCCESS", slotName));
     const base64 = btoa(JSON.stringify(data));
     navigator.clipboard.writeText(base64).then(() => {
       console.log("[Save] Copied to clipboard");
@@ -865,11 +865,11 @@ const exitReplay = (): void => {
     const btnP = document.getElementById("guide-btn-primary");
     const btnS = document.getElementById("guide-btn-secondary");
     if (gameStore.appState === AppState.GUIDE_FROM_TITLE) {
-      if (btnP) {btnP.textContent = UI_TEXT.BTN_START_GAME;btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
-      if (btnS) {btnS.textContent = UI_TEXT.BTN_BACK;btnS.addEventListener("click", backToTitle);}
+      if (btnP) {btnP.textContent = i18n.t("BTN_START_GAME");btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
+      if (btnS) {btnS.textContent = i18n.t("BTN_BACK");btnS.addEventListener("click", backToTitle);}
     } else {
-      if (btnP) {btnP.textContent = UI_TEXT.BTN_NEW_GAME;btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
-      if (btnS) {btnS.textContent = UI_TEXT.BTN_RESUME;btnS.addEventListener("click", backToGame);}
+      if (btnP) {btnP.textContent = i18n.t("BTN_NEW_GAME");btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
+      if (btnS) {btnS.textContent = i18n.t("BTN_RESUME");btnS.addEventListener("click", backToGame);}
     }
   };
 
@@ -909,7 +909,7 @@ const exitReplay = (): void => {
       const data = saveManager.load(idx);
       if (data) {loadGameFromData(data);}
     } else {
-      overlayManager.showToast(UI_TEXT.NO_SAVE, true);
+      overlayManager.showToast(i18n.t("NO_SAVE"), true);
     }
   });
 
@@ -920,14 +920,14 @@ const exitReplay = (): void => {
     e.preventDefault();
     const wasMuted = audioManager.muted;
     audioManager.mute();
-    overlayManager.showToast(wasMuted ? UI_TEXT.MUTE_OFF : UI_TEXT.MUTE_ON);
+    overlayManager.showToast(wasMuted ? i18n.t("MUTE_OFF") : i18n.t("MUTE_ON"));
     // Visual: toggle volume slider between blue (active) and gray (muted)
     if (volumeSlider) {
       volumeSlider.classList.toggle("muted", !wasMuted);
     }
     // Sync the volume-value text with mute state
     if (volumeValueText) {
-      volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : UI_TEXT.MUTE_ON;
+      volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : i18n.t("MUTE_ON");
     }
     return;
   }
@@ -981,7 +981,7 @@ const exitReplay = (): void => {
             const data = saveManager.load(idx);
             if (data) {loadGameFromData(data);}
           } else {
-            overlayManager.showToast(UI_TEXT.NO_SAVE, true);
+            overlayManager.showToast(i18n.t("NO_SAVE"), true);
           }
           return;
         }
@@ -1008,7 +1008,7 @@ const exitReplay = (): void => {
                   const data = saveManager.load(idx);
                   if (data) {loadGameFromData(data);}
                 } else {
-                  overlayManager.showToast(UI_TEXT.NO_SAVE, true);
+                  overlayManager.showToast(i18n.t("NO_SAVE"), true);
                 }
                 break;
               }
@@ -1069,7 +1069,7 @@ const exitReplay = (): void => {
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
             eventBus.emit(Events.COLORBLIND_MODE_TOGGLED, isColorblindMode);
-            overlayManager.showToast(isColorblindMode ? UI_TEXT.COLORBLIND_ON : UI_TEXT.COLORBLIND_OFF);
+            overlayManager.showToast(isColorblindMode ? i18n.t("COLORBLIND_ON") : i18n.t("COLORBLIND_OFF"));
             break;
         }
         break;
@@ -1189,6 +1189,32 @@ const exitReplay = (): void => {
 
   if (blackRadio) blackRadio.addEventListener("change", onPlayerColorChange);
   if (whiteRadio) whiteRadio.addEventListener("change", onPlayerColorChange);
+
+  // I18n: inject all data-i18n text into DOM
+  const injectUITexts = (): void => {
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (key) el.textContent = i18n.t(key as any);
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      const key = el.getAttribute("data-i18n-placeholder");
+      if (key) (el as HTMLInputElement).placeholder = i18n.t(key as any);
+    });
+  };
+
+  // Bind language switcher
+  const langSelect = document.getElementById("lang-select") as HTMLSelectElement;
+  if (langSelect) {
+    langSelect.value = i18n.getLang();
+    langSelect.addEventListener("change", () => {
+      i18n.setLang(langSelect.value);
+      injectUITexts();
+      updateTurnIndicator(currentPlayer);
+    });
+  }
+
+  // Initial injection
+  injectUITexts();
 }
 
 main();

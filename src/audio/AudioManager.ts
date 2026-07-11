@@ -466,8 +466,8 @@ class AudioManager {
     this.stopBGM();
 
     const pattern = BGM_PATTERNS[track];
-    // Adjust gain/parameters based on intensity
-    const adjustedGain = pattern.baseGain * (1 + this.intensity * 0.2);
+    // Adjust gain/parameters based on intensity (reserved for future use)
+    // const adjustedGain = pattern.baseGain * (1 + this.intensity * 0.2);
 
     // Create per-track gain node
     this.bgmGainNode = ctx.createGain();

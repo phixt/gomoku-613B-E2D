@@ -29,14 +29,14 @@
     ====================================================== -->
     <div id="esc-menu" class="hidden">
         <div class="modal-content esc-modal">
-            <h2>暂停</h2>
+            <h2 data-i18n="PAUSE_TITLE">暂停</h2>
             <div class="esc-actions">
-                <button id="esc-resume" class="esc-btn">继续游戏 <kbd>Esc</kbd></button>
-                <button id="esc-restart" class="esc-btn">重新开始 <kbd>R</kbd></button>
-                <button id="esc-save" class="esc-btn">保存进度 <kbd>S</kbd></button>
-                <button id="esc-load" class="esc-btn">加载进度 <kbd>L</kbd></button>
-                <button id="esc-guide" class="esc-btn">快捷键说明 <kbd>G</kbd></button>
-                <button id="esc-title" class="esc-btn danger">回到标题 <kbd>B</kbd></button>
+                <button id="esc-resume" class="esc-btn"><span data-i18n="BTN_RESUME">继续游戏</span> <kbd>Esc</kbd></button>
+                <button id="esc-restart" class="esc-btn"><span data-i18n="BTN_RESTART">重新开始</span> <kbd>R</kbd></button>
+                <button id="esc-save" class="esc-btn"><span data-i18n="BTN_SAVE">保存进度</span> <kbd>S</kbd></button>
+                <button id="esc-load" class="esc-btn"><span data-i18n="BTN_LOAD">加载进度</span> <kbd>L</kbd></button>
+                <button id="esc-guide" class="esc-btn"><span data-i18n="BTN_GUIDE">快捷键说明</span> <kbd>G</kbd></button>
+                <button id="esc-title" class="esc-btn danger"><span data-i18n="BTN_BACK">回到标题</span> <kbd>B</kbd></button>
             </div>
         </div>
     </div>
@@ -54,61 +54,61 @@
 
                 <!-- 改动：按钮组从右栏移到这里，放在左栏底部 -->
                 <div class="action-buttons">
-                    <button id="start-btn" class="primary-btn">开始游戏</button>
-                    <button id="guide-btn" class="secondary-btn">快捷键说明</button>
+                    <button id="start-btn" class="primary-btn" data-i18n="BTN_START_GAME">开始游戏</button>
+                    <button id="guide-btn" class="secondary-btn" data-i18n="BTN_GUIDE">快捷键说明</button>
                 </div>
                 <!-- 改动结束 -->
                 <!-- 游戏设置区域 -->
                 <div class="settings-section">
-                    <h3>游戏设置</h3>
+                    <h3 data-i18n="SETTING_TITLE">游戏设置</h3>
 
                     <!-- 游戏模式选择 -->
                     <div class="setting-group">
-                        <label class="setting-label">对战模式</label>
+                        <label class="setting-label" data-i18n="SETTING_MODE">对战模式</label>
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="game-mode" id="mode-pvp" value="pvp" checked>
-                                <span>双人对战 (PvP)</span>
+                                <span data-i18n="SETTING_PVP">双人对战 (PvP)</span>
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="game-mode" id="mode-pve" value="pve">
-                                <span>人机对战 (PvE)</span>
+                                <span data-i18n="SETTING_PVE">人机对战 (PvE)</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- AI难度选择（仅PvE模式） -->
                     <div class="setting-group" id="ai-difficulty-group">
-                        <label class="setting-label" for="ai-difficulty">AI难度</label>
+                        <label class="setting-label" for="ai-difficulty" data-i18n="SETTING_DIFFICULTY">AI难度</label>
                         <select id="ai-difficulty" class="setting-select">
-                            <option value="easy">简单</option>
-                            <option value="medium" selected>中等</option>
-                            <option value="hard">困难</option>
+                            <option value="easy" data-i18n="SETTING_DIFF_EASY">简单</option>
+                            <option value="medium" selected data-i18n="SETTING_DIFF_MEDIUM">中等</option>
+                            <option value="hard" data-i18n="SETTING_DIFF_HARD">困难</option>
                         </select>
                     </div>
                     <!-- 玩家颜色选择（仅PvE模式） -->
                     <div class="setting-group hidden" id="player-color-group">
-                        <label class="setting-label">玩家颜色</label>
+                        <label class="setting-label" data-i18n="SETTING_COLOR">玩家颜色</label>
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="player-color" id="color-black" value="black" checked>
-                                <span>执黑 (先手)</span>
+                                <span data-i18n="SETTING_BLACK">执黑 (先手)</span>
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="player-color" id="color-white" value="white">
-                                <span>执白 (后手)</span>
+                                <span data-i18n="SETTING_WHITE">执白 (后手)</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- 音量控制 -->
                     <div class="setting-group">
-                        <label class="setting-label" for="volume-slider">音量</label>
+                        <label class="setting-label" for="volume-slider" data-i18n="SETTING_VOLUME">音量</label>
                         <div class="volume-control">
                             <input type="range" id="volume-slider" min="0" max="100" value="25">
                             <span id="volume-value">25%</span>
                         </div>
-                        <p>按 M 静音/取消静音</p>
+                        <p data-i18n="MUTE_HINT">按 M 静音/取消静音</p>
                     </div>
                 </div>
             </div>
@@ -125,11 +125,11 @@
                 </select>
             </div>
                 <div class="save-area">
-                    <h3>存档槽位</h3>
+                    <h3 data-i18n="SAVE_SLOTS_TITLE">存档槽位</h3>
                     <div id="save-slots-list" class="save-slots-list">
                         <!-- 槽位由JS 动态生成 -->
                     </div>
-                    <p class="slot-hint">按 L 快速读取最新存档</p>
+                    <p class="slot-hint" data-i18n="SLOT_HINT">按 L 快速读取最新存档</p>
                 </div>
             </div>
         </div>
@@ -173,15 +173,15 @@
                 </div>
 
                 <div class="key-desc-grid">
-                    <div class="desc-item"><span class="key-tag active">Q / E</span> 旋转 3D 视角</div>
-                    <div class="desc-item"><span class="key-tag active">W / S</span> 推拉 3D 视角</div>
-                    <div class="desc-item"><span class="key-tag active">A / D</span> 切换层级 (循环)</div>
-                    <div class="desc-item"><span class="key-tag active">Z / C</span> 调整层间距</div>
-                    <div class="desc-item"><span class="key-tag active">R</span> 重新开始</div>
-                    <div class="desc-item"><span class="key-tag active">F</span> 翻转 2D 棋盘</div>
-                    <div class="desc-item"><span class="key-tag active">H</span> 开关辅助线</div>
-                    <div class="desc-item"><span class="key-tag active">T</span> 切换主题</div>
-                    <div class="desc-item"><span class="key-tag active">V</span> 切换色弱模式 (开启/关闭)</div>
+                    <div class="desc-item"><span class="key-tag active">Q / E</span> <span data-i18n="KEY_Q">旋转 3D 视角</span></div>
+                    <div class="desc-item"><span class="key-tag active">W / S</span> <span data-i18n="KEY_W">推拉 3D 视角</span></div>
+                    <div class="desc-item"><span class="key-tag active">A / D</span> <span data-i18n="KEY_A">切换层级 (循环)</span></div>
+                    <div class="desc-item"><span class="key-tag active">Z / C</span> <span data-i18n="KEY_Z">调整层间距</span></div>
+                    <div class="desc-item"><span class="key-tag active">R</span> <span data-i18n="KEY_R">重新开始</span></div>
+                    <div class="desc-item"><span class="key-tag active">F</span> <span data-i18n="KEY_F">翻转 2D 棋盘</span></div>
+                    <div class="desc-item"><span class="key-tag active">H</span> <span data-i18n="KEY_H">开关辅助线</span></div>
+                    <div class="desc-item"><span class="key-tag active">T</span> <span data-i18n="KEY_T">切换主题</span></div>
+                    <div class="desc-item"><span class="key-tag active">V</span> <span data-i18n="KEY_V">切换色弱模式 (开启/关闭)</span></div>
                 </div>
             </div>
 
@@ -192,23 +192,23 @@
 
                 <!-- 改动：鼠标提示放在标题下方，居中偏右 -->
                 <div class="mouse-actions">
-                    <p>🖱鼠标悬停：查看辅助线</p>
-                    <p>🖱鼠标点击：当前层落子</p>
-                    <p>🖱鼠标滚轮：旋转 3D 视角</p>
+                    <p data-i18n="MOUSE_HOVER">🖱鼠标悬停：查看辅助线</p>
+                    <p data-i18n="MOUSE_CLICK">🖱鼠标点击：当前层落子</p>
+                    <p data-i18n="MOUSE_WHEEL">🖱鼠标滚轮：旋转 3D 视角</p>
                 </div>
                 <!-- 改动结束 -->
 
                 <!-- 改动：按钮组放在右栏底部 -->
                 <div class="guide-actions">
-                    <button id="guide-btn-primary" class="primary-btn">开始游戏</button>
-                    <button id="guide-btn-secondary" class="secondary-btn">返回标题</button>
+                    <button id="guide-btn-primary" class="primary-btn" data-i18n="BTN_START_GAME">开始游戏</button>
+                    <button id="guide-btn-secondary" class="secondary-btn" data-i18n="BTN_BACK">返回标题</button>
                 </div>
                 <!-- 改动结束 -->
             </div>
 
             <!-- 改动：底部提示左对齐，单行，不跨行 -->
             <div class="guide-bottom-tip">
-                💡 提示：游戏开始后，按 <kbd>S</kbd> 拉远视角
+                <span data-i18n="GUIDE_TIP_PREFIX">💡 提示：游戏开始后，按 </span><kbd>S</kbd> <span data-i18n="GUIDE_TIP_SUFFIX">拉远视角</span>
             </div>
             <!-- 改动结束 -->
         </div>
@@ -257,8 +257,8 @@
             <h2 id="victory-title" class="victory-title">黑方获胜！</h2>
             <p id="victory-subtitle" class="victory-subtitle">本局共 0 步</p>
             <div class="modal-actions">
-                <button id="btn-victory-restart" class="btn-primary">再来一局</button>
-                <button id="btn-victory-title" class="btn-secondary">返回标题</button>
+                <button id="btn-victory-restart" class="btn-primary" data-i18n="BTN_NEW_GAME">再来一局</button>
+                <button id="btn-victory-title" class="btn-secondary" data-i18n="BTN_BACK">返回标题</button>
             </div>
         </div>
     </div>

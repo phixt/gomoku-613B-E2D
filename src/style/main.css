@@ -1649,3 +1649,31 @@ body.dark-theme .custom-select option {
     background-color: #1A2629;
     color: #C8E0E4;
 }
+
+/* =========================================
+   强制“语言”与下拉框整体靠右对齐
+   ========================================= */
+
+/* 1. 选中包含 #lang-select 的那个 setting-group */
+.setting-group:has(#lang-select) {
+    display: flex !important;
+    flex-direction: row !important;      /* 确保文字和下拉框在同一行 */
+    justify-content: flex-end !important; /* 核心：让这一行内容整体靠右 */
+    align-items: center !important;
+    gap: 12px;                           /* “语言”和下拉框之间的间距 */
+    width: 100%;                         /* 占满父容器宽度，让 flex-end 生效 */
+    text-align: right;
+}
+
+/* 2. 确保“语言”标签本身的文本也是右对齐的，且清除多余的边距 */
+.setting-group:has(#lang-select) .setting-label {
+    text-align: right;
+    margin: 0;
+    flex-shrink: 0; /* 防止文字被挤压 */
+}
+
+/* 3. 确保下拉框不会被拉伸 */
+.setting-group:has(#lang-select) .custom-select {
+    flex-shrink: 0;
+    width: auto; /* 或者固定一个合适的宽度，如 width: 120px; */
+}

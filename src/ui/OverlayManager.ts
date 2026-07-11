@@ -1,6 +1,6 @@
 import type { SaveData } from "../core/SaveManager";
 import { SaveManager } from "../core/SaveManager";
-import { UI_TEXT } from "../core/TextConstants";
+import { i18n } from "../core/I18n";
 
 export class OverlayManager {
   private onSave: (index: number, data: SaveData) => void;
@@ -88,18 +88,18 @@ export class OverlayManager {
 
   public tryFillSlot(index: number): void {
     this.showInputDialog(
-      UI_TEXT.SLOT_FILL,
-      UI_TEXT.PASTE_PLACEHOLDER,
+      i18n.t("SLOT_FILL"),
+      i18n.t("PASTE_PLACEHOLDER"),
       (inputValue: string) => {
         if (!inputValue || !inputValue.trim()) {
-          this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+          this.showToast(i18n.t("SAVE_INVALID_STRUCTURE"), true);
           return;
         }
         console.log("[Fill] Raw input (JSON-escaped):", JSON.stringify(inputValue));
         const parsedData = SaveManager.tryParseSaveData(inputValue.trim());
         if (!parsedData) {
           console.error("[Import] Blocked: Invalid structure");
-          this.showToast(UI_TEXT.SAVE_INVALID_STRUCTURE, true);
+          this.showToast(i18n.t("SAVE_INVALID_STRUCTURE"), true);
           return;
         }
         const validationError = SaveManager.validateSaveData(parsedData);
@@ -107,14 +107,14 @@ export class OverlayManager {
           console.error("[Import] Blocked: Validation failed -", validationError);
           this.showToast(
             validationError === "SAVE_INVALID_DIMENSIONS"
-              ? UI_TEXT.SAVE_INVALID_DIMENSIONS
-              : UI_TEXT.SAVE_INVALID_STRUCTURE,
+              ? i18n.t("SAVE_INVALID_DIMENSIONS")
+              : i18n.t("SAVE_INVALID_STRUCTURE"),
             true
           );
           return;
         }
         this.onSave(index, parsedData);
-        this.showToast(UI_TEXT.SAVE_SUCCESS(index + 1));
+        this.showToast(i18n.t("SAVE_SUCCESS", index + 1));
       }
     );
   }
