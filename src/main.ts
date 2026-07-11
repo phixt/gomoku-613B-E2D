@@ -1,4 +1,4 @@
-import "./style/main.css";
+﻿import "./style/main.css";
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
   let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
   let isReplayMode = false;
 
-  // 鈹€鈹€ 3D Turn Indicator (isolated scene) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // ── 3D Turn Indicator (isolated scene) ─────────────────
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
   let indicatorScene: THREE.Scene | null = null;
   let indicatorCamera: THREE.PerspectiveCamera | null = null;
@@ -527,10 +527,10 @@ const startReplay = (data: SaveData): void => {
         controls = document.createElement("div");
         controls.id = "replay-controls";
         controls.innerHTML =
-            '<button id="btn-replay-prev">涓婁竴姝?/button>' +
+            '<button id="btn-replay-prev">上一步</button>' +
             '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
-            '<button id="btn-replay-next">涓嬩竴姝?/button>' +
-            '<button id="btn-replay-exit">閫€鍑?/button>';
+            '<button id="btn-replay-next">下一步</button>' +
+            '<button id="btn-replay-exit">退出</button>';
         document.body.appendChild(controls);
 
         document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
@@ -683,20 +683,6 @@ const exitReplay = (): void => {
       // Instant-load board snapshot
       if (data.boardState && Array.isArray(data.boardState)) {
         rightPanel.loadBoardSnapshot(data.boardState);
-        // Safety net: if snapshot is all zeros but moves exist, reconstruct from moves
-        let boardEmpty = true;
-        rightPanel.board.forEach((_x: number, _y: number, _z: number, state: number) => {
-          if (state !== 0) boardEmpty = false;
-        });
-        if (boardEmpty && data.moves && data.moves.length > 0) {
-          console.warn('[Load] boardState was empty; replaying from moves');
-          for (const move of data.moves) {
-            if (move.x >= 0 && move.x < BOARD_SIZE && move.y >= 0 && move.y < BOARD_SIZE && move.z >= 0 && move.z < LAYER_COUNT) {
-              rightPanel.board.set(move.x, move.y, move.z, move.player as any);
-            }
-          }
-          rightPanel.refresh();
-        }
       } else if (data.moves) {
         // Fallback: replay moves for legacy saves
         rightPanel.board.reset();
@@ -711,6 +697,7 @@ const exitReplay = (): void => {
         return;
       }
 
+        
       // Restore move history
       moveHistory = data.moves ? [...data.moves] : [];
 
