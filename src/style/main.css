@@ -1176,6 +1176,10 @@ body.dark-theme .setting-select:focus {
     cursor: pointer;
 }
 
+#volume-slider.muted {
+  accent-color: #888;
+}
+
 body.dark-theme .volume-slider {
     background: #3A4A4E;
 }

@@ -55,8 +55,24 @@ export class OverlayManager {
 
   // ---- Public: fill a slot from clipboard (prompt -> parse -> validate -> save) ----
 
+  // ???????????????????????????????????????????????????????????
+  // DEBUG  IMPORT PIPELINE
+  // Uses browser prompt()  no HTML <input> to set autocomplete on.
+  // If stale values reappear, check browser prompt auto-fill
+  // (Chrome sometimes caches prompt answers per origin).
+  // To rule out timing issues, the raw input is logged below.
+  // ???????????????????????????????????????????????????????????
+  // ===========================================================
+  // DEBUG  IMPORT PIPELINE
+  // Uses browser prompt()  no HTML <input> to set autocomplete on.
+  // If stale values reappear, check browser prompt auto-fill
+  // (Chrome sometimes caches prompt answers per origin).
+  // To rule out timing issues, the raw input is logged below.
+  // ===========================================================
   public tryFillSlot(index: number): void {
-    const input = prompt(UI_TEXT.PASTE_PLACEHOLDER);
+    // Force empty default to reduce chance of browser auto-filling old value
+    const input = prompt(UI_TEXT.PASTE_PLACEHOLDER, "");
+    console.log("[Fill] Raw input (JSON-escaped):", JSON.stringify(input));
     if (!input || !input.trim()) return;
     const saveData = SaveManager.tryParseSaveData(input.trim());
     if (!saveData) {
@@ -75,7 +91,7 @@ export class OverlayManager {
     this.onSave(index, saveData);
   }
 
-  // ---- Confirm dialog ----
+// ---- Confirm dialog ----
 
   public showConfirm(title: string, message: string, onYes: () => void): void {
     this.confirmTitle.textContent = title;

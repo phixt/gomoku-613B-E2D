@@ -909,6 +909,10 @@ const exitReplay = (): void => {
     const wasMuted = audioManager.muted;
     audioManager.mute();
     overlayManager.showToast(wasMuted ? UI_TEXT.MUTE_OFF : UI_TEXT.MUTE_ON);
+    // Visual: toggle volume slider between blue (active) and gray (muted)
+    if (volumeSlider) {
+      volumeSlider.classList.toggle("muted", !wasMuted);
+    }
     // Sync the volume-value text with mute state
     if (volumeValueText) {
       volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : UI_TEXT.MUTE_ON;
@@ -916,7 +920,7 @@ const exitReplay = (): void => {
     return;
   }
 
-    // Theme toggle works regardless of game state
+// Theme toggle works regardless of game state
     if (e.key === "t" || e.key === "T") {
       e.preventDefault();
       currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
