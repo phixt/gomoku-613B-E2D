@@ -4,13 +4,13 @@ import type { Line3DData, HighlightPoint3D, AuxData3D } from "../core/Types";
 import { Board } from "../core/Board";
 import { checkWinner } from "../core/Rules";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND, COLOR_AUX_RED, COLOR_AUX_BLUE } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, HOVER_PIECE_OPACITY, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND, COLOR_AUX_RED, COLOR_AUX_BLUE } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER = (BOARD_SIZE - 1) / 2;
-const GHOST_OPACITY = 0.35;
+const GHOST_OPACITY = HOVER_PIECE_OPACITY;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
 

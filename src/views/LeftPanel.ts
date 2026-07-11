@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { type Theme, AuxMode, LIGHT_THEME, DARK_THEME } from "../core/Types";
 import type { AuxData3D } from "../core/Types";
 import type { Board } from "../core/Board";
-import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, MIN_LAYER_SPACING, MAX_LAYER_SPACING, COLOR_ENEMY_NORMAL, COLOR_ENEMY_BLIND } from "../core/Config";
+import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, MIN_LAYER_SPACING, MAX_LAYER_SPACING, GHOST_PIECE_OPACITY, GHOST_GRID_OPACITY, GHOST_CONNECTOR_OPACITY, COLOR_ENEMY_NORMAL, COLOR_ENEMY_BLIND } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
@@ -11,7 +11,7 @@ const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const CENTER_Z = (LAYER_COUNT - 1) * LAYER_SPACING / 2;
 const CENTER = (BOARD_SIZE - 1) / 2;
 
-const VERTS_PER_LAYER = 26 * 2;
+const VERTS_PER_LAYER = BOARD_SIZE * 4;  // (horizontal lines + vertical lines) * 2 vertices each
 
 const AUX_PTS: [number, number][] = [
 [0, 0], [BOARD_SIZE - 1, 0], [0, BOARD_SIZE - 1],
@@ -148,8 +148,8 @@ export class LeftPanel {
 
     this.focusBlackMat = new THREE.SpriteMaterial({ map: this.blackTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
     this.focusWhiteMat = new THREE.SpriteMaterial({ map: this.whiteTex, transparent: true, opacity: 1.0, depthWrite: true, depthTest: true });
-    this.ghostBlackMat = new THREE.SpriteMaterial({ map: this.blackGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
-    this.ghostWhiteMat = new THREE.SpriteMaterial({ map: this.whiteGhostTex, transparent: true, opacity: 0.25, depthWrite: false, depthTest: true });
+    this.ghostBlackMat = new THREE.SpriteMaterial({ map: this.blackGhostTex, transparent: true, opacity: GHOST_PIECE_OPACITY, depthWrite: false, depthTest: true });
+    this.ghostWhiteMat = new THREE.SpriteMaterial({ map: this.whiteGhostTex, transparent: true, opacity: GHOST_PIECE_OPACITY, depthWrite: false, depthTest: true });
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(theme.bgColor);
@@ -220,7 +220,7 @@ export class LeftPanel {
 
 
     const geo = buildGridGeometry(this.focusZ, s);
-    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
+    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.add(this.gridSegments);
@@ -232,7 +232,7 @@ export class LeftPanel {
 
 
     const connGeo = buildConnectorGeometry(s);
-    this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: 0.35 }));
+    this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: GHOST_CONNECTOR_OPACITY }));
     this.scene.add(this.connectorSegments);
 
 
@@ -276,7 +276,7 @@ export class LeftPanel {
     const old = this.gridSegments;
     const s = this._layerSpacing;
     const geo = buildGridGeometry(this.focusZ, s);
-    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
+    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.remove(old);
@@ -497,7 +497,7 @@ export class LeftPanel {
     const oldGrid = this.gridSegments;
     const s = this._layerSpacing;
     const geo = buildGridGeometry(this.focusZ, s);
-    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: 0.4 });
+    const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.remove(oldGrid);
@@ -518,7 +518,7 @@ export class LeftPanel {
     // Rebuild connector segments
     const oldConn = this.connectorSegments;
     const connGeo = buildConnectorGeometry(s);
-    this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: 0.35 }));
+    this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: GHOST_CONNECTOR_OPACITY }));
     this.scene.remove(oldConn);
     this.scene.add(this.connectorSegments);
     oldConn.geometry.dispose();
