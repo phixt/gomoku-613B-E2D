@@ -18,6 +18,7 @@ const zhCN = {
   OCCUPIED_SLOT: "已存档",
   QUICK_SAVE_LABEL: "快速存档",
   SAVE_SLOT_LABEL: "存档 {0}",
+  SLOT_MOVES: "{0} 步",
 
   // Buttons & menus
   BTN_START_GAME: "开始游戏",

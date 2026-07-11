@@ -18,6 +18,7 @@ const jaJP = {
   OCCUPIED_SLOT: "保存済み",
   QUICK_SAVE_LABEL: "クイックセーブ",
   SAVE_SLOT_LABEL: "スロット {0}",
+  SLOT_MOVES: "{0} 手",
 
   // Buttons & menus
   BTN_START_GAME: "ゲーム開始",

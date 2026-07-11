@@ -354,7 +354,7 @@ async function main(): Promise<void> {
       const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
       quickDiv.innerHTML =
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
-        '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
+        '<span class="slot-meta">' + modeStr + aiDiff + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
         '<span class="slot-actions">' +
           '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
           '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
@@ -396,7 +396,7 @@ async function main(): Promise<void> {
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
         div.innerHTML =
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
-          '<span class="slot-meta">' + modeStr + aiDiff + " | " + movesCount + " moves | " + timeStr + '</span>' +
+          '<span class="slot-meta">' + modeStr + aiDiff + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
             '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
             '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +

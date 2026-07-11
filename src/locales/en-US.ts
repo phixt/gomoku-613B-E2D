@@ -18,6 +18,7 @@ const enUS = {
   OCCUPIED_SLOT: "Occupied",
   QUICK_SAVE_LABEL: "Quick Save",
   SAVE_SLOT_LABEL: "Slot {0}",
+  SLOT_MOVES: "{0} moves",
 
   // Buttons & menus
   BTN_START_GAME: "Start Game",
