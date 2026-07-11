@@ -1210,6 +1210,7 @@ const exitReplay = (): void => {
       i18n.setLang(langSelect.value);
       injectUITexts();
       updateTurnIndicator(currentPlayer);
+      renderSaveSlots();
     });
   }
 
