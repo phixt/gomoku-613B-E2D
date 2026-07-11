@@ -647,6 +647,18 @@ const exitReplay = (): void => {
   const loadGameFromData = (data: SaveData): void => {
     try {
       if (!data) {overlayManager.showToast(UI_TEXT.INVALID_SAVE, true);return;}
+      
+      // === Deep validation pipeline ===
+      const saveError = SaveManager.validateSaveData(data);
+      if (saveError) {
+        const errorMsgs: Record<string, string> = {
+          "SAVE_INVALID_STRUCTURE": UI_TEXT.SAVE_INVALID_STRUCTURE,
+          "SAVE_INVALID_DIMENSIONS": UI_TEXT.SAVE_INVALID_DIMENSIONS,
+        };
+        overlayManager.showToast(errorMsgs[saveError] || saveError, true);
+        console.error("[Load] Validation failed:", saveError);
+        return;
+      }
       console.log("[Load] Restoring from save:", data.id || "unknown");
 
       // Restore theme first

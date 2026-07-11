@@ -99,8 +99,6 @@ export const UI_TEXT = {
     // ================= save validation =================
     SAVE_INVALID_STRUCTURE: "存档数据结构无效",
     SAVE_INVALID_DIMENSIONS: "存档棋盘尺寸不匹配",
-    SAVE_INVALID_MOVES: "存档步数数据异常",
-    SAVE_MOVES_BOARD_MISMATCH: "存档步数与棋盘状态不一致",
 
     // ================= game over =================
     BLACK_WIN: "黑方获胜！",

@@ -1,5 +1,5 @@
 import type { IStorageAdapter } from "./StorageAdapter";
-import { SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./Config";
+import { SAVE_SLOT_COUNT, QUICK_SAVE_INDEX, BOARD_SIZE, LAYER_COUNT } from "./Config";
 import { eventBus, Events } from "./EventBus";
 
 export interface SaveData {
@@ -181,6 +181,42 @@ export class SaveManager {
   private persist(): void {
     this.storage.set(STORAGE_KEY, JSON.stringify(this._slots));
     eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
+  }
+
+
+  /**
+   * Deep validation of save data integrity. Returns an error message key (from UI_TEXT)
+   * on failure, or null if the data passes all checks.
+   */
+  /**
+   * Validate save data integrity before loading.
+   * Returns an error message key (from UI_TEXT) on failure, or null if valid.
+   */
+  static validateSaveData(data: any): string | null {
+    // Stage 1: Structure validation ? required fields must exist with correct types
+    if (!data || typeof data !== "object") return "SAVE_INVALID_STRUCTURE";
+    if (!data.version
+        || !Array.isArray(data.boardState)
+        || !Array.isArray(data.moves)
+        || typeof data.boardSize !== "number" || data.boardSize <= 0
+        || typeof data.layers !== "number" || data.layers <= 0) {
+      return "SAVE_INVALID_STRUCTURE";
+    }
+    // Verify boardState dimensions match declared size
+    if (data.boardState.length !== data.layers) return "SAVE_INVALID_STRUCTURE";
+    for (let z = 0; z < data.layers; z++) {
+      const layer = data.boardState[z];
+      if (!Array.isArray(layer) || layer.length !== data.boardSize) return "SAVE_INVALID_STRUCTURE";
+      // Spot-check first row of each layer (full scan is too expensive)
+      if (!Array.isArray(layer[0]) || layer[0].length !== data.boardSize) return "SAVE_INVALID_STRUCTURE";
+    }
+
+    // Stage 2: Dimension validation ? must match current Config
+    if (data.boardSize !== BOARD_SIZE || data.layers !== LAYER_COUNT) {
+      return "SAVE_INVALID_DIMENSIONS";
+    }
+
+    return null;
   }
 
   static serializeToBase64(data: SaveData): string {
