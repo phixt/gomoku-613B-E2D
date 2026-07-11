@@ -242,8 +242,8 @@ async function main(): Promise<void> {
     hideAllOverlays();
         currentPlayer = 1;
         // Reset board state for clean new game
-        rightPanel.board.reset();
         rightPanel.resetGame();
+        eventBus.emit(Events.GAME_RESET);
     moveCount = 0;
     moveHistory = [];
     // CRITICAL: Read player color from UI, DO NOT hardcode to 1
@@ -505,6 +505,7 @@ const startReplay = (data: SaveData): void => {
     forceCorrectSize();
     // Clear any residual lastMove ring from previous game
     rightPanel.resetGame();
+    eventBus.emit(Events.GAME_RESET);
     
     // 3. Set strict REPLAY state
     isReplayMode = true;
@@ -592,10 +593,10 @@ const exitReplay = (): void => {
     }
     isAIThinking = false;
     currentPlayer = 1;
-    rightPanel.board.reset();
     focusZ = 0;
     rightPanel.resetGame();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
+      eventBus.emit(Events.GAME_RESET);
     gameStore.appState = AppState.TITLE;
     hideAllOverlays();
     startScreen?.classList.remove("hidden");
@@ -672,6 +673,20 @@ const exitReplay = (): void => {
         return;
       }
 
+        // Fallback: if boardState was empty but moves exist, replay from moves
+        let boardEmpty = true;
+        rightPanel.board.forEach((_x: number, _y: number, _z: number, state: number) => {
+          if (state !== 0) boardEmpty = false;
+        });
+        if (boardEmpty && data.moves && data.moves.length > 0) {
+          for (const move of data.moves) {
+            if (move.x >= 0 && move.x < BOARD_SIZE && move.y >= 0 && move.y < BOARD_SIZE && move.z >= 0 && move.z < LAYER_COUNT) {
+              rightPanel.board.set(move.x, move.y, move.z, move.player as any);
+            }
+          }
+          rightPanel.refresh();
+        }
+        
       // Restore move history
       moveHistory = data.moves ? [...data.moves] : [];
 
@@ -701,6 +716,7 @@ const exitReplay = (): void => {
 
       // Sync 3D view
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
+      eventBus.emit(Events.GAME_RESET);
 
       // State-aware transition
       if (gameStore.appState === AppState.TITLE || gameStore.appState === AppState.GUIDE_FROM_TITLE) {
@@ -760,8 +776,6 @@ const exitReplay = (): void => {
   if (startBtn) startBtn.addEventListener("click", startGame);
 
   // ===== Guide Screen State Machine =====
-  const guideBtnPrimary = document.getElementById("guide-btn-primary");
-  const guideBtnSecondary = document.getElementById("guide-btn-secondary");
   const escGuideBtn = document.getElementById("esc-guide");
 
   const hideAllOverlays = (): void => {
@@ -772,7 +786,8 @@ const exitReplay = (): void => {
   };
 
   const backToTitle = (): void => {
-    rightPanel.board.reset();
+    rightPanel.resetGame();
+    eventBus.emit(Events.GAME_RESET);
     focusZ = 0;
     hideAllOverlays();
     startScreen?.classList.remove("hidden");
@@ -791,9 +806,10 @@ const exitReplay = (): void => {
   };
 
   const updateGuideButtons = (): void => {
-    if (!guideBtnPrimary || !guideBtnSecondary) return;
-    const oldP = guideBtnPrimary;
-    const oldS = guideBtnSecondary;
+    // Re-query buttons from DOM each call (stale refs after cloneNode+replaceWith)
+    const oldP = document.getElementById("guide-btn-primary");
+    const oldS = document.getElementById("guide-btn-secondary");
+    if (!oldP || !oldS) return;
     const newP = oldP.cloneNode(true) as HTMLElement;
     const newS = oldS.cloneNode(true) as HTMLElement;
     oldP.replaceWith(newP);
