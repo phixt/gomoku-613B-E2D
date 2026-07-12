@@ -11,6 +11,8 @@ import { LocalStorageAdapter } from "./core/LocalStorageAdapter";
 import { isTauri } from "@tauri-apps/api/core";
 import type { IStorageAdapter } from "./core/StorageAdapter";
 import { OverlayManager } from "./ui/OverlayManager";
+import { LevelManager } from "./core/LevelManager";
+import { Board } from "./core/Board";
 import { audioManager } from "./audio/AudioManager";
 import { AIEngine } from "./ai/AIEngine";
 import * as THREE from "three";
@@ -67,8 +69,8 @@ async function main(): Promise<void> {
   const guideBtn = document.getElementById("guide-btn");
   const guideScreen = document.getElementById("guide-screen");
 
-  const leftPanel = new LeftPanel(leftEl, currentTheme);
-  const rightPanel = new RightPanel(rightEl, currentTheme);
+  let leftPanel = new LeftPanel(leftEl, currentTheme);
+  let rightPanel = new RightPanel(rightEl, currentTheme);
   rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
   var overlayManager = new OverlayManager({
     onSave: function (index, data) {
@@ -160,6 +162,11 @@ async function main(): Promise<void> {
   let moveCount = 0;
   let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
   let isReplayMode = false;
+  let currentLevelIndex = 0;
+
+  const STANDARD_LEVEL = {
+    id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
+  };
 
   // ── 3D Turn Indicator (isolated scene) ─────────────────
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
@@ -239,48 +246,119 @@ async function main(): Promise<void> {
    * Start the game: hide start screen, enable keyboard input.
    */
   const startGame = (): void => {
-    if (gameStore.appState === AppState.PLAYING) return;
-    hideAllOverlays();
-        currentPlayer = 1;
-        // Reset board state for clean new game
-        rightPanel.resetGame();
-        eventBus.emit(Events.GAME_RESET);
+    initGameContext(STANDARD_LEVEL);
+  };
+
+
+
+  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
+    console.log("[Context] Initializing with size: " + levelConfig.boardSize + "x" + levelConfig.layers);
+
+    if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+    isAIThinking = false;
+
+    if (leftPanel) {
+      const oldCanvas = leftPanel.renderer.domElement;
+      if (oldCanvas.parentNode) oldCanvas.parentNode.removeChild(oldCanvas);
+    }
+    if (rightPanel) {
+      const oldCanvas = rightPanel.renderer.domElement;
+      if (oldCanvas.parentNode) oldCanvas.parentNode.removeChild(oldCanvas);
+    }
+
+    leftPanel = new LeftPanel(leftEl, currentTheme, levelConfig.boardSize, levelConfig.layers);
+    rightPanel = new RightPanel(rightEl, currentTheme, levelConfig.boardSize, levelConfig.layers);
+    const board = new Board(levelConfig.boardSize, levelConfig.layers);
+
+    rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
+    rightPanel.onPieceChanged = (b: Board, z: number): void => {
+      leftPanel.renderAllPieces(b, z);
+    };
+    rightPanel.on3DAuxDataChanged = (data): void => {
+      leftPanel.update3DAuxData(data);
+    };
+    rightPanel.onHoverChanged = (x, y, z): void => {
+      if (x >= 0) leftPanel.updateHoverMarker(x, y, z);
+      else leftPanel.clearHoverMarker();
+    };
+    rightPanel.setTurnCallback(() => {
+      if (isReplayMode) return false;
+      if (gameStore.appState !== AppState.PLAYING) return false;
+      return !isPvEMode || currentPlayer === playerColor;
+    });
+    rightPanel.onGameWonCallback = (winner: 1 | 2): void => {
+      console.log("[Game] Player", winner, "won!");
+      if (aiEngine) { aiEngine.cancel(); }
+      isAIThinking = false;
+      gameStore.appState = AppState.GAME_OVER;
+      audioManager.playSFX("win");
+      const modal = document.getElementById("victory-modal");
+      const title = document.getElementById("victory-title");
+      const subtitle = document.getElementById("victory-subtitle");
+      if (modal && title && subtitle) {
+        title.textContent = winner === 1 ? i18n.t("BLACK_WIN") : i18n.t("WHITE_WIN");
+        subtitle.textContent = i18n.t("GAME_OVER_SUBTITLE", moveCount);
+        modal.classList.remove("hidden");
+      }
+    };
+    rightPanel.onPiecePlaced = (_x: number, _y: number, _z: number, player: number): void => {
+      moveCount++;
+      moveHistory.push({ x: _x, y: _y, z: _z, player: player as 1 | 2 });
+      audioManager.playSFX("click");
+      rightPanel.updateLastMoveUI(_x, _y, _z);
+      leftPanel.updateLastMoveUI(_x, _y, _z);
+      currentPlayer = player === 1 ? 2 : 1;
+      overlayManager.showToast(currentPlayer === 1 ? i18n.t("BLACK_TURN") : i18n.t("WHITE_TURN"));
+      updateTurnIndicator(currentPlayer);
+      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+      if (isPvEMode && currentPlayer === aiColor) {
+        triggerAIMove();
+      }
+    };
+
     moveCount = 0;
     moveHistory = [];
-    // CRITICAL: Read player color from UI, DO NOT hardcode to 1
-    const cw = document.getElementById("color-white") as HTMLInputElement;
-    playerColor = (cw && cw.checked) ? 2 : 1;
-    console.log("[Game] startGame() Player color:", playerColor === 1 ? "Black" : "White");
-    if (isPvEMode) {
-      const diffSelect = document.getElementById("ai-difficulty") as HTMLSelectElement;
-      aiEngine = new AIEngine(diffSelect?.value as "Easy" | "Medium" | "Hard" || "Easy");
-      isAIThinking = false;
-      const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
-      console.log("[Game] AI initialized. AI color:", aiColor === 1 ? "Black" : "White");
-    } else {
-      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+    currentPlayer = 1;
+    focusZ = 0;
+    gameStore.setFocusZ(0);
+
+    levelConfig.initialMoves.forEach((move) => {
+      board.set(move.x, move.y, move.z, move.player);
+      moveHistory.push(move);
+    });
+
+    rightPanel.board = board;
+    rightPanel.refresh();
+    leftPanel.renderAllPieces(board, focusZ);
+
+    hideAllOverlays();
+    if (startScreen) {
+      startScreen.classList.add("hidden");
+      startScreen.style.display = "none";
     }
+    guideScreen?.classList.add("hidden");
     gameStore.appState = AppState.PLAYING;
-    rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
     audioManager.playBGM("game");
-
     updateTurnIndicator(currentPlayer);
+    forceCorrectSize();
 
-    // If AI plays Black (player chose White), AI must move first
     if (isPvEMode) {
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
       if (currentPlayer === aiColor) {
-        setTimeout(() => triggerAIMove(), 200);
+        setTimeout(() => triggerAIMove(), 300);
       }
     }
-
-    if (startScreen) {
-      startScreen.classList.add("fade-out");
-      setTimeout(() => {startScreen.style.display = "none";}, 500);
-    }
-    setTimeout(forceCorrectSize, 550);
   };
 
+  const loadLevel = (id: string): void => {
+    const config = LevelManager.getLevel(id);
+    if (!config) {
+      console.warn("[Level] Unknown level ID:", id);
+      return;
+    }
+    overlayManager.showToast("Loading: " + config.name);
+    initGameContext(config);
+  };
 
 
   const triggerAIMove = async (): Promise<void> => {
@@ -984,6 +1062,15 @@ const exitReplay = (): void => {
           } else {
             overlayManager.showToast(i18n.t("NO_SAVE"), true);
           }
+          return;
+        }
+        if (e.code === "KeyU") {
+          e.preventDefault();
+          const ids = LevelManager.getAllIds();
+          if (ids.length === 0) return;
+          const id = ids[currentLevelIndex % ids.length];
+          currentLevelIndex = (currentLevelIndex + 1) % ids.length;
+          loadLevel(id);
           return;
         }
         break;

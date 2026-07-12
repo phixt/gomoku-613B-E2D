@@ -8,14 +8,8 @@ import { resourceManager } from "../utils/ResourceManager";
 
 // Derived Z center: (LAYER_COUNT - 1) * LAYER_SPACING / 2
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
-const CENTER_Z = (LAYER_COUNT - 1) * LAYER_SPACING / 2;
-const CENTER = (BOARD_SIZE - 1) / 2;
 
-const VERTS_PER_LAYER = BOARD_SIZE * 4;  // (horizontal lines + vertical lines) * 2 vertices each
 
-const AUX_PTS: [number, number][] = [
-[0, 0], [BOARD_SIZE - 1, 0], [0, BOARD_SIZE - 1],
-[BOARD_SIZE - 1, BOARD_SIZE - 1], [CENTER, CENTER]];
 
 
 //  Canvas piece texture 
@@ -60,38 +54,41 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
 
 //  Geometry builders (parameterized spacing) 
 
-function buildGridGeometry(focusZ: number, spacing: number): THREE.BufferGeometry {
+function buildGridGeometry(focusZ: number, spacing: number, bs: number, lc: number): THREE.BufferGeometry {
   const positions: number[] = [];
   const ordered: number[] = [];
-  for (let z = 0; z < LAYER_COUNT; z++) {if (z !== focusZ) ordered.push(z);}
+  for (let z = 0; z < lc; z++) {if (z !== focusZ) ordered.push(z);}
   ordered.push(focusZ);
   for (const layer of ordered) {
     const zPos = layer * spacing;
-    for (let y = 0; y < BOARD_SIZE; y++) positions.push(0, y, zPos, BOARD_SIZE - 1, y, zPos);
-    for (let x = 0; x < BOARD_SIZE; x++) positions.push(x, 0, zPos, x, BOARD_SIZE - 1, zPos);
+    for (let y = 0; y < bs; y++) positions.push(0, y, zPos, bs - 1, y, zPos);
+    for (let x = 0; x < bs; x++) positions.push(x, 0, zPos, x, bs - 1, zPos);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  const nf = VERTS_PER_LAYER * (LAYER_COUNT - 1);
+  const vertsPerLayer = bs * 4;
+  const nf = vertsPerLayer * (lc - 1);
   g.addGroup(0, nf, 0);
-  g.addGroup(nf, VERTS_PER_LAYER, 1);
+  g.addGroup(nf, vertsPerLayer, 1);
   return g;
 }
 
-function buildAuxLinesGeometry(spacing: number): THREE.BufferGeometry {
-  const maxZ = (LAYER_COUNT - 1) * spacing;
+function buildAuxLinesGeometry(spacing: number, bs: number, lc: number): THREE.BufferGeometry {
+  const maxZ = (lc - 1) * spacing;
   const positions: number[] = [];
-  for (const [x, y] of AUX_PTS) positions.push(x, y, 0, x, y, maxZ);
+  const auxPts: [number, number][] = [[0,0],[bs-1,0],[0,bs-1],[bs-1,bs-1],[(bs-1)/2,(bs-1)/2]];
+  for (const [x, y] of auxPts) positions.push(x, y, 0, x, y, maxZ);
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   return g;
 }
 
-function buildConnectorGeometry(spacing: number): THREE.BufferGeometry {
+function buildConnectorGeometry(spacing: number, bs: number, lc: number): THREE.BufferGeometry {
   const positions: number[] = [];
-  for (let z = 0; z < LAYER_COUNT - 1; z++) {
+  for (let z = 0; z < lc - 1; z++) {
     const z0 = z * spacing,z1 = (z + 1) * spacing;
-    for (const [x, y] of AUX_PTS) positions.push(x, y, z0, x, y, z1);
+    const auxPts2: [number, number][] = [[0,0],[bs-1,0],[0,bs-1],[bs-1,bs-1],[(bs-1)/2,(bs-1)/2]];
+    for (const [x, y] of auxPts2) positions.push(x, y, z0, x, y, z1);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -132,11 +129,15 @@ export class LeftPanel {
   private ghostWhiteMat!: THREE.SpriteMaterial;
 
 
+  private _boardSize: number;
+  private _layerCount: number;
   private _layerSpacing: number = 3.5;
   private _previousSpacing: number | null = null;
   private _board: Board | null = null;
 
-  constructor(container: HTMLElement, theme: Theme) {
+  constructor(container: HTMLElement, theme: Theme, boardSize: number = BOARD_SIZE, layerCount: number = LAYER_COUNT) {
+    this._boardSize = boardSize;
+    this._layerCount = layerCount;
     this.container = container;
     this.theme = theme;
     const w = safeWidth(container),h = safeHeight(container);
@@ -157,7 +158,7 @@ export class LeftPanel {
     this.camera = new THREE.PerspectiveCamera(15, w / h, 0.1, 200);
     this.camera.up.set(0, 1, 0);
     this.camera.position.set(20, 8, 40);
-    this.camera.lookAt(CENTER, CENTER, CENTER_Z);
+    const c_look = (this._boardSize - 1) / 2; const cz_look = (this._layerCount - 1) * LAYER_SPACING / 2; this.camera.lookAt(c_look, c_look, cz_look);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(w, h);
@@ -207,10 +208,10 @@ export class LeftPanel {
 
 
   private checkBoundarySafety(): void {
-    const target = new THREE.Vector3(CENTER, CENTER, CENTER_Z);
+    const c_tgt = (this._boardSize - 1) / 2; const cz_tgt = (this._layerCount - 1) * LAYER_SPACING / 2; const target = new THREE.Vector3(c_tgt, c_tgt, cz_tgt);
     const dist = this.camera.position.distanceTo(target);
     const vh = 2 * dist * Math.tan(this.camera.fov * Math.PI / 360);
-    if (vh < BOARD_SIZE) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${BOARD_SIZE}.`);
+    if (vh < this._boardSize) console.warn(`[LeftPanel] Board may be clipped: visibleHeight=${vh.toFixed(1)} < ${this._boardSize}.`);
   }
 
 
@@ -219,30 +220,30 @@ export class LeftPanel {
     const s = this._layerSpacing;
 
 
-    const geo = buildGridGeometry(this.focusZ, s);
+    const geo = buildGridGeometry(this.focusZ, s, this._boardSize, this._layerCount);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
     this.scene.add(this.gridSegments);
 
 
-    const auxGeo = buildAuxLinesGeometry(s);
+    const auxGeo = buildAuxLinesGeometry(s, this._boardSize, this._layerCount);
     this.auxSegments = new THREE.LineSegments(auxGeo, new THREE.LineBasicMaterial({ color: this.theme.auxLineColor }));
     this.scene.add(this.auxSegments);
 
 
-    const connGeo = buildConnectorGeometry(s);
+    const connGeo = buildConnectorGeometry(s, this._boardSize, this._layerCount);
     this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: GHOST_CONNECTOR_OPACITY }));
     this.scene.add(this.connectorSegments);
 
 
     this.markerGroup = new THREE.Group();
-    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+    for (let layer = 0; layer < this._layerCount; layer++) {
       const sphere = new THREE.Mesh(
         resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 })
       );
-      sphere.position.set(CENTER, CENTER, layer * s);
+      const c_sph = (this._boardSize - 1) / 2; sphere.position.set(c_sph, c_sph, layer * s);
       sphere.userData = { layer };
       this.markerGroup.add(sphere);
     }
@@ -272,10 +273,10 @@ export class LeftPanel {
 
 
   highlightFocusLayer(z: number): void {
-    this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
+    this.focusZ = Math.max(0, Math.min(this._layerCount - 1, z));
     const old = this.gridSegments;
     const s = this._layerSpacing;
-    const geo = buildGridGeometry(this.focusZ, s);
+    const geo = buildGridGeometry(this.focusZ, s, this._boardSize, this._layerCount);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
@@ -288,7 +289,7 @@ export class LeftPanel {
   }
 
   private highlightCenterMarker(focus: number): void {
-    for (let i = 0; i < LAYER_COUNT; i++) {
+    for (let i = 0; i < this._layerCount; i++) {
       const sphere = this.markerGroup.children[i] as THREE.Mesh;
       const mat = sphere.material as THREE.MeshBasicMaterial;
       if (i === focus) {sphere.scale.setScalar(1.5);mat.color.setHex(this.isColorblindMode ? COLOR_ENEMY_BLIND : COLOR_ENEMY_NORMAL);} else
@@ -300,7 +301,7 @@ export class LeftPanel {
 
   public rotateY(direction: number): void {
     const angle = direction * Math.PI / 2;
-    const target = new THREE.Vector3(CENTER, CENTER, CENTER_Z);
+    const c_tgt = (this._boardSize - 1) / 2; const cz_tgt = (this._layerCount - 1) * LAYER_SPACING / 2; const target = new THREE.Vector3(c_tgt, c_tgt, cz_tgt);
     const offset = this.camera.position.clone().sub(target);
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
     this.camera.position.copy(target).add(offset);
@@ -336,7 +337,7 @@ export class LeftPanel {
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       }
 
-      this.camera.lookAt(CENTER, CENTER, CENTER_Z);
+      const c_look = (this._boardSize - 1) / 2; const cz_look = (this._layerCount - 1) * LAYER_SPACING / 2; this.camera.lookAt(c_look, c_look, cz_look);
       this.camera.updateProjectionMatrix();
     } else {
 
@@ -355,8 +356,8 @@ export class LeftPanel {
     this.piecesGroup.clear();
     const scale = 0.8;
     // Clamp loops to configured bounds (safe against runtime config changes)
-    const maxZ = Math.min(LAYER_COUNT, board.layers);
-    const maxXY = Math.min(BOARD_SIZE, board.size);
+    const maxZ = Math.min(this._layerCount, board.layers);
+    const maxXY = Math.min(this._boardSize, board.size);
     for (let z = 0; z < maxZ; z++) {
       const zPos = z * s;
       const isFocus = z === focusZ;
@@ -496,7 +497,7 @@ export class LeftPanel {
     // Rebuild grid segments (same pattern as highlightFocusLayer)
     const oldGrid = this.gridSegments;
     const s = this._layerSpacing;
-    const geo = buildGridGeometry(this.focusZ, s);
+    const geo = buildGridGeometry(this.focusZ, s, this._boardSize, this._layerCount);
     const m1 = new THREE.LineBasicMaterial({ color: this.theme.ghostGridColor, transparent: true, opacity: GHOST_GRID_OPACITY });
     const m2 = new THREE.LineBasicMaterial({ color: this.theme.focusGridColor });
     this.gridSegments = new THREE.LineSegments(geo, [m1, m2]);
@@ -508,7 +509,7 @@ export class LeftPanel {
 
     // Rebuild aux segments
     const oldAux = this.auxSegments;
-    const auxGeo = buildAuxLinesGeometry(s);
+    const auxGeo = buildAuxLinesGeometry(s, this._boardSize, this._layerCount);
     this.auxSegments = new THREE.LineSegments(auxGeo, new THREE.LineBasicMaterial({ color: this.theme.auxLineColor }));
     this.scene.remove(oldAux);
     this.scene.add(this.auxSegments);
@@ -517,7 +518,7 @@ export class LeftPanel {
 
     // Rebuild connector segments
     const oldConn = this.connectorSegments;
-    const connGeo = buildConnectorGeometry(s);
+    const connGeo = buildConnectorGeometry(s, this._boardSize, this._layerCount);
     this.connectorSegments = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({ color: this.theme.gridColor, transparent: true, opacity: GHOST_CONNECTOR_OPACITY }));
     this.scene.remove(oldConn);
     this.scene.add(this.connectorSegments);
@@ -532,12 +533,12 @@ export class LeftPanel {
       this.markerGroup.remove(c);
     }
     this.markerGroup = new THREE.Group();
-    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+    for (let layer = 0; layer < this._layerCount; layer++) {
       const sphere = new THREE.Mesh(
         resourceManager.getGeometry("marker"),
         new THREE.MeshBasicMaterial({ color: 0x8b0000 })
       );
-      sphere.position.set(CENTER, CENTER, layer * s);
+      const c_sph = (this._boardSize - 1) / 2; sphere.position.set(c_sph, c_sph, layer * s);
       sphere.userData = { layer };
       this.markerGroup.add(sphere);
     }
@@ -557,8 +558,8 @@ export class LeftPanel {
     }
 
     // Sync camera lookAt to new Z center
-    const newCenterZ = (LAYER_COUNT - 1) * this._layerSpacing / 2;
-    this.camera.lookAt(CENTER, CENTER, newCenterZ);
+    const newCenterZ = (this._layerCount - 1) * this._layerSpacing / 2;
+    const c_ncz = (this._boardSize - 1) / 2; this.camera.lookAt(c_ncz, c_ncz, newCenterZ);
     this.checkBoundarySafety();
   }
 
@@ -576,7 +577,7 @@ export class LeftPanel {
 
   updateLastMoveUI(x: number, y: number, z: number): void {
     // Boundary check: reject out-of-range coordinates (phantom ring prevention)
-    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || z < 0 || z >= LAYER_COUNT) return;
+    if (x < 0 || x >= this._boardSize || y < 0 || y >= this._boardSize || z < 0 || z >= this._layerCount) return;
     const zPos = z * this._layerSpacing;
     this.lastMoveRing.position.set(x, y, zPos + 0.1);
     this.lastMoveRing.visible = true;
@@ -588,7 +589,7 @@ export class LeftPanel {
     if (Math.abs(delta) > 0.01) {
       this.adjustLayerSpacing(delta);
     }
-    this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, focusZ));
+    this.focusZ = Math.max(0, Math.min(this._layerCount - 1, focusZ));
     this.highlightFocusLayer(this.focusZ);
   }
 

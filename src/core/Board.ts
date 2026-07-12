@@ -1,29 +1,31 @@
 import type { CellState, Vector3Int } from "./Types";
 import { BOARD_SIZE, LAYER_COUNT } from "./Config";
 
-const CELL_TOTAL = BOARD_SIZE * BOARD_SIZE * LAYER_COUNT;
-
 export class Board {
   private data: Uint8Array;
+  private _size: number;
+  private _layers: number;
 
-  constructor() {
-    this.data = new Uint8Array(CELL_TOTAL);
+  constructor(size: number = BOARD_SIZE, layers: number = LAYER_COUNT) {
+    this._size = size;
+    this._layers = layers;
+    this.data = new Uint8Array(size * size * layers);
   }
 
   private index(x: number, y: number, z: number): number {
-    return z * BOARD_SIZE * BOARD_SIZE + y * BOARD_SIZE + x;
+    return z * this._size * this._size + y * this._size + x;
   }
 
   get(x: number, y: number, z: number): CellState {
-    if (x < 0 || x >= this.size || y < 0 || y >= this.size || z < 0 || z >= this.layers) {
-      return 0; // Return empty for out-of-bounds
+    if (x < 0 || x >= this._size || y < 0 || y >= this._size || z < 0 || z >= this._layers) {
+      return 0;
     }
     return this.data[this.index(x, y, z)] as CellState;
   }
 
   set(x: number, y: number, z: number, state: CellState): void {
-    if (x < 0 || x >= this.size || y < 0 || y >= this.size || z < 0 || z >= this.layers) {
-      return; // Ignore out-of-bounds writes
+    if (x < 0 || x >= this._size || y < 0 || y >= this._size || z < 0 || z >= this._layers) {
+      return;
     }
     this.data[this.index(x, y, z)] = state;
   }
@@ -37,9 +39,9 @@ export class Board {
   }
 
   forEach(fn: (x: number, y: number, z: number, state: CellState) => void): void {
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let z = 0; z < this._layers; z++) {
+      for (let y = 0; y < this._size; y++) {
+        for (let x = 0; x < this._size; x++) {
           fn(x, y, z, this.get(x, y, z));
         }
       }
@@ -51,10 +53,10 @@ export class Board {
   }
 
   get size(): number {
-    return BOARD_SIZE;
+    return this._size;
   }
 
   get layers(): number {
-    return LAYER_COUNT;
+    return this._layers;
   }
 }

@@ -9,16 +9,15 @@ import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
 
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
-const CENTER = (BOARD_SIZE - 1) / 2;
 const GHOST_OPACITY = HOVER_PIECE_OPACITY;
 
 const DIRS_2D: [number, number][] = [[1, 0], [0, 1], [1, 1], [1, -1]];
 
 
-function buildLayerGridGeometry(): THREE.BufferGeometry {
+function buildLayerGridGeometry(bs: number): THREE.BufferGeometry {
   const p: number[] = [];
-  for (let y = 0; y < BOARD_SIZE; y++) p.push(0, y, 0, BOARD_SIZE - 1, y, 0);
-  for (let x = 0; x < BOARD_SIZE; x++) p.push(x, 0, 0, x, BOARD_SIZE - 1, 0);
+  for (let y = 0; y < bs; y++) p.push(0, y, 0, bs - 1, y, 0);
+  for (let x = 0; x < bs; x++) p.push(x, 0, 0, x, bs - 1, 0);
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
   return g;
@@ -58,11 +57,11 @@ function createPieceTexture(isBlack: boolean, isGhost = false): THREE.CanvasText
 
 
 export class RightPanel {
-  public static readonly BOARD_SIZE = 13;
+  public static get BOARD_SIZE(): number { return BOARD_SIZE; }
   public static readonly GRID_PADDING = 0.5;
 
   public readonly renderer: THREE.WebGLRenderer;
-  public readonly board: Board;
+  public board: Board;
   public onPieceChanged: ((board: Board, focusZ: number) => void) | null = null;
   public on3DAuxDataChanged: ((data: AuxData3D) => void) | null = null;
   public onHoverChanged: ((x: number, y: number, z: number) => void) | null = null;
@@ -103,6 +102,8 @@ export class RightPanel {
   private _hoverWorldPos: THREE.Vector3 | null = null;
   private isGameActive: () => boolean = () => true;
   private isMyTurn: () => boolean = () => true;
+  private _boardSize: number;
+  private _layerCount: number;
   private isMirrored: boolean = true;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundClick: (e: MouseEvent) => void;
@@ -116,7 +117,9 @@ export class RightPanel {
     return this.isColorblindMode ? COLOR_ENEMY_BLIND : COLOR_ENEMY_NORMAL;
   }
 
-  constructor(container: HTMLElement, theme: Theme) {
+  constructor(container: HTMLElement, theme: Theme, boardSize: number = BOARD_SIZE, layerCount: number = LAYER_COUNT) {
+    this._boardSize = boardSize;
+    this._layerCount = layerCount;
     this.container = container;
     this.theme = theme;
     this.board = new Board();
@@ -126,9 +129,9 @@ export class RightPanel {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera((-BOARD_SIZE / 2), (BOARD_SIZE / 2), (BOARD_SIZE / 2), (-BOARD_SIZE / 2), 0.1, 1000);
-    this.camera.position.set(CENTER, CENTER, 50);
-    this.camera.lookAt(CENTER, CENTER, 0);
+    this.camera = new THREE.OrthographicCamera((-this._boardSize / 2), (this._boardSize / 2), (this._boardSize / 2), (-this._boardSize / 2), 0.1, 1000);
+    const c_init = (this._boardSize - 1) / 2; this.camera.position.set(c_init, c_init, 50);
+    const c_init2 = (this._boardSize - 1) / 2; this.camera.lookAt(c_init2, c_init2, 0);
 
     this.blackTex = createPieceTexture(true);
     this.whiteTex = createPieceTexture(false);
@@ -138,19 +141,19 @@ export class RightPanel {
     this.blackMat = new THREE.MeshBasicMaterial({ map: this.blackTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
     this.whiteMat = new THREE.MeshBasicMaterial({ map: this.whiteTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: true });
     this.gridGroup = new THREE.Group();
-    const gridGeo = buildLayerGridGeometry();
+    const gridGeo = buildLayerGridGeometry(this._boardSize);
     const gridMat = new THREE.LineBasicMaterial({ color: theme.gridColor, transparent: true, opacity: 1 });
     this.gridSegments = new THREE.LineSegments(gridGeo, gridMat);
     this.gridGroup.add(this.gridSegments);
 
     // --- Star points for board navigation ---
-    const starOffset = Math.max(1, Math.floor(BOARD_SIZE / 5));
+    const starOffset = Math.max(1, Math.floor(this._boardSize / 5));
     const starPositions = [
-    { x: CENTER, y: CENTER },
+    { x: (this._boardSize - 1) / 2, y: (this._boardSize - 1) / 2 },
     { x: starOffset, y: starOffset },
-    { x: starOffset, y: BOARD_SIZE - 1 - starOffset },
-    { x: BOARD_SIZE - 1 - starOffset, y: starOffset },
-    { x: BOARD_SIZE - 1 - starOffset, y: BOARD_SIZE - 1 - starOffset }];
+    { x: starOffset, y: this._boardSize - 1 - starOffset },
+    { x: this._boardSize - 1 - starOffset, y: starOffset },
+    { x: BOARD_SIZE - 1 - starOffset, y: this._boardSize - 1 - starOffset }];
 
     const starGeo = new THREE.CircleGeometry(0.12, 32);
     this.starMat = new THREE.MeshBasicMaterial({
@@ -241,7 +244,7 @@ export class RightPanel {
     vec.unproject(this.camera);
     const gx = Math.round(vec.x),gy = Math.round(vec.y);
 
-    if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) {
+    if (gx < 0 || gx >= this._boardSize || gy < 0 || gy >= this._boardSize || this.board.get(gx, gy, this.focusZ) !== 0) {
       this.hideGhostPiece();
       this.hoverValid = false;
       this._hoverWorldPos = null;
@@ -284,7 +287,7 @@ export class RightPanel {
 
   public updateLastMoveUI(x: number, y: number, z: number): void {
     // Boundary check: reject out-of-range coordinates
-    if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE || z < 0 || z >= LAYER_COUNT) return;
+    if (x < 0 || x >= this._boardSize || y < 0 || y >= this._boardSize || z < 0 || z >= this._layerCount) return;
     this.lastMove = { x, y, z };
     this.renderPieces();
   }
@@ -317,11 +320,11 @@ export class RightPanel {
   /** Capture a full 3D board snapshot for serialization. */
   getBoardSnapshot(): number[][][] {
     const snapshot: number[][][] = [];
-    for (let z = 0; z < LAYER_COUNT; z++) {
+    for (let z = 0; z < this._layerCount; z++) {
       const layer: number[][] = [];
-      for (let y = 0; y < BOARD_SIZE; y++) {
+      for (let y = 0; y < this._boardSize; y++) {
         const row: number[] = [];
-        for (let x = 0; x < BOARD_SIZE; x++) {
+        for (let x = 0; x < this._boardSize; x++) {
           row.push(this.board.get(x, y, z));
         }
         layer.push(row);
@@ -335,9 +338,9 @@ export class RightPanel {
   loadBoardSnapshot(snapshot: number[][][]): void {
     this.board.reset();
     this.lastMove = null;
-    for (let z = 0; z < Math.min(snapshot.length, LAYER_COUNT); z++) {
-      for (let y = 0; y < Math.min(snapshot[z]?.length ?? 0, BOARD_SIZE); y++) {
-        for (let x = 0; x < Math.min(snapshot[z][y]?.length ?? 0, BOARD_SIZE); x++) {
+    for (let z = 0; z < Math.min(snapshot.length, this._layerCount); z++) {
+      for (let y = 0; y < Math.min(snapshot[z]?.length ?? 0, this._boardSize); y++) {
+        for (let x = 0; x < Math.min(snapshot[z][y]?.length ?? 0, this._boardSize); x++) {
           const val = snapshot[z][y][x] as 0 | 1 | 2;
           if (val !== 0) this.board.set(x, y, z, val);
         }
@@ -586,7 +589,7 @@ export class RightPanel {
     if (!this.isMyTurn()) return;
     if (!this.hoverValid) return;
     const gx = this.hoverX,gy = this.hoverY;
-    if (gx < 0 || gx >= BOARD_SIZE || gy < 0 || gy >= BOARD_SIZE || this.board.get(gx, gy, this.focusZ) !== 0) return;
+    if (gx < 0 || gx >= this._boardSize || gy < 0 || gy >= this._boardSize || this.board.get(gx, gy, this.focusZ) !== 0) return;
     this.board.set(gx, gy, this.focusZ, this._currentPlayer);
     this.lastMove = { x: gx, y: gy, z: this.focusZ };
     const actualState = this.board.get(gx, gy, this.focusZ);
@@ -619,8 +622,8 @@ export class RightPanel {
     this.ghostMesh = null;
 
     const geo = resourceManager.getGeometry("piece");
-    for (let y = 0; y < BOARD_SIZE; y++) {
-      for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let y = 0; y < this._boardSize; y++) {
+      for (let x = 0; x < this._boardSize; x++) {
         const state = this.board.get(x, y, this.focusZ);
         if (state === 0) continue;
         const mat = state === BLACK ? this.blackMat : this.whiteMat;
@@ -632,8 +635,8 @@ export class RightPanel {
 
     // Show last-move highlight if on the current layer (bounds-safe)
     if (this.lastMove && this.lastMove.z === this.focusZ
-        && this.lastMove.x >= 0 && this.lastMove.x < BOARD_SIZE
-        && this.lastMove.y >= 0 && this.lastMove.y < BOARD_SIZE) {
+        && this.lastMove.x >= 0 && this.lastMove.x < this._boardSize
+        && this.lastMove.y >= 0 && this.lastMove.y < this._boardSize) {
       this.lastMoveRing.position.set(this.lastMove.x, this.lastMove.y, 0.02);
       this.lastMoveRing.visible = true;
     } else {
@@ -646,16 +649,16 @@ export class RightPanel {
     this.renderPieces();
   }private applyFocusZ(): void {
     const zPos = this.focusZ * LAYER_SPACING;
-    this.camera.position.set(CENTER, CENTER, zPos + 50);
+    const c_afz = (this._boardSize - 1) / 2; this.camera.position.set(c_afz, c_afz, zPos + 50);
     this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(CENTER, CENTER, zPos);
+    const c_afz2 = (this._boardSize - 1) / 2; this.camera.lookAt(c_afz2, c_afz2, zPos);
     this.gridGroup.position.z = zPos;
     this.renderPieces();
     this.clearAllOverlays();
   }
 
   setFocusZ(z: number): void {
-    this.focusZ = Math.max(0, Math.min(LAYER_COUNT - 1, z));
+    this.focusZ = Math.max(0, Math.min(this._layerCount - 1, z));
     this.applyFocusZ();
   }
 
@@ -701,7 +704,7 @@ export class RightPanel {
     this.renderer.setSize(containerWidth, containerHeight);
 
 
-    const boardWorldSize = RightPanel.BOARD_SIZE - 1; // 12
+    const boardWorldSize = this._boardSize - 1; // 12
 
 
     const totalSize = boardWorldSize + RightPanel.GRID_PADDING * 2;
