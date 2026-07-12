@@ -1,6 +1,7 @@
 import zhCN from "../locales/zh-CN";
 import enUS from "../locales/en-US";
 import jaJP from "../locales/ja-JP";
+import zhHant from "../locales/zh-Hant";
 
 // Derive key union from zh-CN (authoritative key set)
 type LocaleKey = keyof typeof zhCN;
@@ -10,6 +11,7 @@ const LOCALES: Record<string, Locale> = {
   "zh-CN": zhCN as Locale,
   "en-US": enUS as Locale,
   "ja-JP": jaJP as Locale,
+  "zh-Hant": zhHant as Locale,
 };
 
 const STORAGE_KEY = "app_lang";

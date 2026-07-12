@@ -1,4 +1,15 @@
 /* =========================================
+   Local font (primary) ? CDN fallback in index.html
+   ========================================= */
+@font-face {
+    font-family: 'LXGW WenKai';
+    src: url('/fonts/LXGWWenKaiLite-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* =========================================
    1. 游戏主界面布局 (防塌陷核心，严禁修改)
    ========================================= */
 * {

@@ -1,7 +1,12 @@
 {
   "name": "gomoku-613b-e2d",
+  "license": "MIT",
+  "homepage": "https://github.com/phixt/gomoku-613B-E2D",
+  "bugs": {
+    "url": "https://github.com/phixt/gomoku-613B-E2D/issues"
+  },
   "private": true,
-  "version": "0.6.2",
+  "version": "0.6.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,5 +33,14 @@
     "@tauri-apps/plugin-store": "^2.4.3",
     "@tweenjs/tween.js": "^25.0.0",
     "three": "^0.185.1"
+  },
+  "thirdPartyNotices": {
+    "fonts": {
+      "LXGW WenKai": {
+        "license": "SIL OFL 1.1",
+        "copyright": "Copyright (c) 2021, LXGW",
+        "url": "https://github.com/lxgw/LxgwWenKai"
+      }
+    }
   }
 }
