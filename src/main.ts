@@ -1,4 +1,4 @@
-﻿import "./style/main.css";
+import "./style/main.css";
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
@@ -359,6 +359,49 @@ async function main(): Promise<void> {
     initGameContext(config);
   };
 
+
+  const setupCustomSandbox = (): void => {
+    const modal = document.getElementById("custom-sandbox-modal");
+    const sizeSlider = document.getElementById("custom-board-size") as HTMLInputElement | null;
+    const sizeVal = document.getElementById("custom-board-size-val");
+    const layerSlider = document.getElementById("custom-layers") as HTMLInputElement | null;
+    const layerVal = document.getElementById("custom-layers-val");
+    const startBtn = document.getElementById("btn-start-custom");
+    const cancelBtn = document.getElementById("btn-cancel-custom");
+    const customBtn = document.getElementById("custom-btn");
+
+    if (!modal || !sizeSlider || !layerSlider || !startBtn || !cancelBtn) return;
+
+    sizeSlider.addEventListener("input", () => {
+      if (sizeVal) sizeVal.textContent = sizeSlider.value;
+    });
+    layerSlider.addEventListener("input", () => {
+      if (layerVal) layerVal.textContent = layerSlider.value;
+    });
+
+    startBtn.addEventListener("click", () => {
+      const size = parseInt(sizeSlider.value, 10);
+      const layers = parseInt(layerSlider.value, 10);
+      const customConfig = {
+        id: "custom_sandbox",
+        name: "Custom " + size + "x" + size + "x" + layers,
+        boardSize: size,
+        layers: layers,
+        initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
+      };
+      modal.classList.add("hidden");
+      overlayManager.showToast("Starting: " + customConfig.name);
+      initGameContext(customConfig);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+
+    customBtn?.addEventListener("click", () => {
+      modal.classList.remove("hidden");
+    });
+  };
 
   const triggerAIMove = async (): Promise<void> => {
     if (!aiEngine || isAIThinking) return;
@@ -1350,6 +1393,7 @@ const exitReplay = (): void => {
 
   // Initial injection
   injectUITexts();
+  setupCustomSandbox();
 }
 
 main();

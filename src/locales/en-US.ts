@@ -1,4 +1,4 @@
-const enUS = {
+﻿const enUS = {
   // Game state & turns
   BLACK_TURN: "Black's Turn",
   WHITE_TURN: "White's Turn",
@@ -115,6 +115,13 @@ const enUS = {
   // Level system
   BTN_LEVEL_MODE: "Level Mode",
   LEVEL_SELECT_TITLE: "Select Level",
+
+  // Custom Sandbox
+  BTN_CUSTOM_SANDBOX: "Custom Sandbox",
+  CUSTOM_SANDBOX_TITLE: "Custom Sandbox",
+  BOARD_SIZE_LABEL: "Board Size (Odd)",
+  LAYER_COUNT_LABEL: "Layers",
+  BTN_START_CUSTOM: "Start Custom Game",
 
 } as const;
 

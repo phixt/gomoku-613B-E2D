@@ -1,4 +1,4 @@
-const zhCN = {
+﻿const zhCN = {
   // Game state & turns
   BLACK_TURN: "黑方回合",
   WHITE_TURN: "白方回合",
@@ -115,6 +115,13 @@ const zhCN = {
   // Level system
   BTN_LEVEL_MODE: "关卡模式",
   LEVEL_SELECT_TITLE: "关卡选择",
+
+  // Custom Sandbox
+  BTN_CUSTOM_SANDBOX: "自定义沙盒",
+  CUSTOM_SANDBOX_TITLE: "自定义沙盒",
+  BOARD_SIZE_LABEL: "棋盘规模 (奇数)",
+  LAYER_COUNT_LABEL: "层数",
+  BTN_START_CUSTOM: "开始自定义对局",
 
 } as const;
 

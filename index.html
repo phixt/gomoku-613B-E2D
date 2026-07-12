@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -37,6 +37,7 @@
                 <button id="esc-save" class="esc-btn"><span data-i18n="BTN_SAVE">保存进度</span> <kbd>S</kbd></button>
                 <button id="esc-load" class="esc-btn"><span data-i18n="BTN_LOAD">加载进度</span> <kbd>L</kbd></button>
                 <button id="esc-guide" class="esc-btn"><span data-i18n="BTN_GUIDE">快捷键说明</span> <kbd>G</kbd></button>
+                <button id="custom-btn" class="secondary-btn" data-i18n="BTN_CUSTOM_SANDBOX">自定义沙盒</button>
                 <button id="esc-title" class="esc-btn danger"><span data-i18n="BTN_BACK">回到标题</span> <kbd>B</kbd></button>
             </div>
         </div>
@@ -273,7 +274,36 @@
             <h3 data-i18n="LEVEL_SELECT_TITLE">关卡选择</h3>
             <div id="level-list" class="level-list"></div>
             <div class="modal-actions">
-                <button id="level-select-cancel" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
+                <button id="level-select-cancel" class="btn-secondary" data-i18n="SLOT_CANCEL">鍙栨秷</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Custom Sandbox Modal -->
+    <div id="custom-sandbox-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <h3 data-i18n="CUSTOM_SANDBOX_TITLE">自定义沙盒</h3>
+
+            <div class="setting-group">
+                <label class="setting-label" data-i18n="BOARD_SIZE_LABEL">棋盘规模 (奇数)</label>
+                <div class="slider-container">
+                    <input type="range" id="custom-board-size" class="custom-slider" min="5" max="19" step="2" value="9">
+                    <output id="custom-board-size-val" class="slider-value">9</output>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label" data-i18n="LAYER_COUNT_LABEL">层数</label>
+                <div class="slider-container">
+                    <input type="range" id="custom-layers" class="custom-slider" min="1" max="10" step="1" value="1">
+                    <output id="custom-layers-val" class="slider-value">1</output>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 24px;">
+                <button id="btn-start-custom" class="btn-primary" data-i18n="BTN_START_CUSTOM">开始自定义对局</button>
+                <button id="btn-cancel-custom" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
             </div>
         </div>
     </div>

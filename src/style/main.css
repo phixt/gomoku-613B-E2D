@@ -1,4 +1,4 @@
-/* =========================================
+﻿/* =========================================
    Local font (primary) ? CDN fallback in index.html
    ========================================= */
 @font-face {
@@ -1687,6 +1687,137 @@ body.dark-theme .custom-select option {
     flex-shrink: 0;
     width: auto; /* 或者固定一个合适的宽度，如 width: 120px; */
 }
+
+/* =========================================
+   Custom Sandbox Modal - Slider Styles
+   ========================================= */
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.slider-container .custom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    background: #D5E0D5;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.slider-container .custom-slider:focus,
+.slider-container .custom-slider:hover {
+    background: #C5D5C0;
+}
+
+body.dark-theme .slider-container .custom-slider {
+    background: #3A4A4E;
+}
+
+body.dark-theme .slider-container .custom-slider:focus,
+body.dark-theme .slider-container .custom-slider:hover {
+    background: #4A5A5E;
+}
+
+.slider-container .custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2C4A4E;
+    border: 2px solid #F4F9F4;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.slider-container .custom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+body.dark-theme .slider-container .custom-slider::-webkit-slider-thumb {
+    background: #C8E0E4;
+    border-color: #1A2629;
+}
+
+.slider-container .custom-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2C4A4E;
+    border: 2px solid #F4F9F4;
+    cursor: pointer;
+}
+
+body.dark-theme .slider-container .custom-slider::-moz-range-thumb {
+    background: #C8E0E4;
+    border-color: #1A2629;
+}
+
+.slider-container .slider-value {
+    min-width: 28px;
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    color: #2C4A4E;
+    font-family: 'Consolas', monospace;
+}
+
+body.dark-theme .slider-container .slider-value {
+    color: #C8E0E4;
+}
+
+/* Custom Sandbox modal: setting-group horizontal layout */
+#custom-sandbox-modal .setting-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    margin: 14px 0;
+    padding: 0 8px;
+    width: 100%;
+}
+
+#custom-sandbox-modal .setting-group .setting-label {
+    min-width: 100px;
+    flex-shrink: 0;
+    text-align: left;
+    font-size: 0.9em;
+}
+
+#custom-sandbox-modal .modal-content {
+    min-width: 360px;
+}
+
+/* btn-primary for custom sandbox modal */
+#custom-sandbox-modal .btn-primary {
+    padding: 8px 25px;
+    background: #2C4A4E;
+    color: #F4F9F4;
+    border: 1px solid #2C4A4E;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.2s;
+}
+#custom-sandbox-modal .btn-primary:hover {
+    background: #1A3A3E;
+}
+body.dark-theme #custom-sandbox-modal .btn-primary {
+    background: #C8E0E4;
+    color: #1A2629;
+    border-color: #C8E0E4;
+}
+body.dark-theme #custom-sandbox-modal .btn-primary:hover {
+    background: #A0C0C4;
+}
+
+
 /* =========================================
    Level Select Modal
    ========================================= */

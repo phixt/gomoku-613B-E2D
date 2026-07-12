@@ -1,4 +1,4 @@
-const jaJP = {
+﻿const jaJP = {
   // Game state & turns
   BLACK_TURN: "黒の番",
   WHITE_TURN: "白の番",
@@ -116,6 +116,13 @@ const jaJP = {
   // Level system
   BTN_LEVEL_MODE: "ステージモード",
   LEVEL_SELECT_TITLE: "ステージ選択",
+
+  // Custom Sandbox
+  BTN_CUSTOM_SANDBOX: "カスタムサンドボックス",
+  CUSTOM_SANDBOX_TITLE: "カスタムサンドボックス",
+  BOARD_SIZE_LABEL: "盤面サイズ (奇数)",
+  LAYER_COUNT_LABEL: "層数",
+  BTN_START_CUSTOM: "カスタム対局を開始",
 
 } as const;
 

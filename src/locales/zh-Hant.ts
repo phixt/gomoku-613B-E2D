@@ -1,4 +1,4 @@
-// zh-Hant.ts
+﻿// zh-Hant.ts
 const zhHant = {
   // Game state & turns
   BLACK_TURN: "黑方回合",
@@ -117,6 +117,13 @@ const zhHant = {
   // Level system
   BTN_LEVEL_MODE: "關卡模式",
   LEVEL_SELECT_TITLE: "關卡選擇",
+
+  // Custom Sandbox
+  BTN_CUSTOM_SANDBOX: "自訂沙盒",
+  CUSTOM_SANDBOX_TITLE: "自訂沙盒",
+  BOARD_SIZE_LABEL: "棋盤規模 (奇數)",
+  LAYER_COUNT_LABEL: "層數",
+  BTN_START_CUSTOM: "開始自訂對局",
 
 } as const;
 
