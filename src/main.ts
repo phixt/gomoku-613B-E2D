@@ -196,8 +196,8 @@ async function main(): Promise<void> {
 
     // Use same geometry as board pieces
     const geo = resourceManager.getGeometry("piece");
-    indicatorBlackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1 });
-    indicatorWhiteMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4, metalness: 0.1 });
+    indicatorBlackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1, side: THREE.DoubleSide });
+    indicatorWhiteMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide });
 
     indicatorMesh = new THREE.Mesh(geo, indicatorBlackMat);
     indicatorScene.add(indicatorMesh);
