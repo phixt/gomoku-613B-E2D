@@ -1,4 +1,4 @@
-﻿const zhCN = {
+const zhCN = {
   // Game state & turns
   BLACK_TURN: "黑方回合",
   WHITE_TURN: "白方回合",

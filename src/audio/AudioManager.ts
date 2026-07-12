@@ -150,7 +150,7 @@ class AudioManager {
   private initialized: boolean = false;
   private pendingInit: (() => void)[] = [];
 
-  // Dynamic intensity (0~1) – auto-adjusted via events
+  // Dynamic intensity (0~1) 鈥?auto-adjusted via events
   private intensity: number = 0;
 
   private constructor() {
@@ -269,7 +269,7 @@ class AudioManager {
         const currentFreq = glide.from + (glide.to - glide.from) * progress;
         let glideSample = 0;
         for (const freq of frequencies) {
-          // only apply to the first (or all) – here we replace the main tone
+          // only apply to the first (or all) 鈥?here we replace the main tone
           // For simplicity, we generate a new sine based on glide frequency
           if (freq === frequencies[0]) {
             glideSample = Math.sin(2 * Math.PI * currentFreq * t);

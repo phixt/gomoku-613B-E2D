@@ -1,4 +1,4 @@
-﻿// zh-Hant.ts
+// zh-Hant.ts
 const zhHant = {
   // Game state & turns
   BLACK_TURN: "黑方回合",

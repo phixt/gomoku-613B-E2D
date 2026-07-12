@@ -1,4 +1,4 @@
-﻿const jaJP = {
+const jaJP = {
   // Game state & turns
   BLACK_TURN: "黒の番",
   WHITE_TURN: "白の番",

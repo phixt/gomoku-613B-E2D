@@ -1,4 +1,4 @@
-﻿const enUS = {
+const enUS = {
   // Game state & turns
   BLACK_TURN: "Black's Turn",
   WHITE_TURN: "White's Turn",

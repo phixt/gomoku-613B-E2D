@@ -57,7 +57,7 @@ export class AIEngine {
   }
 
   // ============================================================
-  //  PUBLIC think() — all difficulties use DIRECTIONS_3D
+  //  PUBLIC think() 鈥?all difficulties use DIRECTIONS_3D
   //  Difficulty is differentiated by candidate scope, not direction set.
   // ============================================================
   async think(board: Board): Promise<AIMove | null> {
@@ -83,7 +83,7 @@ export class AIEngine {
       const attackScore = this.evaluatePoint(board, move.x, move.y, move.z, aiPlayer, DIRECTIONS_3D);
       const defenseScore = this.evaluatePoint(board, move.x, move.y, move.z, opponentPlayer, DIRECTIONS_3D);
 
-      // Defense weighted higher — blocking opponent's win is top priority
+      // Defense weighted higher 鈥?blocking opponent's win is top priority
       const totalScore = attackScore + defenseScore * 1.1;
 
       if (totalScore > bestScore) {
@@ -165,7 +165,7 @@ export class AIEngine {
   }
 
   // ============================================================
-  //  Candidate Selection — difficulty is differentiated HERE
+  //  Candidate Selection 鈥?difficulty is differentiated HERE
   // ============================================================
   private getCandidates(board: Board): AIMove[] {
     if (!this.boardHasPieces(board)) {
@@ -192,7 +192,7 @@ export class AIEngine {
         for (let x = 0; x < BOARD_SIZE; x++) {
           if (board.get(x, y, z) === 0) continue;
 
-          // Found a piece — add all empty cells within radius
+          // Found a piece 鈥?add all empty cells within radius
           for (let dz = -radius; dz <= radius; dz++) {
             for (let dx = -radius; dx <= radius; dx++) {
               for (let dy = -radius; dy <= radius; dy++) {
