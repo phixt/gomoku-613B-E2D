@@ -54,6 +54,7 @@ async function main(): Promise<void> {
     adapter = new LocalStorageAdapter();
   }
   const saveManager = new SaveManager(adapter);
+  await saveManager.init();
 
   gameStore.appState = AppState.TITLE;
   let currentTheme: Theme = LIGHT_THEME;
@@ -73,15 +74,15 @@ async function main(): Promise<void> {
   let rightPanel = new RightPanel(rightEl, currentTheme);
   rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
   var overlayManager = new OverlayManager({
-    onSave: function (index, data) {
-      saveManager.save(index, data);
+    onSave: async function (index, data) {
+      await saveManager.save(index, data);
       overlayManager.showToast(i18n.t("SAVE_SUCCESS", index === QUICK_SAVE_INDEX ? i18n.t("QUICK_SAVE_LABEL") : String(index + 1)));
     },
     onLoad: function (data) {
       loadGameFromData(data);
     },
-    onDelete: function (index) {
-      saveManager.delete(index);
+    onDelete: async function (index) {
+      await saveManager.delete(index);
       overlayManager.showToast(i18n.t("DELETE_SUCCESS", index + 1));
     },
     serializeState: function () {return serializeBoardState();},
@@ -431,9 +432,10 @@ async function main(): Promise<void> {
       const modeStr = quickData.gameMode === "pve" ? "PvE" : "PvP";
       const movesCount = quickData.moves ? quickData.moves.length : 0;
       const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
+      const dims = quickData.boardSize + "×" + quickData.boardSize + "×" + quickData.layers;
       quickDiv.innerHTML =
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
-        '<span class="slot-meta">' + modeStr + aiDiff + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
+        '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
         '<span class="slot-actions">' +
           '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
           '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
@@ -473,9 +475,10 @@ async function main(): Promise<void> {
         const modeStr = data.gameMode === "pve" ? "PvE" : "PvP";
         const movesCount = data.moves ? data.moves.length : 0;
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
+        const dims2 = data.boardSize + "×" + data.boardSize + "×" + data.layers;
         div.innerHTML =
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
-          '<span class="slot-meta">' + modeStr + aiDiff + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
+          '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims2 + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
             '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
             '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +
@@ -487,7 +490,7 @@ async function main(): Promise<void> {
     });
 
     // Event delegation: single listener for all slot buttons
-    list.onclick = (e) => {
+    list.onclick = async (e) => {
       const target = e.target as HTMLElement;
       const action = target.getAttribute("data-action");
       const indexStr = target.getAttribute("data-index");
@@ -497,7 +500,7 @@ async function main(): Promise<void> {
       switch (action) {
         case "fill":
           console.log("[Main] Fill button clicked, calling overlayManager.tryFillSlot, index:", index);
-          overlayManager.tryFillSlot(index);
+          await overlayManager.tryFillSlot(index);
           renderSaveSlots();
           break;
         case "load":
@@ -510,9 +513,9 @@ async function main(): Promise<void> {
             overlayManager.showToast(i18n.t("SAVE_INVALID_STRUCTURE"), true);
             break;
           }
-          showConfirmDialog(i18n.t("CONFIRM_OVERWRITE", index + 1), () => {
+          showConfirmDialog(i18n.t("CONFIRM_OVERWRITE", index + 1), async () => {
             const currentSaveData = serializeBoardState();
-            saveManager.save(index, currentSaveData);
+            await saveManager.save(index, currentSaveData);
             overlayManager.showToast(i18n.t("SAVE_SUCCESS", i18n.t("SAVE_SLOT_LABEL", index + 1)));
             renderSaveSlots();
           });
@@ -522,8 +525,8 @@ async function main(): Promise<void> {
           if (replayData) startReplay(replayData);
           break;
         case "delete":
-          showConfirmDialog(i18n.t("CONFIRM_DELETE", index + 1), () => {
-            saveManager.delete(index);
+          showConfirmDialog(i18n.t("CONFIRM_DELETE", index + 1), async () => {
+            await saveManager.delete(index);
             renderSaveSlots();
           });
           break;
@@ -533,7 +536,7 @@ async function main(): Promise<void> {
           break;
         case "quick-save":
           const qsData = serializeBoardState();
-          saveManager.quickSave(qsData);
+          await saveManager.quickSave(qsData);
           overlayManager.showToast(i18n.t("SAVE_SUCCESS", i18n.t("QUICK_SAVE_LABEL")));
           renderSaveSlots();
           break;
@@ -876,7 +879,7 @@ const exitReplay = (): void => {
     }
   };
 
-  const saveGame = (): void => {
+  const saveGame = async (): Promise<void> => {
     const data = serializeBoardState();
     // Find first empty slot, or overwrite quick save slot if all full
     let targetIndex = -1;
@@ -884,7 +887,7 @@ const exitReplay = (): void => {
       if (saveManager.getSlots()[i] === null) {targetIndex = i;break;}
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
-    saveManager.save(targetIndex, data);
+    await saveManager.save(targetIndex, data);
     const slotName = targetIndex === QUICK_SAVE_INDEX ? i18n.t("QUICK_SAVE_LABEL") : String(targetIndex + 1);
     overlayManager.showToast(i18n.t("SAVE_SUCCESS", slotName));
     const base64 = btoa(JSON.stringify(data));
@@ -951,6 +954,37 @@ const exitReplay = (): void => {
       if (btnS) {btnS.textContent = i18n.t("BTN_RESUME");btnS.addEventListener("click", backToGame);}
     }
   };
+
+  // Level Select modal
+  const levelBtn = document.getElementById("level-btn");
+  const levelSelectModal = document.getElementById("level-select-modal");
+  const levelList = document.getElementById("level-list");
+  const levelCancel = document.getElementById("level-select-cancel");
+
+  if (levelBtn) levelBtn.addEventListener("click", () => {
+    if (!levelSelectModal || !levelList) return;
+    levelList.innerHTML = "";
+    const levels = LevelManager.getAllIds();
+    levels.forEach((id) => {
+      const config = LevelManager.getLevel(id);
+      if (!config) return;
+      const item = document.createElement("div");
+      item.className = "level-item";
+      item.innerHTML = '<div class="level-name">' + config.name + '</div>' +
+        '<div class="level-dims">' + config.boardSize + '×' + config.boardSize + '×' + config.layers + '</div>';
+      item.addEventListener("click", () => {
+        levelSelectModal.classList.add("hidden");
+        loadLevel(id);
+      });
+      levelList.appendChild(item);
+    });
+    levelSelectModal.classList.remove("hidden");
+  });
+
+  if (levelCancel) levelCancel.addEventListener("click", () => {
+    levelSelectModal?.classList.add("hidden");
+  });
+
 
   guideBtn?.addEventListener("click", () => {
     gameStore.appState = AppState.GUIDE_FROM_TITLE;

@@ -48,13 +48,14 @@
         <div class="start-layout split-layout">
             <!-- 左侧：标题+ 品牌+ 按钮（沉底） -->
             <div class="start-left brand-area">
-                <h1>GOMOKU 613B-E2D</h1>
+                <h1>GOMOKU-E2D</h1>
                 <p class="subtitle">Discrete 3D Tactical Gomoku</p>
                 <div class="version-badge">v0.6.2</div>
 
                 <!-- 改动：按钮组从右栏移到这里，放在左栏底部 -->
                 <div class="action-buttons">
                     <button id="start-btn" class="primary-btn" data-i18n="BTN_START_GAME">开始游戏</button>
+                    <button id="level-btn" class="secondary-btn" data-i18n="BTN_LEVEL_MODE">关卡模式</button>
                     <button id="guide-btn" class="secondary-btn" data-i18n="BTN_GUIDE">快捷键说明</button>
                 </div>
                 <!-- 改动结束 -->
@@ -263,6 +264,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Level Select Modal -->
+    <div id="level-select-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <h3 data-i18n="LEVEL_SELECT_TITLE">关卡选择</h3>
+            <div id="level-list" class="level-list"></div>
+            <div class="modal-actions">
+                <button id="level-select-cancel" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

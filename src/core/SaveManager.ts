@@ -1,72 +1,52 @@
-import type { IStorageAdapter } from "./StorageAdapter";
-import { SAVE_SLOT_COUNT, QUICK_SAVE_INDEX, BOARD_SIZE, LAYER_COUNT } from "./Config";
+import type { IStorageAdapter, SlotMeta } from "./StorageAdapter";
+import { SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./Config";
 import { eventBus, Events } from "./EventBus";
 
 export interface SaveData {
-  // ================= 1. 核心标识 =================
-  id: string;              // 唯一存档ID (UUID或时间戳+随机数)，用于管理/分享
-  version: string;         // 存档结构版本号 (如 "2.0.0")，用于迁移兼容
-  timestamp: number;       // 创建/最后修改时间
-  
-  // ================= 2. 棋盘快照 (性能优化) =================
-  // moves 用于复盘，boardState 用于“秒开”渲染和合法性校验
-  // 3D 数组: [z][x][y] -> 0(空), 1(黑), 2(白)
-  boardState: number[][][]; 
-  
-  // ================= 3. 对局历史 (复盘/禁手/悔棋核心) =================
+  id: string;
+  version: string;
+  timestamp: number;
+  boardState: number[][][];
   moves: Array<{
-    x: number; 
-    y: number; 
-    z: number; 
-    player: 1 | 2; 
-    timestamp?: number;    // 可选：记录每步耗时，用于高级复盘分析
-    evaluation?: number;   // 可选：AI 评估分数 (未来功能)
+    x: number; y: number; z: number; player: 1 | 2;
+    timestamp?: number;
+    evaluation?: number;
   }>;
-  
-  // ================= 4. 规则与配置 (禁手/联机同步刚需) =================
-  rules: 'gomoku' | 'renju' | 'swap2'; // 当前对局规则
+  rules: 'gomoku' | 'renju' | 'swap2';
   gameMode: 'pvp' | 'pve';
   aiDifficulty?: 'easy' | 'medium' | 'hard';
-  
-  // ================= 5. 状态与元数据 =================
   status: 'playing' | 'finished' | 'paused';
-  winner?: 1 | 2 | 0;      // 0=平局或无结果
-  currentPlayer: 1 | 2;    // 下一手该谁
-  focusZ: number;          // 存档时的视角层级
-  isDarkTheme: boolean;    // 主题偏好
+  winner?: 1 | 2 | 0;
+  currentPlayer: 1 | 2;
+  focusZ: number;
+  isDarkTheme: boolean;
   playerColor: 1 | 2;
-  
-  // 3D 物理配置 (防止未来默认值变更导致旧存档错位)
-  boardSize: number;       // 13
-  layers: number;          // 6
-  layerSpacing: number;    // 层间距
-}
-export interface SlotEntry {
-  type: "general" | "quick";
-  data: SaveData | null;
+  boardSize: number;
+  layers: number;
+  layerSpacing: number;
 }
 
-// Derived from imported Config.ts constants
 export const TOTAL_SLOTS = SAVE_SLOT_COUNT;
-export const GENERAL_SLOT_COUNT = SAVE_SLOT_COUNT - 1;
-const STORAGE_KEY = "gomoku_saves_v3";
 
 export class SaveManager {
   private _slots: (SaveData | null)[] = [];
+  private _slotIds: (string | null)[] = [];  // Maps slot index -> save id
   private storage: IStorageAdapter;
+  private _ready = false;
 
   constructor(storage: IStorageAdapter) {
     this.storage = storage;
-    this.loadFromStorage();
+    this._slots = new Array(TOTAL_SLOTS).fill(null);
+    this._slotIds = new Array(TOTAL_SLOTS).fill(null);
   }
 
-  /** @deprecated Use getSlots() instead. */
-  get slots(): ReadonlyArray<SlotEntry> {
-    return this._slots.map((data, i) => ({
-      type: i === QUICK_SAVE_INDEX ? "quick" : "general",
-      data
-    }));
+  async init(): Promise<void> {
+    await this.storage.init();
+    await this.loadFromStorage();
+    this._ready = true;
   }
+
+  get ready(): boolean { return this._ready; }
 
   getSlots(): ReadonlyArray<SaveData | null> {
     return this._slots;
@@ -76,10 +56,20 @@ export class SaveManager {
     return index < 0 || index >= TOTAL_SLOTS || this._slots[index] === null;
   }
 
-  save(index: number, data: SaveData): void {
+  async save(index: number, data: SaveData): Promise<void> {
     if (index < 0 || index >= TOTAL_SLOTS) return;
     this._slots[index] = data;
-    this.persist();
+    this._slotIds[index] = data.id;
+    const meta: SlotMeta = {
+      index,
+      id: data.id,
+      timestamp: data.timestamp,
+      boardSize: data.boardSize,
+      layers: data.layers,
+      movesCount: data.moves ? data.moves.length : 0
+    };
+    await this.storage.setSave(data.id, JSON.stringify(data), meta);
+    eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
   }
 
   load(index: number): SaveData | null {
@@ -87,14 +77,19 @@ export class SaveManager {
     return this._slots[index];
   }
 
-  delete(index: number): void {
+  async delete(index: number): Promise<void> {
     if (index < 0 || index >= TOTAL_SLOTS) return;
+    const id = this._slotIds[index];
     this._slots[index] = null;
-    this.persist();
+    this._slotIds[index] = null;
+    if (id) {
+      await this.storage.deleteSave(id);
+    }
+    eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
   }
 
-  quickSave(data: SaveData): void {
-    this.save(QUICK_SAVE_INDEX, data);
+  async quickSave(data: SaveData): Promise<void> {
+    await this.save(QUICK_SAVE_INDEX, data);
   }
 
   quickLoad(): SaveData | null {
@@ -114,30 +109,33 @@ export class SaveManager {
     return latest;
   }
 
-    private loadFromStorage(): void {
+  private async loadFromStorage(): Promise<void> {
     try {
-      const raw = this.storage.get(STORAGE_KEY);
-      if (raw) {
-        const parsed: (SaveData | null)[] = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === TOTAL_SLOTS) {
-          // Run migration on each slot
-          this._slots = parsed.map((data) => data ? this.migrateData(data) : null);
-          return;
-        }
+      const index = await this.storage.getIndex();
+      if (!index || index.length === 0) {
+        this._slots = new Array(TOTAL_SLOTS).fill(null);
+        this._slotIds = new Array(TOTAL_SLOTS).fill(null);
+        return;
+      }
+      for (const meta of index) {
+        if (meta.index < 0 || meta.index >= TOTAL_SLOTS) continue;
+        const raw = await this.storage.getSave(meta.id);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          this._slots[meta.index] = this.migrateData(parsed);
+          this._slotIds[meta.index] = meta.id;
+        } catch { /* skip corrupt save */ }
       }
     } catch {
-      /* corrupt data, reset */
+      this._slots = new Array(TOTAL_SLOTS).fill(null);
+      this._slotIds = new Array(TOTAL_SLOTS).fill(null);
     }
-    this._slots = new Array(TOTAL_SLOTS).fill(null);
   }
 
-  /**
-   * Migrate legacy save data to the latest version (2.0.0).
-   */
   private migrateData(data: any): SaveData {
     if (!data.version || data.version < "2.0.0") {
-      console.log("[SaveManager] Migrating legacy save data to v2.0.0...");
-      // Reconstruct boardState from moves if missing
+      console.log("[SaveManager] Migrating legacy save to v2.0.0...");
       const boardSize = data.boardSize || 13;
       const layers = data.layers || 6;
       const boardState: number[][][] = [];
@@ -148,7 +146,6 @@ export class SaveManager {
         }
         boardState.push(layer);
       }
-      // Populate boardState from moves
       if (data.moves && Array.isArray(data.moves)) {
         for (const move of data.moves) {
           if (move.x >= 0 && move.x < boardSize && move.y >= 0 && move.y < boardSize && move.z >= 0 && move.z < layers) {
@@ -178,22 +175,11 @@ export class SaveManager {
     return data as SaveData;
   }
 
-  private persist(): void {
-    this.storage.set(STORAGE_KEY, JSON.stringify(this._slots));
-    eventBus.emit(Events.SAVE_UPDATED, this.getSlots());
-  }
-
-
-  /**
-   * Deep validation of save data integrity. Returns an error message key (from UI_TEXT)
-   * on failure, or null if the data passes all checks.
-   */
   /**
    * Validate save data integrity before loading.
-   * Returns an error message key (from UI_TEXT) on failure, or null if valid.
+   * Now accepts any boardSize/layers (no dimension check against Config).
    */
   static validateSaveData(data: any): string | null {
-    // Stage 1: Structure validation ? required fields must exist with correct types
     if (!data || typeof data !== "object") return "SAVE_INVALID_STRUCTURE";
     if (!data.version
         || !Array.isArray(data.boardState)
@@ -202,20 +188,12 @@ export class SaveManager {
         || typeof data.layers !== "number" || data.layers <= 0) {
       return "SAVE_INVALID_STRUCTURE";
     }
-    // Verify boardState dimensions match declared size
     if (data.boardState.length !== data.layers) return "SAVE_INVALID_STRUCTURE";
     for (let z = 0; z < data.layers; z++) {
       const layer = data.boardState[z];
       if (!Array.isArray(layer) || layer.length !== data.boardSize) return "SAVE_INVALID_STRUCTURE";
-      // Spot-check first row of each layer (full scan is too expensive)
       if (!Array.isArray(layer[0]) || layer[0].length !== data.boardSize) return "SAVE_INVALID_STRUCTURE";
     }
-
-    // Stage 2: Dimension validation ? must match current Config
-    if (data.boardSize !== BOARD_SIZE || data.layers !== LAYER_COUNT) {
-      return "SAVE_INVALID_DIMENSIONS";
-    }
-
     return null;
   }
 
@@ -227,35 +205,17 @@ export class SaveManager {
     }
   }
 
-  /**
-   * Fail-fast parse pipeline for Base64-encoded save data.
-   * Returns null for any invalid input ? never a partial/empty save.
-   */
   static tryParseSaveData(input: string): SaveData | null {
     if (!input || !input.trim()) return null;
-
     let decoded: string;
-    try {
-      decoded = atob(input.trim());
-    } catch {
-      return null;
-    }
-
+    try { decoded = atob(input.trim()); } catch { return null; }
     let parsed: unknown;
-    try {
-      parsed = JSON.parse(decoded);
-    } catch {
-      return null;
-    }
-
+    try { parsed = JSON.parse(decoded); } catch { return null; }
     if (!parsed || typeof parsed !== "object") return null;
-
     const data = parsed as Record<string, unknown>;
     if (!data.version || !Array.isArray(data.moves)) return null;
     if (typeof data.boardSize !== "number" || data.boardSize <= 0) return null;
     if (typeof data.layers !== "number" || data.layers <= 0) return null;
-
     return parsed as SaveData;
   }
 }
-

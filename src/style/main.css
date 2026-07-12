@@ -1677,3 +1677,75 @@ body.dark-theme .custom-select option {
     flex-shrink: 0;
     width: auto; /* 或者固定一个合适的宽度，如 width: 120px; */
 }
+/* =========================================
+   Level Select Modal
+   ========================================= */
+.level-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.level-item {
+    padding: 12px 16px;
+    border: 1px solid #C5D5C0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(196, 212, 192, 0.1);
+    text-align: left;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+
+.level-item:hover {
+    background: rgba(44, 74, 78, 0.1);
+    border-color: #2C4A4E;
+}
+
+.level-item .level-name {
+    font-size: 1.05em;
+    font-weight: bold;
+    color: #2C4A4E;
+    margin-bottom: 2px;
+}
+
+.level-item .level-dims {
+    font-size: 0.85em;
+    color: #6B8A8E;
+}
+
+body.dark-theme .level-item {
+    border-color: #3A4A4E;
+    background: rgba(26, 38, 41, 0.6);
+}
+
+body.dark-theme .level-item:hover {
+    background: rgba(200, 224, 228, 0.1);
+    border-color: #C8E0E4;
+}
+
+body.dark-theme .level-item .level-name {
+    color: #C8E0E4;
+}
+
+body.dark-theme .level-item .level-dims {
+    color: #6B8A8E;
+}
+
+/* Slot dimensions badge */
+.slot-dims {
+    font-size: 0.8em;
+    color: #8B9A9E;
+    background: rgba(139, 154, 158, 0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+}
+
+body.dark-theme .slot-dims {
+    color: #A0B0B4;
+    background: rgba(160, 176, 180, 0.15);
+}

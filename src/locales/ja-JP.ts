@@ -113,6 +113,10 @@ const jaJP = {
   SLOT_HINT: "L キーで最新セーブを読み込み",
   MUTE_HINT: "M キーでミュート切り替え",
 
+  // Level system
+  BTN_LEVEL_MODE: "ステージモード",
+  LEVEL_SELECT_TITLE: "ステージ選択",
+
 } as const;
 
 export default jaJP;

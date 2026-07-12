@@ -112,6 +112,10 @@ const enUS = {
   SLOT_HINT: "Press L to quick-load latest save",
   MUTE_HINT: "Press M to mute/unmute",
 
+  // Level system
+  BTN_LEVEL_MODE: "Level Mode",
+  LEVEL_SELECT_TITLE: "Select Level",
+
 } as const;
 
 export default enUS;

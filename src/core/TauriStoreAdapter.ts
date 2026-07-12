@@ -1,51 +1,91 @@
-﻿import { Store } from "@tauri-apps/plugin-store";
-import type { IStorageAdapter } from "./StorageAdapter";
+import { Store } from "@tauri-apps/plugin-store";
+import type { IStorageAdapter, SlotMeta } from "./StorageAdapter";
 
-/** Tauri environment adapter using @tauri-apps/plugin-store. */
+const INDEX_KEY = "index";
+const SAVE_PREFIX = "save_";
+const LEGACY_KEY = "__gomoku_saves";
+
 export class TauriStoreAdapter implements IStorageAdapter {
-  private store!: Store;
-  private cache = new Map<string, string>();
+  private indexStore!: Store;
+  private dataStore!: Store;
 
-  /** Load all keys from disk into in-memory cache. Must be called before read. */
   public async init(): Promise<void> {
-    this.store = await Store.load("saves.json");
-    const keys = await this.store.keys();
-    for (const key of keys) {
-      const val = await this.store.get<string>(key);
-      if (val !== undefined && val !== null) {
-        this.cache.set(key, val);
-      }
-    }
-    console.log("[TauriStoreAdapter] ✅ Loaded from disk, keys:", keys.length);
+    this.indexStore = await Store.load("index.json");
+    this.dataStore = await Store.load("saves.json");
+    await this.tryMigrate();
   }
 
-  /** Synchronous read from in-memory cache. */
-  get(key: string): string | null {
-    return this.cache.get(key) ?? null;
-  }
-
-  /** Update cache immediately, persist to disk in background. */
-  set(key: string, value: string): void {
-    this.cache.set(key, value);
-    this.saveToDisk(key, value);
-  }
-
-  /** Remove from cache immediately, persist to disk in background. */
-  remove(key: string): void {
-    this.cache.delete(key);
-    this.saveToDisk(key, null);
-  }
-
-  private async saveToDisk(key: string, value: string | null): Promise<void> {
+  async getIndex(): Promise<SlotMeta[]> {
     try {
-      if (value === null) {
-        await this.store.delete(key);
-      } else {
-        await this.store.set(key, value);
+      const raw = await this.indexStore.get<string>(INDEX_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as SlotMeta[];
+    } catch { /* corrupt */ }
+    return [];
+  }
+
+  async getSave(id: string): Promise<string | null> {
+    const val = await this.dataStore.get<string>(SAVE_PREFIX + id);
+    return val ?? null;
+  }
+
+  async setSave(id: string, data: string, meta: SlotMeta): Promise<void> {
+    await this.dataStore.set(SAVE_PREFIX + id, data);
+    const index = await this.getIndex();
+    const existing = index.findIndex((m) => m.id === id);
+    if (existing >= 0) {
+      index[existing] = meta;
+    } else {
+      index.push(meta);
+    }
+    await this.indexStore.set(INDEX_KEY, JSON.stringify(index));
+    await this.indexStore.save();
+    await this.dataStore.save();
+  }
+
+  async deleteSave(id: string): Promise<void> {
+    await this.dataStore.delete(SAVE_PREFIX + id);
+    const index = await this.getIndex();
+    const filtered = index.filter((m) => m.id !== id);
+    await this.indexStore.set(INDEX_KEY, JSON.stringify(filtered));
+    await this.indexStore.save();
+    await this.dataStore.save();
+  }
+
+  /** Migrate from old monolithic saves.json in Tauri store. */
+  async tryMigrate(): Promise<boolean> {
+    try {
+      const raw = await this.dataStore.get<string>(LEGACY_KEY);
+      if (!raw) return false;
+      // Check if it's the old array format
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return false;
+      console.log("[TauriStoreAdapter] Migrating legacy saves to sharded format...");
+      const index: SlotMeta[] = [];
+      for (let i = 0; i < parsed.length; i++) {
+        const data = parsed[i];
+        if (!data || !data.id) continue;
+        const id = data.id;
+        await this.dataStore.set(SAVE_PREFIX + id, JSON.stringify(data));
+        index.push({
+          index: i,
+          id,
+          timestamp: data.timestamp || Date.now(),
+          boardSize: data.boardSize || 13,
+          layers: data.layers || 6,
+          movesCount: data.moves ? data.moves.length : 0
+        });
       }
-      await this.store.save();
+      await this.indexStore.set(INDEX_KEY, JSON.stringify(index));
+      await this.dataStore.delete(LEGACY_KEY);
+      await this.indexStore.save();
+      await this.dataStore.save();
+      console.log("[TauriStoreAdapter] Migration complete:", index.length, "saves");
+      return true;
     } catch (e) {
-      console.error("[TauriStoreAdapter] Failed to persist", e);
+      console.error("[TauriStoreAdapter] Migration failed:", e);
+      return false;
     }
   }
 }

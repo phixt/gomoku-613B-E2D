@@ -112,6 +112,10 @@ const zhCN = {
   SLOT_HINT: "按 L 快速读取最新存档",
   MUTE_HINT: "按 M 静音/取消静音",
 
+  // Level system
+  BTN_LEVEL_MODE: "关卡模式",
+  LEVEL_SELECT_TITLE: "关卡选择",
+
 } as const;
 
 export default zhCN;
