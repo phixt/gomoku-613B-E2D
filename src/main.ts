@@ -3,7 +3,7 @@ import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
-import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX, BOARD_SIZE } from "./core/Config";
+import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./core/Config";
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { SaveManager, type SaveData } from "./core/SaveManager";
@@ -163,8 +163,6 @@ async function main(): Promise<void> {
   let moveCount = 0;
   let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
   let isReplayMode = false;
-  let currentLevelIndex = 0;
-
   const STANDARD_LEVEL = {
     id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
   };
@@ -582,6 +580,9 @@ const showConfirmDialog = (message: string, onConfirm: () => void): void => {
 const startReplay = (data: SaveData): void => {
     console.log("[Replay] Starting replay for save:", data.id);
 
+    // 0. Ensure board context matches save dimensions
+    ensureContextMatches(data);
+
     // 1. Cancel any running AI and clear timers
     if (aiEngine) { aiEngine.cancel(); }
     isAIThinking = false;
@@ -654,17 +655,20 @@ const updateReplayUI = (): void => {
     if (!replayState) return;
     // Clear board for replay (board data only; lastMove already cleared in startReplay)
     rightPanel.board.reset();
-    // Board already reset above; skip redundant empty snapshot load
+    const bs = rightPanel.board.size;
+    const lc = rightPanel.board.layers;
     // Replay moves up to currentIndex
     for (let i = 0; i < replayState.currentIndex; i++) {
         const m = replayState.moves[i];
-        rightPanel.board.set(m.x, m.y, m.z, m.player);
+        if (m.x >= 0 && m.x < bs && m.y >= 0 && m.y < bs && m.z >= 0 && m.z < lc) {
+          rightPanel.board.set(m.x, m.y, m.z, m.player);
+        }
     }
     rightPanel.refresh();
     // Show last move ring for current replay step (skip step 0 = empty board, bounds-safe)
     if (replayState.currentIndex > 0) {
       const prevMv = replayState.moves[replayState.currentIndex - 1];
-      if (prevMv.x >= 0 && prevMv.x < BOARD_SIZE && prevMv.y >= 0 && prevMv.y < BOARD_SIZE && prevMv.z >= 0 && prevMv.z < LAYER_COUNT) {
+      if (prevMv.x >= 0 && prevMv.x < rightPanel.board.size && prevMv.y >= 0 && prevMv.y < rightPanel.board.size && prevMv.z >= 0 && prevMv.z < rightPanel.board.layers) {
         rightPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
         leftPanel.updateLastMoveUI(prevMv.x, prevMv.y, prevMv.z);
       }
@@ -735,22 +739,39 @@ const exitReplay = (): void => {
       focusZ: focusZ,
       isDarkTheme: currentTheme.name === "dark",
       playerColor: playerColor,
-      boardSize: 13,
-      layers: LAYER_COUNT,
+      boardSize: rightPanel.board.size,
+      layers: rightPanel.board.layers,
       layerSpacing: leftPanel.layerSpacing
     };
+  };
+
+  /** Ensure the current game context matches the saved board dimensions.
+   *  If not, rebuild panels with the correct size before loading. */
+  const ensureContextMatches = (data: SaveData): void => {
+    if (data.boardSize !== rightPanel.board.size || data.layers !== rightPanel.board.layers) {
+      console.log("[Context] Switching to " + data.boardSize + "x" + data.layers + " for save/replay.");
+      initGameContext({
+        id: "loaded_save",
+        name: "Loaded Save",
+        boardSize: data.boardSize,
+        layers: data.layers,
+        initialMoves: []
+      });
+    }
   };
 
   const loadGameFromData = (data: SaveData): void => {
     try {
       if (!data) {overlayManager.showToast(i18n.t("INVALID_SAVE"), true);return;}
+
+      // Ensure board dimensions match before validating/loading
+      ensureContextMatches(data);
       
       // === Deep validation pipeline ===
       const saveError = SaveManager.validateSaveData(data);
       if (saveError) {
         const errorMsgs: Record<string, string> = {
           "SAVE_INVALID_STRUCTURE": i18n.t("SAVE_INVALID_STRUCTURE"),
-          "SAVE_INVALID_DIMENSIONS": i18n.t("SAVE_INVALID_DIMENSIONS"),
         };
         overlayManager.showToast(errorMsgs[saveError] || saveError, true);
         console.error("[Load] Validation failed:", saveError);
@@ -785,7 +806,7 @@ const exitReplay = (): void => {
         if (boardEmpty && data.moves && data.moves.length > 0) {
           console.warn("[Load] boardState was empty; replaying from moves");
           for (const move of data.moves) {
-            if (move.x >= 0 && move.x < BOARD_SIZE && move.y >= 0 && move.y < BOARD_SIZE && move.z >= 0 && move.z < LAYER_COUNT) {
+            if (move.x >= 0 && move.x < rightPanel.board.size && move.y >= 0 && move.y < rightPanel.board.size && move.z >= 0 && move.z < rightPanel.board.layers) {
               rightPanel.board.set(move.x, move.y, move.z, move.player as any);
             }
           }
@@ -795,7 +816,7 @@ const exitReplay = (): void => {
         // Fallback: replay moves for legacy saves
         rightPanel.board.reset();
         for (const move of data.moves) {
-          if (move.x >= 0 && move.x < BOARD_SIZE && move.y >= 0 && move.y < BOARD_SIZE && move.z >= 0 && move.z < LAYER_COUNT) {
+          if (move.x >= 0 && move.x < rightPanel.board.size && move.y >= 0 && move.y < rightPanel.board.size && move.z >= 0 && move.z < rightPanel.board.layers) {
             rightPanel.board.set(move.x, move.y, move.z, move.player as any);
           }
         }
@@ -839,7 +860,7 @@ const exitReplay = (): void => {
       // Restore last move ring from save data (bounds-safe)
       if (data.moves && data.moves.length > 0) {
         const lastMv = data.moves[data.moves.length - 1];
-        if (lastMv.x >= 0 && lastMv.x < BOARD_SIZE && lastMv.y >= 0 && lastMv.y < BOARD_SIZE && lastMv.z >= 0 && lastMv.z < LAYER_COUNT) {
+        if (lastMv.x >= 0 && lastMv.x < rightPanel.board.size && lastMv.y >= 0 && lastMv.y < rightPanel.board.size && lastMv.z >= 0 && lastMv.z < rightPanel.board.layers) {
           rightPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
           leftPanel.updateLastMoveUI(lastMv.x, lastMv.y, lastMv.z);
         }
@@ -1096,15 +1117,6 @@ const exitReplay = (): void => {
           } else {
             overlayManager.showToast(i18n.t("NO_SAVE"), true);
           }
-          return;
-        }
-        if (e.code === "KeyU") {
-          e.preventDefault();
-          const ids = LevelManager.getAllIds();
-          if (ids.length === 0) return;
-          const id = ids[currentLevelIndex % ids.length];
-          currentLevelIndex = (currentLevelIndex + 1) % ids.length;
-          loadLevel(id);
           return;
         }
         break;

@@ -911,9 +911,8 @@ body.dark-theme .save-slot.quick-save::before {
 
 #start-screen .action-buttons {
     margin-top: auto;
-    margin-bottom: auto;
+    margin-bottom: 0.6rem;
     align-self: center;
-    transform: translateY(-20%);
     display: flex;
     gap: 1.2rem;
     flex-wrap: wrap;
@@ -1748,4 +1747,26 @@ body.dark-theme .level-item .level-dims {
 body.dark-theme .slot-dims {
     color: #A0B0B4;
     background: rgba(160, 176, 180, 0.15);
+}
+
+/* =========================================
+   Fix: prevent title/version squeeze from settings overflow
+   ========================================= */
+#start-screen .start-left.brand-area h1,
+#start-screen .start-left.brand-area .subtitle,
+#start-screen .start-left.brand-area .version-badge {
+    flex-shrink: 0;
+}
+
+#start-screen .start-left.brand-area .settings-section {
+    flex-shrink: 1;
+    overflow-y: auto;
+    min-height: 0;  /* allow flex shrink */
+    padding: 0 1rem;
+    width: 100%;
+    max-width: 340px;
+}
+
+#start-screen .start-left.brand-area .action-buttons {
+    flex-shrink: 0;
 }
