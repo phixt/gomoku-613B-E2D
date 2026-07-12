@@ -473,7 +473,7 @@ async function main(): Promise<void> {
       const modeStr = quickData.gameMode === "pve" ? "PvE" : "PvP";
       const movesCount = quickData.moves ? quickData.moves.length : 0;
       const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
-      const dims = quickData.boardSize + "脳" + quickData.boardSize + "脳" + quickData.layers;
+      const dims = quickData.boardSize + "×" + quickData.boardSize + "×" + quickData.layers;
       quickDiv.innerHTML =
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
         '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
@@ -516,7 +516,7 @@ async function main(): Promise<void> {
         const modeStr = data.gameMode === "pve" ? "PvE" : "PvP";
         const movesCount = data.moves ? data.moves.length : 0;
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
-        const dims2 = data.boardSize + "脳" + data.boardSize + "脳" + data.layers;
+        const dims2 = data.boardSize + "×" + data.boardSize + "×" + data.layers;
         div.innerHTML =
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
           '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims2 + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
@@ -1035,7 +1035,7 @@ const exitReplay = (): void => {
       const item = document.createElement("div");
       item.className = "level-item";
       item.innerHTML = '<div class="level-name">' + config.name + '</div>' +
-        '<div class="level-dims">' + config.boardSize + '脳' + config.boardSize + '脳' + config.layers + '</div>';
+        '<div class="level-dims">' + config.boardSize + '×' + config.boardSize + '×' + config.layers + '</div>';
       item.addEventListener("click", () => {
         levelSelectModal.classList.add("hidden");
         loadLevel(id);
