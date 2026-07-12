@@ -153,7 +153,7 @@ export class RightPanel {
     { x: starOffset, y: starOffset },
     { x: starOffset, y: this._boardSize - 1 - starOffset },
     { x: this._boardSize - 1 - starOffset, y: starOffset },
-    { x: BOARD_SIZE - 1 - starOffset, y: this._boardSize - 1 - starOffset }];
+    { x: this._boardSize - 1 - starOffset, y: this._boardSize - 1 - starOffset }];
 
     const starGeo = new THREE.CircleGeometry(0.12, 32);
     this.starMat = new THREE.MeshBasicMaterial({
@@ -442,7 +442,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep,py = hy + dy * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) return;
+      if (px < 0 || px >= this._boardSize || py < 0 || py >= this._boardSize) return;
       if (firstStep > maxSteps) return; // exceeded search range
       const s = this.board.get(px, py, z);
       if (s !== 0) break;
@@ -455,7 +455,7 @@ export class RightPanel {
     while (true) {
       if (step > maxSteps) break; // exceeded search range
       const px = hx + dx * step,py = hy + dy * step;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE) break;
+      if (px < 0 || px >= this._boardSize || py < 0 || py >= this._boardSize) break;
       const s = this.board.get(px, py, z);
 
       const isAlly = s === this.currentPlayer;
@@ -513,7 +513,7 @@ export class RightPanel {
     let firstStep = 1;
     while (true) {
       const px = hx + dx * firstStep,py = hy + dy * firstStep,pz = hz + dz * firstStep;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) return;
+      if (px < 0 || px >= this._boardSize || py < 0 || py >= this._boardSize || pz < 0 || pz >= this._layerCount) return;
       if (firstStep > maxSteps) return; // exceeded search range
       const s = this.board.get(px, py, pz);
       if (s !== 0) break;
@@ -526,7 +526,7 @@ export class RightPanel {
     while (true) {
       if (step > maxSteps) break; // exceeded search range
       const px = hx + dx * step,py = hy + dy * step,pz = hz + dz * step;
-      if (px < 0 || px >= BOARD_SIZE || py < 0 || py >= BOARD_SIZE || pz < 0 || pz >= LAYER_COUNT) break;
+      if (px < 0 || px >= this._boardSize || py < 0 || py >= this._boardSize || pz < 0 || pz >= this._layerCount) break;
       const s = this.board.get(px, py, pz);
 
       const isAlly = s === this.currentPlayer;
