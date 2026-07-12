@@ -167,7 +167,7 @@ async function main(): Promise<void> {
     id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
   };
 
-  // 鈹€鈹€ 3D Turn Indicator (isolated scene) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  // == 3D Turn Indicator (isolated scene) =================
   const indicatorCanvas = document.getElementById("turn-indicator-canvas") as HTMLCanvasElement;
   let indicatorScene: THREE.Scene | null = null;
   let indicatorCamera: THREE.PerspectiveCamera | null = null;
