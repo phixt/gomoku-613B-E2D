@@ -1,6 +1,6 @@
 import type { Board } from "./Board";
 import { DIRECTIONS_3D } from "../utils/MathUtils";
-import { BOARD_SIZE, LAYER_COUNT } from "./Config";
+import { BOARD_SIZE, LAYER_COUNT, WIN_LENGTH } from "./Config";
 
 export interface PatternCell3D {
   x: number;
@@ -82,7 +82,7 @@ export function collectLayerPatterns3D(board: Board, z: number): Pattern3D[] {
 }
 
 export function checkWinPatterns(patterns: Pattern3D[]): boolean {
-  return patterns.some((p) => p.count >= 5);
+  return patterns.some((p) => p.count >= WIN_LENGTH);
 }
 
 /** Check if the stone at (x,y,z) produces a win. Returns BLACK (1), WHITE (2), or 0. */
