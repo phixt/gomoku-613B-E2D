@@ -1,0 +1,621 @@
+/* =========================================
+   多模式快捷键样式系统 (统一浅棕文字 + 常规字重)
+   ========================================= */
+
+/* 1. 全局色彩变量定义 */
+:root {
+    /* 核心背景色 */
+    --kbd-base-bg: #E8F4F5;      /* 水蓝（浅） */
+    --kbd-base-border: #2C4A4E;
+    --kbd-replay: #2D6A4F;       /* 墨绿 */
+    --kbd-pause: #1E3A5F;        /* 深蓝 */
+    /* 统一文字颜色：浅棕色 */
+    --kbd-text-color: #8B7355;   /* 浅棕，适合浅色背景 */
+    /* 非活跃状态 */
+    --kbd-inactive-bg: #FFF;
+    --kbd-inactive-border: #D0D0D0;
+    --kbd-inactive-text: #AAA;
+    /* 阴影 */
+    --kbd-shadow: 0 3px 0 rgba(0, 0, 0, 0.1);
+    /* 全局文字阴影（用于三色混合，增强可读） */
+    --kbd-global-text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+body.dark-theme {
+    --kbd-base-bg: #4A7A7E;      /* 暗色下加深水蓝 */
+    --kbd-base-border: #C8E0E4;
+    --kbd-replay: #2D6A4F;
+    --kbd-pause: #1E3A5F;
+    --kbd-text-color: #C4A882;   /* 暗色下浅棕更亮 */
+    --kbd-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+    --kbd-inactive-bg: #2A3A3E;
+    --kbd-inactive-border: #4A5A5E;
+    --kbd-inactive-text: #6A7A7E;
+    --kbd-global-text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 2. 键盘模拟器容器与布局 */
+.keyboard-sim {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(200, 220, 200, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+.kb-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* 3. 基础按键样式（非活跃） */
+.key,
+.key-spacer {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--kbd-inactive-bg);
+    border: 1px solid var(--kbd-inactive-border);
+    border-radius: 6px;
+    font-size: 1em;
+    color: var(--kbd-inactive-text);
+    font-family: 'Consolas', monospace;
+    transition: all 0.2s;
+}
+.key-spacer { visibility: hidden; }
+
+/* 4. 所有模式统一文字颜色和字重 */
+.key,
+.key.key-base,
+.key.key-replay,
+.key.key-pause,
+.key.key-base-replay,
+.key.key-base-pause,
+.key.key-global {
+    color: var(--kbd-text-color) !important;
+    font-weight: normal !important;
+}
+
+/* 5. 各模式背景与边框（保留区分） */
+.key.key-base {
+    background: var(--kbd-base-bg) !important;
+    border-color: var(--kbd-base-border) !important;
+    box-shadow: var(--kbd-shadow);
+}
+.key.key-replay {
+    background: var(--kbd-replay) !important;
+    border-color: var(--kbd-replay) !important;
+    box-shadow: var(--kbd-shadow);
+}
+.key.key-pause {
+    background: var(--kbd-pause) !important;
+    border-color: var(--kbd-pause) !important;
+    box-shadow: var(--kbd-shadow);
+}
+.key.key-base-replay {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%) !important;
+    border: 1px solid transparent !important;
+    box-shadow: 
+        -1px -1px 0 var(--kbd-base-bg),
+        1px 1px 0 var(--kbd-replay),
+        var(--kbd-shadow);
+}
+.key.key-base-pause {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%) !important;
+    border: 1px solid transparent !important;
+    box-shadow: 
+        -1px -1px 0 var(--kbd-base-bg),
+        1px 1px 0 var(--kbd-pause),
+        var(--kbd-shadow);
+}
+.key.key-global {
+    background: linear-gradient(135deg, 
+        var(--kbd-base-bg) 0%, 
+        var(--kbd-base-bg) 33%, 
+        var(--kbd-replay) 33%, 
+        var(--kbd-replay) 66%, 
+        var(--kbd-pause) 66%, 
+        var(--kbd-pause) 100%) !important;
+    border: 1px solid transparent !important;
+    box-shadow: var(--kbd-shadow);
+    text-shadow: var(--kbd-global-text-shadow); /* 增强可读 */
+}
+
+/* 6. 标签样式（与按键同步） */
+.key-tag {
+    padding: 3px 6px;
+    background: var(--kbd-inactive-bg);
+    border: 1px solid var(--kbd-inactive-border);
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85em;
+    min-width: 50px;
+    text-align: center;
+    transition: all 0.2s;
+}
+/* 统一文字颜色和字重 */
+.key-tag,
+.key-tag.key-base,
+.key-tag.key-replay,
+.key-tag.key-pause,
+.key-tag.key-base-replay,
+.key-tag.key-base-pause,
+.key-tag.key-global {
+    color: var(--kbd-text-color) !important;
+    font-weight: normal !important;
+}
+
+/* 各标签背景区分 */
+.key-tag.key-base {
+    background: var(--kbd-base-bg) !important;
+    border-color: var(--kbd-base-border) !important;
+}
+.key-tag.key-replay {
+    background: var(--kbd-replay) !important;
+    border-color: var(--kbd-replay) !important;
+}
+.key-tag.key-pause {
+    background: var(--kbd-pause) !important;
+    border-color: var(--kbd-pause) !important;
+}
+.key-tag.key-base-replay {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%) !important;
+    border: 1px solid transparent !important;
+}
+.key-tag.key-base-pause {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%) !important;
+    border: 1px solid transparent !important;
+}
+.key-tag.key-global {
+    background: linear-gradient(135deg, 
+        var(--kbd-base-bg) 0%, 
+        var(--kbd-base-bg) 33%, 
+        var(--kbd-replay) 33%, 
+        var(--kbd-replay) 66%, 
+        var(--kbd-pause) 66%, 
+        var(--kbd-pause) 100%) !important;
+    border: 1px solid transparent !important;
+    text-shadow: var(--kbd-global-text-shadow);
+}
+
+/* 7. 快捷键说明列表布局 */
+.key-desc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 0.9em;
+    color: #3A4A4E;
+}
+body.dark-theme .key-desc-grid { color: #A0B0B4; }
+.desc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 8. 图例说明（仅色块，不涉及文字颜色） */
+.kbd-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    font-size: 0.85em;
+    color: #3A4A4E;
+    opacity: 0.85;
+}
+body.dark-theme .kbd-legend { color: #A0B0B4; }
+.kbd-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+.legend-dot.base {
+    background: var(--kbd-base-bg);
+    border-color: var(--kbd-base-border);
+}
+.legend-dot.replay {
+    background: var(--kbd-replay);
+}
+.legend-dot.pause {
+    background: var(--kbd-pause);
+}
+.legend-dot.base-replay {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%);
+}
+.legend-dot.base-pause {
+    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%);
+}
+.legend-dot.global {
+    background: linear-gradient(135deg, 
+        var(--kbd-base-bg) 0%, 
+        var(--kbd-base-bg) 33%, 
+        var(--kbd-replay) 33%, 
+        var(--kbd-replay) 66%, 
+        var(--kbd-pause) 66%, 
+        var(--kbd-pause) 100%);
+}
+
+/* =========================================
+   Esc pause menu
+   ========================================= */
+#esc-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    background: rgba(40, 46, 46, 0.517);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.2s ease;
+}
+#esc-menu.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+.esc-modal {
+    min-width: 360px !important;
+    padding: 35px 45px !important;
+}
+.esc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.esc-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px !important;
+    font-size: 1.05em !important;
+    background: transparent;
+    border: 1px solid #C5D5C0 !important;
+    border-radius: 6px !important;
+    color: #2C4A4E;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.2s;
+    text-align: left;
+}
+.esc-btn kbd {
+    background: rgba(116, 132, 134, 0.1);
+    border: 1px solid #C5D5C0;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 0.75em;
+    font-family: 'Consolas', monospace;
+    color: #608491;
+}
+.esc-btn:hover {
+    background: rgba(44, 74, 78, 0.08);
+    border-color: #2C4A4E !important;
+    transform: translateX(4px);
+}
+.esc-btn.danger {
+    border-color: #C07070 !important;
+    color: #8B3A3A;
+}
+.esc-btn.danger kbd {
+    background: rgba(192, 112, 112, 0.1);
+    border-color: #C07070;
+    color: #8B3A3A;
+}
+.esc-btn.danger:hover {
+    background: rgba(139, 58, 58, 0.08);
+    border-color: #8B3A3A !important;
+}
+body.dark-theme .esc-btn {
+    color: #C8E0E4;
+    border-color: #3A4A4E !important;
+}
+body.dark-theme .esc-btn kbd {
+    background: rgba(200, 224, 228, 0.08);
+    border-color: #3A4A4E;
+    color: #8A9A9E;
+}
+body.dark-theme .esc-btn:hover {
+    background: rgba(200, 224, 228, 0.05);
+    border-color: #C8E0E4 !important;
+}
+body.dark-theme .esc-btn.danger {
+    border-color: #7A4A4A !important;
+    color: #D08080;
+}
+body.dark-theme .esc-btn.danger kbd {
+    background: rgba(208, 128, 128, 0.1);
+    border-color: #7A4A4A;
+    color: #D08080;
+}
+body.dark-theme .esc-btn.danger:hover {
+    background: rgba(208, 128, 128, 0.08);
+    border-color: #D08080 !important;
+}
+
+/* =========================================
+   Turn indicator
+   ========================================= */
+#turn-indicator-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+body.in-game #turn-indicator-container {
+    opacity: 1;
+}
+#turn-indicator-canvas {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+#turn-indicator-text {
+    font-size: 0.9em;
+    color: #2C4A4E;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+body.dark-theme #turn-indicator-text {
+    color: #C8E0E4;
+    background: rgba(26, 38, 41, 0.8);
+}
+#turn-indicator-text.thinking::after {
+    content: ".";
+    animation: thinking-dots 1.2s steps(1) infinite;
+}
+#turn-indicator-container.thinking #turn-indicator-canvas {
+    animation: pulse 1s infinite alternate;
+}
+
+/* =========================================
+   Replay controls
+   ========================================= */
+#replay-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(244, 249, 244, 0.95);
+    border: 1px solid #C5D5C0;
+    border-radius: 30px;
+    padding: 10px 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    z-index: 10000;
+    pointer-events: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+body.dark-theme #replay-controls {
+    background: rgba(26, 38, 41, 0.95);
+    border-color: #3A4A4E;
+}
+#replay-controls button {
+    background: transparent;
+    border: 1px solid #2C4A4E;
+    color: #2C4A4E;
+    padding: 6px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+body.dark-theme #replay-controls button {
+    border-color: #C8E0E4;
+    color: #C8E0E4;
+}
+#replay-step-info {
+    font-size: 0.9em;
+    color: #2C4A4E;
+    min-width: 80px;
+    text-align: center;
+}
+body.dark-theme #replay-step-info {
+    color: #C8E0E4;
+}
+
+/* =========================================
+   Settings panel (on start screen)
+   ========================================= */
+.settings-area {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #C5D5C0;
+}
+body.dark-theme .settings-area {
+    border-top-color: #3A4A4E;
+}
+.settings-area h3 {
+    font-size: 1em;
+    color: #2C4A4E;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    font-weight: normal;
+}
+body.dark-theme .settings-area h3 {
+    color: #C8E0E4;
+}
+
+/* Language select alignment (specific) */
+.setting-group:has(#lang-select) {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    text-align: right;
+}
+.setting-group:has(#lang-select) .setting-label {
+    text-align: right;
+    margin: 0;
+    flex-shrink: 0;
+}
+.setting-group:has(#lang-select) .custom-select {
+    flex-shrink: 0;
+}
+
+/* =========================================
+   Victory modal (specific)
+   ========================================= */
+.victory-content {
+    background: #F4F9F4;
+    border: 1px solid #C5D5C0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    font-family: 'LXGW WenKai', sans-serif !important;
+}
+body.dark-theme .victory-content {
+    background: #1A2629;
+    border-color: #3A4A4E;
+}
+.victory-title {
+    font-size: 1.8em;
+    color: #2C4A4E;
+    margin-bottom: 10px;
+    font-weight: normal;
+    letter-spacing: 2px;
+}
+body.dark-theme .victory-title {
+    color: #C8E0E4;
+}
+.victory-subtitle {
+    font-size: 1em;
+    color: #6A8A8E;
+    margin-bottom: 25px;
+}
+body.dark-theme .victory-subtitle {
+    color: #8A9A9E;
+}
+#btn-victory-restart {
+    background: transparent;
+    color: #2C4A4E;
+    border: 1px solid #C5D5C0;
+}
+#btn-victory-restart:hover {
+    background: rgba(44, 74, 78, 0.1);
+}
+body.dark-theme #btn-victory-restart {
+    color: #C8E0E4;
+    border-color: #3A4A4E;
+}
+body.dark-theme #btn-victory-restart:hover {
+    background: rgba(200, 224, 228, 0.1);
+}
+
+/* =========================================
+   Custom sandbox modal
+   ========================================= */
+#custom-sandbox-modal .setting-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    margin: 14px 0;
+    padding: 0 8px;
+    width: 100%;
+}
+#custom-sandbox-modal .setting-group .setting-label {
+    min-width: 100px;
+    flex-shrink: 0;
+    text-align: left;
+    font-size: 0.9em;
+}
+#custom-sandbox-modal .modal-content {
+    min-width: 360px;
+}
+#custom-sandbox-modal .btn-primary {
+    padding: 8px 25px;
+    background: #2C4A4E;
+    color: #F4F9F4;
+    border: 1px solid #2C4A4E;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'LXGW WenKai', sans-serif;
+    transition: all 0.2s;
+}
+#custom-sandbox-modal .btn-primary:hover {
+    background: #1A3A3E;
+}
+body.dark-theme #custom-sandbox-modal .btn-primary {
+    background: #C8E0E4;
+    color: #1A2629;
+    border-color: #C8E0E4;
+}
+body.dark-theme #custom-sandbox-modal .btn-primary:hover {
+    background: #A0C0C4;
+}
+
+/* =========================================
+   Level select modal
+   ========================================= */
+.level-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+.level-item {
+    padding: 12px 16px;
+    border: 1px solid #C5D5C0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(196, 212, 192, 0.1);
+    text-align: left;
+    font-family: 'LXGW WenKai', sans-serif;
+}
+.level-item:hover {
+    background: rgba(44, 74, 78, 0.1);
+    border-color: #2C4A4E;
+}
+.level-item .level-name {
+    font-size: 1.05em;
+    font-weight: bold;
+    color: #2C4A4E;
+    margin-bottom: 2px;
+}
+.level-item .level-dims {
+    font-size: 0.85em;
+    color: #6B8A8E;
+}
+body.dark-theme .level-item {
+    border-color: #3A4A4E;
+    background: rgba(26, 38, 41, 0.6);
+}
+body.dark-theme .level-item:hover {
+    background: rgba(200, 224, 228, 0.1);
+    border-color: #C8E0E4;
+}
+body.dark-theme .level-item .level-name {
+    color: #C8E0E4;
+}
+body.dark-theme .level-item .level-dims {
+    color: #6B8A8E;
+}

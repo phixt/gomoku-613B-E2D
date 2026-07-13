@@ -1,0 +1,19 @@
+/* =========================================
+   Animations & transitions
+   ========================================= */
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    from { transform: scale(1); opacity: 0.8; }
+    to { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes thinking-dots {
+    0% { content: "."; }
+    33% { content: ".."; }
+    66% { content: "..."; }
+    100% { content: "."; }
+}

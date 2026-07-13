@@ -1,0 +1,300 @@
+/* =========================================
+   Main layout (app, panels)
+   ========================================= */
+#app {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    height: 100% !important;
+    position: relative;
+    z-index: 1;
+}
+.panel {
+    position: relative;
+    height: 100%;
+    flex: 1;
+    background: transparent;
+}
+#right-panel {
+    border-left: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* =========================================
+   Start & guide screens
+   ========================================= */
+#start-screen,
+#guide-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: linear-gradient(135deg, #F4F9F4 0%, #E8F0E6 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+body.dark-theme #start-screen,
+body.dark-theme #guide-screen {
+    background: linear-gradient(135deg, #1A2629 0%, #152022 100%);
+}
+#start-screen.fade-out,
+#guide-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.start-layout {
+    display: flex;
+    width: 95%;
+    max-width: 1200px;
+    height: 85vh;
+    min-height: 600px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #C5D5C0;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+body.dark-theme .start-layout {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #3A4A4E;
+}
+
+.split-layout .start-left {
+    flex: 1;
+    border-right: 1px dashed #C5D5C0;
+}
+.split-layout .start-right {
+    flex: 1.2;
+}
+body.dark-theme .split-layout .start-left {
+    border-right-color: #3A4A4E;
+}
+
+.brand-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+}
+.brand-area h1 {
+    font-size: 2.8em;
+    color: #2C4A4E;
+    letter-spacing: 6px;
+    margin-bottom: 15px;
+    font-weight: normal;
+}
+body.dark-theme .brand-area h1 {
+    color: #C8E0E4;
+}
+.brand-area .subtitle {
+    font-size: 1.1em;
+    color: #6A8A8E;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
+body.dark-theme .brand-area .subtitle {
+    color: #8A9A9E;
+}
+.version-badge {
+    padding: 6px 16px;
+    background: rgba(44, 74, 78, 0.1);
+    border: 1px solid #C5D5C0;
+    border-radius: 20px;
+    color: #2C4A4E;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    font-family: 'Consolas', monospace;
+}
+body.dark-theme .version-badge {
+    background: rgba(200, 224, 228, 0.1);
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+}
+
+.action-area {
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    gap: 30px;
+}
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Save area container (layout) */
+.save-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+.save-area h3 {
+    font-size: 1.1em;
+    color: #2C4A4E;
+    margin-bottom: 15px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+body.dark-theme .save-area h3 {
+    color: #C8E0E4;
+}
+
+/* Start page tweaks */
+#start-screen .start-left.brand-area {
+    justify-content: flex-start;
+    align-items: center;
+    padding: 1rem 0 2rem 0;
+    text-align: center;
+}
+#start-screen .action-buttons {
+    margin-top: auto;
+    margin-bottom: 0.6rem;
+    align-self: center;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+#start-screen .action-buttons .primary-btn,
+#start-screen .action-buttons .secondary-btn {
+    padding: 0.8rem 2.2rem;
+    font-size: 1.2rem;
+    border-radius: 6px;
+    width: 200px;
+    text-align: center;
+}
+
+/* Guide page layout */
+#guide-screen .start-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 2rem;
+    min-height: 70vh;
+    padding: 2rem 4rem;
+    position: relative;
+}
+#guide-screen .start-left {
+    flex: 1.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+}
+#guide-screen .start-right {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    text-align: center;
+}
+#guide-screen .start-right h1 {
+    margin-bottom: 0.2rem;
+}
+#guide-screen .start-right .subtitle {
+    margin-bottom: 1.2rem;
+}
+#guide-screen .mouse-actions {
+    margin: 0.2rem 0 1.8rem 0;
+    padding-right: 1.5rem;
+    text-align: center;
+}
+#guide-screen .mouse-actions p {
+    margin: 0.2rem 0;
+}
+#guide-screen .guide-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+#guide-screen .guide-bottom-tip {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 4rem;
+    right: 4rem;
+    text-align: left;
+    font-size: 0.95rem;
+    color: var(--text-secondary, #666);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#guide-screen .guide-bottom-tip kbd {
+    background: var(--bg-tertiary, #eee);
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+body.dark-theme #guide-screen .guide-bottom-tip {
+    color: var(--text-secondary-dark, #aaa);
+}
+body.dark-theme #guide-screen .guide-bottom-tip kbd {
+    background: var(--bg-tertiary-dark, #333);
+}
+
+/* Responsive tweaks */
+@media (max-width: 820px) {
+    #start-screen .start-layout,
+    #guide-screen .start-layout {
+        flex-direction: column;
+        padding: 1.5rem;
+        min-height: auto;
+    }
+    #start-screen .start-left.brand-area {
+        justify-content: flex-start;
+    }
+    #start-screen .action-buttons {
+        transform: translateY(0);
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    #start-screen .action-buttons .primary-btn,
+    #start-screen .action-buttons .secondary-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+    }
+    #guide-screen .start-left {
+        order: 2;
+    }
+    #guide-screen .start-right {
+        order: 1;
+    }
+    #guide-screen .guide-bottom-tip {
+        position: static;
+        margin-top: 1.5rem;
+        white-space: normal;
+        text-align: left;
+        padding: 0 1rem;
+    }
+}
+
+/* Additional layout: prevent title squeeze */
+#start-screen .start-left.brand-area h1,
+#start-screen .start-left.brand-area .subtitle,
+#start-screen .start-left.brand-area .version-badge {
+    flex-shrink: 0;
+}
+#start-screen .start-left.brand-area .settings-section {
+    flex-shrink: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding: 0 1rem;
+    width: 100%;
+    max-width: 340px;
+}
+#start-screen .start-left.brand-area .action-buttons {
+    flex-shrink: 0;
+}

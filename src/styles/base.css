@@ -1,0 +1,44 @@
+/* =========================================
+   Local font
+   ========================================= */
+@font-face {
+    font-family: 'LXGW WenKai';
+    src: url('/fonts/LXGWWenKaiLite-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* =========================================
+   Global reset
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'LXGW WenKai', 'Segoe UI', sans-serif;
+    scrollbar-width: none;
+}
+body::-webkit-scrollbar {
+    display: none;
+}
+body {
+    background-color: #F2F7F2;
+    transition: background-color 0.3s ease;
+}
+body.dark-theme {
+    background-color: #1A2629;
+}
+
+.hidden {
+    display: none !important;
+}

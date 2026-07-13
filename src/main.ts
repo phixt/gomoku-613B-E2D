@@ -1,4 +1,10 @@
-import "./style/main.css";
+// src/main.ts
+import './styles/base.css';
+import './styles/layout.css';
+import './styles/components.css';
+import './styles/panels.css';
+import './styles/animations.css';
+
 import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
