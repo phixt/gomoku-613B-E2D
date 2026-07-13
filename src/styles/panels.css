@@ -1,40 +1,42 @@
 /* =========================================
-   多模式快捷键样式系统 (统一浅棕文字 + 常规字重)
+   多模式快捷键样式系统 (3D阴影 + 分区最高对比度文字)
    ========================================= */
 
-/* 1. 全局色彩变量定义 */
+/* 1. 全局色彩与阴影变量 */
 :root {
-    /* 核心背景色 */
-    --kbd-base-bg: #E8F4F5;      /* 水蓝（浅） */
+    /* 背景色 */
+    --kbd-base-bg: #E8F4F5;      /* 水蓝 */
     --kbd-base-border: #2C4A4E;
     --kbd-replay: #2D6A4F;       /* 墨绿 */
     --kbd-pause: #1E3A5F;        /* 深蓝 */
-    /* 统一文字颜色：浅棕色 */
-    --kbd-text-color: #8B7355;   /* 浅棕，适合浅色背景 */
+    
+    /* 最高对比度文字颜色（单色时使用） */
+    --text-on-base: #1A2E3A;     /* 深石板灰，水蓝上对比度极高 */
+    --text-on-dark: #FFFFFF;     /* 纯白，墨绿/深蓝上对比度极高 */
+
     /* 非活跃状态 */
     --kbd-inactive-bg: #FFF;
     --kbd-inactive-border: #D0D0D0;
     --kbd-inactive-text: #AAA;
-    /* 阴影 */
-    --kbd-shadow: 0 3px 0 rgba(0, 0, 0, 0.1);
-    /* 全局文字阴影（用于三色混合，增强可读） */
-    --kbd-global-text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+
+    /* 恢复 3D 立体阴影 (上浅下深，按压感) */
+    --kbd-shadow-3d: 0 4px 0 rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 body.dark-theme {
-    --kbd-base-bg: #4A7A7E;      /* 暗色下加深水蓝 */
+    --kbd-base-bg: #4A7A7E;
     --kbd-base-border: #C8E0E4;
     --kbd-replay: #2D6A4F;
     --kbd-pause: #1E3A5F;
-    --kbd-text-color: #C4A882;   /* 暗色下浅棕更亮 */
-    --kbd-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+    --text-on-base: #E8F0F0;     /* 暗色下水蓝变深，文字变亮 */
+    --text-on-dark: #FFFFFF;
+    --kbd-shadow-3d: 0 4px 0 rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
     --kbd-inactive-bg: #2A3A3E;
     --kbd-inactive-border: #4A5A5E;
     --kbd-inactive-text: #6A7A7E;
-    --kbd-global-text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-/* 2. 键盘模拟器容器与布局 */
+/* 2. 键盘容器 */
 .keyboard-sim {
     display: flex;
     flex-direction: column;
@@ -50,7 +52,7 @@ body.dark-theme {
     gap: 8px;
 }
 
-/* 3. 基础按键样式（非活跃） */
+/* 3. 按键基础样式 (含 3D 阴影恢复) */
 .key,
 .key-spacer {
     width: 40px;
@@ -62,55 +64,44 @@ body.dark-theme {
     border: 1px solid var(--kbd-inactive-border);
     border-radius: 6px;
     font-size: 1em;
-    color: var(--kbd-inactive-text);
     font-family: 'Consolas', monospace;
-    transition: all 0.2s;
+    transition: all 0.1s ease;
+    color: var(--kbd-inactive-text);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.05); /* 非活跃状态轻度阴影 */
 }
-.key-spacer { visibility: hidden; }
+.key-spacer {
+    visibility: hidden;
+}
 
-/* 4. 所有模式统一文字颜色和字重 */
-.key,
+/* 4. 所有激活模式的 3D 阴影统一覆盖 */
 .key.key-base,
 .key.key-replay,
 .key.key-pause,
 .key.key-base-replay,
 .key.key-base-pause,
 .key.key-global {
-    color: var(--kbd-text-color) !important;
-    font-weight: normal !important;
+    box-shadow: var(--kbd-shadow-3d) !important;
+    border: 1px solid transparent !important; /* 边框交给阴影和背景，但保留可见 */
 }
 
-/* 5. 各模式背景与边框（保留区分） */
+/* 5. 背景色定义 (不变) */
 .key.key-base {
     background: var(--kbd-base-bg) !important;
     border-color: var(--kbd-base-border) !important;
-    box-shadow: var(--kbd-shadow);
 }
 .key.key-replay {
     background: var(--kbd-replay) !important;
-    border-color: var(--kbd-replay) !important;
-    box-shadow: var(--kbd-shadow);
 }
 .key.key-pause {
     background: var(--kbd-pause) !important;
-    border-color: var(--kbd-pause) !important;
-    box-shadow: var(--kbd-shadow);
 }
 .key.key-base-replay {
     background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%) !important;
-    border: 1px solid transparent !important;
-    box-shadow: 
-        -1px -1px 0 var(--kbd-base-bg),
-        1px 1px 0 var(--kbd-replay),
-        var(--kbd-shadow);
+    border-color: transparent !important;
 }
 .key.key-base-pause {
     background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%) !important;
-    border: 1px solid transparent !important;
-    box-shadow: 
-        -1px -1px 0 var(--kbd-base-bg),
-        1px 1px 0 var(--kbd-pause),
-        var(--kbd-shadow);
+    border-color: transparent !important;
 }
 .key.key-global {
     background: linear-gradient(135deg, 
@@ -120,69 +111,53 @@ body.dark-theme {
         var(--kbd-replay) 66%, 
         var(--kbd-pause) 66%, 
         var(--kbd-pause) 100%) !important;
-    border: 1px solid transparent !important;
-    box-shadow: var(--kbd-shadow);
-    text-shadow: var(--kbd-global-text-shadow); /* 增强可读 */
+    border-color: transparent !important;
 }
 
-/* 6. 标签样式（与按键同步） */
-.key-tag {
-    padding: 3px 6px;
-    background: var(--kbd-inactive-bg);
-    border: 1px solid var(--kbd-inactive-border);
-    border-radius: 4px;
+/* ========== 6. 关键：文字分区最高对比度 ========== */
+.key-label {
     font-family: 'Consolas', monospace;
-    font-size: 0.85em;
-    min-width: 50px;
-    text-align: center;
-    transition: all 0.2s;
-}
-/* 统一文字颜色和字重 */
-.key-tag,
-.key-tag.key-base,
-.key-tag.key-replay,
-.key-tag.key-pause,
-.key-tag.key-base-replay,
-.key-tag.key-base-pause,
-.key-tag.key-global {
-    color: var(--kbd-text-color) !important;
-    font-weight: normal !important;
+    font-size: 1em;
+    font-weight: normal;
+    display: inline-block;
+    line-height: 1;
 }
 
-/* 各标签背景区分 */
-.key-tag.key-base {
-    background: var(--kbd-base-bg) !important;
-    border-color: var(--kbd-base-border) !important;
+/* 6a. 单色模式：直接使用纯色，对比度最高 */
+.key-base .key-label {
+    color: var(--text-on-base) !important;
 }
-.key-tag.key-replay {
-    background: var(--kbd-replay) !important;
-    border-color: var(--kbd-replay) !important;
+.key-replay .key-label,
+.key-pause .key-label {
+    color: var(--text-on-dark) !important;
 }
-.key-tag.key-pause {
-    background: var(--kbd-pause) !important;
-    border-color: var(--kbd-pause) !important;
+
+/* 6b. 双色/三色混合模式：使用 background-clip: text 跟随背景分割 */
+.key-base-replay .key-label {
+    background: linear-gradient(135deg, var(--text-on-base) 50%, var(--text-on-dark) 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
-.key-tag.key-base-replay {
-    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%) !important;
-    border: 1px solid transparent !important;
+.key-base-pause .key-label {
+    background: linear-gradient(135deg, var(--text-on-base) 50%, var(--text-on-dark) 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
-.key-tag.key-base-pause {
-    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%) !important;
-    border: 1px solid transparent !important;
-}
-.key-tag.key-global {
+.key-global .key-label {
+    /* 对应背景：水蓝(深色文字) -> 墨绿(白色文字) -> 深蓝(白色文字) */
     background: linear-gradient(135deg, 
-        var(--kbd-base-bg) 0%, 
-        var(--kbd-base-bg) 33%, 
-        var(--kbd-replay) 33%, 
-        var(--kbd-replay) 66%, 
-        var(--kbd-pause) 66%, 
-        var(--kbd-pause) 100%) !important;
-    border: 1px solid transparent !important;
-    text-shadow: var(--kbd-global-text-shadow);
+        var(--text-on-base) 0%, 
+        var(--text-on-base) 33%, 
+        var(--text-on-dark) 33%, 
+        var(--text-on-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-/* 7. 快捷键说明列表布局 */
+/* ========== 7. 图例与说明列表（不变，只做微调适配） ========== */
 .key-desc-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -197,7 +172,7 @@ body.dark-theme .key-desc-grid { color: #A0B0B4; }
     gap: 8px;
 }
 
-/* 8. 图例说明（仅色块，不涉及文字颜色） */
+/* 图例色块 */
 .kbd-legend {
     display: flex;
     flex-wrap: wrap;
@@ -220,31 +195,12 @@ body.dark-theme .kbd-legend { color: #A0B0B4; }
     display: inline-block;
     border: 1px solid rgba(0,0,0,0.1);
 }
-.legend-dot.base {
-    background: var(--kbd-base-bg);
-    border-color: var(--kbd-base-border);
-}
-.legend-dot.replay {
-    background: var(--kbd-replay);
-}
-.legend-dot.pause {
-    background: var(--kbd-pause);
-}
-.legend-dot.base-replay {
-    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%);
-}
-.legend-dot.base-pause {
-    background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%);
-}
-.legend-dot.global {
-    background: linear-gradient(135deg, 
-        var(--kbd-base-bg) 0%, 
-        var(--kbd-base-bg) 33%, 
-        var(--kbd-replay) 33%, 
-        var(--kbd-replay) 66%, 
-        var(--kbd-pause) 66%, 
-        var(--kbd-pause) 100%);
-}
+.legend-dot.base { background: var(--kbd-base-bg); border-color: var(--kbd-base-border); }
+.legend-dot.replay { background: var(--kbd-replay); }
+.legend-dot.pause { background: var(--kbd-pause); }
+.legend-dot.base-replay { background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-replay) 50%); }
+.legend-dot.base-pause { background: linear-gradient(135deg, var(--kbd-base-bg) 50%, var(--kbd-pause) 50%); }
+.legend-dot.global { background: linear-gradient(135deg, var(--kbd-base-bg) 0%, var(--kbd-base-bg) 33%, var(--kbd-replay) 33%, var(--kbd-replay) 66%, var(--kbd-pause) 66%, var(--kbd-pause) 100%); }
 
 /* =========================================
    Esc pause menu

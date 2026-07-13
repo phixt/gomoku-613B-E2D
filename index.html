@@ -150,31 +150,30 @@
                 <!-- 键盘模拟器 (按键类名已更新) -->
                 <div class="keyboard-sim">
                     <div class="kb-row">
-                        <div class="key key-base-replay">Q</div>
-                        <div class="key key-base-replay">W</div>
-                        <div class="key key-base-replay">E</div>
-                        <div class="key key-base-pause">R</div>
-                        <div class="key key-global">T</div>
+                        <div class="key key-base-replay"><span class="key-label">Q</span></div>
+                        <div class="key key-base-replay"><span class="key-label">W</span></div>
+                        <div class="key key-base-replay"><span class="key-label">E</span></div>
+                        <div class="key key-base-pause"><span class="key-label">R</span></div>
+                        <div class="key key-global"><span class="key-label">T</span></div>
                         <div class="key-spacer"></div>
                         <div class="key-spacer"></div>
                     </div>
                     <div class="kb-row">
-                        <div class="key key-base-replay">A</div>
-                        <div class="key key-global">S</div> <!-- S 三种模式均有功能 -->
-                        <div class="key key-base-replay">D</div>
-                        <div class="key key-base-replay">F</div>
-                        <div class="key key-pause">G</div>
-                        <div class="key key-base">H</div> <!-- H 仅对战 -->
+                        <div class="key key-base-replay"><span class="key-label">A</span></div>
+                        <div class="key key-global"><span class="key-label">S</span></div>
+                        <div class="key key-base-replay"><span class="key-label">D</span></div>
+                        <div class="key key-base-replay"><span class="key-label">F</span></div>
+                        <div class="key key-pause"><span class="key-label">G</span></div>
+                        <div class="key key-base"><span class="key-label">H</span></div>
                     </div>
                     <div class="kb-row">
-                        <div class="key key-base-replay">Z</div>
-                        <div class="key key-base-replay">X</div> <!-- X 复位层间距 -->
-                        <div class="key key-base-replay">C</div>
-                        <div class="key key-base-replay">V</div>
-                        <div class="key key-pause">B</div>
+                        <div class="key key-base-replay"><span class="key-label">Z</span></div>
+                        <div class="key key-base-replay"><span class="key-label">X</span></div>
+                        <div class="key key-base-replay"><span class="key-label">C</span></div>
+                        <div class="key key-base-replay"><span class="key-label">V</span></div>
+                        <div class="key key-pause"><span class="key-label">B</span></div>
                     </div>
                 </div>
-
                 <!-- 模式图例 (更新) -->
                 <div class="kbd-legend">
                     <div class="kbd-legend-item"><span class="legend-dot base"></span> 对战模式</div>
@@ -188,37 +187,101 @@
                 <!-- 快捷键说明列表 (按功能重新组织，说明文字已更新) -->
                 <div class="key-desc-grid">
                     <!-- 对战+复盘 (Base+Replay) -->
-                    <div class="desc-item"><span class="key-tag key-base-replay">Q / E</span> <span>旋转 3D 视角</span>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">Q / E</span>
+                        <span>旋转 3D 视角</span>
                     </div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">W / S</span> <span>推拉 3D 视角</span>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">W / S</span>
+                        <span>推拉 3D 视角</span>
                     </div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">A / D</span> <span>切换层级 (循环)</span>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">A / D</span>
+                        <span>切换层级 (循环)</span>
                     </div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">Z / C</span> <span>调整层间距</span></div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">X</span> <span>复位层间距</span></div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">F</span> <span>翻转 2D 棋盘</span></div>
-                    <div class="desc-item"><span class="key-tag key-base-replay">V</span> <span>切换色弱模式</span></div>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">Z / C</span>
+                        <span>调整层间距</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">X</span>
+                        <span>复位层间距</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">F</span>
+                        <span>翻转 2D 棋盘</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot base-replay"></span>
+                        <span class="key-tag key-base-replay">V</span>
+                        <span>切换色弱模式</span>
+                    </div>
 
                     <!-- 仅对战 (Base) -->
-                    <div class="desc-item"><span class="key-tag key-base">H</span> <span>开关辅助线</span></div>
+                    <div class="desc-item">
+                        <span class="legend-dot base"></span>
+                        <span class="key-tag key-base">H</span>
+                        <span>开关辅助线</span>
+                    </div>
 
                     <!-- 对战+暂停 (Base+Pause) -->
-                    <div class="desc-item"><span class="key-tag key-base-pause">R</span> <span>重新开始对局</span></div>
+                    <div class="desc-item">
+                        <span class="legend-dot base-pause"></span>
+                        <span class="key-tag key-base-pause">R</span>
+                        <span>重新开始对局</span>
+                    </div>
 
-                    <!-- 全局 (三种模式) -->
-                    <div class="desc-item"><span class="key-tag key-global">T</span> <span>切换亮/暗主题</span></div>
-                    <div class="desc-item"><span class="key-tag key-global">M</span> <span>全局静音</span></div>
-                    <div class="desc-item"><span class="key-tag key-global">ESC</span> <span>暂停 / 呼出菜单 或 关闭菜单/返回</span>
+                    <!-- 全局 (Global) -->
+                    <div class="desc-item">
+                        <span class="legend-dot global"></span>
+                        <span class="key-tag key-global">T</span>
+                        <span>切换亮/暗主题</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot global"></span>
+                        <span class="key-tag key-global">M</span>
+                        <span>全局静音</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot global"></span>
+                        <span class="key-tag key-global">ESC</span>
+                        <span>暂停 / 呼出菜单 或 关闭菜单/返回</span>
                     </div>
 
                     <!-- 仅复盘 (Replay) -->
-                    <div class="desc-item"><span class="key-tag key-replay">← / →</span> <span>上一步 / 下一步</span></div>
+                    <div class="desc-item">
+                        <span class="legend-dot replay"></span>
+                        <span class="key-tag key-replay">← / →</span>
+                        <span>上一步 / 下一步</span>
+                    </div>
 
                     <!-- 仅暂停 (Pause) -->
-                    <div class="desc-item"><span class="key-tag key-pause">S</span> <span>存档（暂停下）</span></div>
-                    <div class="desc-item"><span class="key-tag key-pause">L</span> <span>读档（开始/暂停页面均可）</span></div>
-                    <div class="desc-item"><span class="key-tag key-pause">G</span> <span>进入快捷键说明（指南页）</span></div>
-                    <div class="desc-item"><span class="key-tag key-pause">B</span> <span>返回标题（暂停界面）</span></div>
+                    <div class="desc-item">
+                        <span class="legend-dot pause"></span>
+                        <span class="key-tag key-pause">S</span>
+                        <span>存档（暂停下）</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot pause"></span>
+                        <span class="key-tag key-pause">L</span>
+                        <span>读档（开始/暂停页面均可）</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot pause"></span>
+                        <span class="key-tag key-pause">G</span>
+                        <span>进入快捷键说明（指南页）</span>
+                    </div>
+                    <div class="desc-item">
+                        <span class="legend-dot pause"></span>
+                        <span class="key-tag key-pause">B</span>
+                        <span>返回标题（暂停界面）</span>
+                    </div>
                 </div>
             </div>
 
