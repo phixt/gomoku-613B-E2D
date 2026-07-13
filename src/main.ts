@@ -18,6 +18,9 @@ import { AIEngine } from "./ai/AIEngine";
 import * as THREE from "three";
 import { resourceManager } from "./utils/ResourceManager";
 import { i18n } from "./core/I18n";
+import { StandardEngine } from "./core/rules/StandardEngine";
+import { SwapEngine } from "./core/rules/SwapEngine";
+import type { IRuleEngine } from "./core/rules/IRuleEngine";
 
 const AppState = {
   TITLE: "TITLE",
@@ -135,7 +138,15 @@ async function main(): Promise<void> {
     audioManager.playSFX("click");
     rightPanel.updateLastMoveUI(_x, _y, _z);
     leftPanel.updateLastMoveUI(_x, _y, _z);
-    currentPlayer = player === 1 ? 2 : 1;
+    // Use rule engine for turn state
+    if (currentEngine) {
+      const ts = currentEngine.getNextTurnState(moveHistory, currentPlayer);
+      if (!ts.isSwapPhase) {
+        currentPlayer = ts.nextPlayer;
+      }
+    } else {
+      currentPlayer = player === 1 ? 2 : 1;
+    }
     overlayManager.showToast(currentPlayer === 1 ? i18n.t("BLACK_TURN") : i18n.t("WHITE_TURN"));
     updateTurnIndicator(currentPlayer);
     const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
@@ -163,6 +174,7 @@ async function main(): Promise<void> {
   let moveCount = 0;
   let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
   let isReplayMode = false;
+  let currentEngine: IRuleEngine | null = null;
   const STANDARD_LEVEL = {
     id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
   };
@@ -250,7 +262,7 @@ async function main(): Promise<void> {
 
 
 
-  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; winLength?: number; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
+  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; winLength?: number; rules?: string; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
     console.log("[Context] Initializing with size: " + levelConfig.boardSize + "x" + levelConfig.layers);
 
     // Apply win length from config (default 5)
@@ -272,6 +284,12 @@ async function main(): Promise<void> {
     leftPanel = new LeftPanel(leftEl, currentTheme, levelConfig.boardSize, levelConfig.layers);
     rightPanel = new RightPanel(rightEl, currentTheme, levelConfig.boardSize, levelConfig.layers);
     const board = new Board(levelConfig.boardSize, levelConfig.layers);
+
+    // Create rule engine based on level config
+    currentEngine = levelConfig.rules === "swap2"
+      ? new SwapEngine()
+      : new StandardEngine();
+    rightPanel.ruleEngine = currentEngine;
 
     rightPanel.setGameActiveCallback(() => gameStore.appState === AppState.PLAYING);
     rightPanel.onPieceChanged = (b: Board, z: number): void => {
@@ -310,7 +328,18 @@ async function main(): Promise<void> {
       audioManager.playSFX("click");
       rightPanel.updateLastMoveUI(_x, _y, _z);
       leftPanel.updateLastMoveUI(_x, _y, _z);
-      currentPlayer = player === 1 ? 2 : 1;
+      // Use rule engine for turn state (handles swap phases)
+      if (currentEngine) {
+        const ts = currentEngine.getNextTurnState(moveHistory, currentPlayer);
+        if (ts.isSwapPhase) {
+          showSwapBar();
+          // Keep currentPlayer unchanged during swap phase; wait for user decision
+        } else {
+          currentPlayer = ts.nextPlayer;
+        }
+      } else {
+        currentPlayer = player === 1 ? 2 : 1;
+      }
       overlayManager.showToast(currentPlayer === 1 ? i18n.t("BLACK_TURN") : i18n.t("WHITE_TURN"));
       updateTurnIndicator(currentPlayer);
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
@@ -341,6 +370,7 @@ async function main(): Promise<void> {
     }
     guideScreen?.classList.add("hidden");
     gameStore.appState = AppState.PLAYING;
+    hideSwapBar();
     audioManager.playBGM("game");
     updateTurnIndicator(currentPlayer);
     forceCorrectSize();
@@ -460,6 +490,42 @@ async function main(): Promise<void> {
     gameStore.appState = AppState.PLAYING;
     if (escMenu) escMenu.classList.add("hidden");
   };
+
+  // ===== Swap2 Decision Bar =====
+  const showSwapBar = (): void => {
+    const bar = document.getElementById("swap-decision-bar");
+    if (bar) bar.classList.remove("hidden");
+  };
+
+  const hideSwapBar = (): void => {
+    const bar = document.getElementById("swap-decision-bar");
+    if (bar) bar.classList.add("hidden");
+  };
+
+  // Bind swap decision buttons
+  const btnSwapConfirm = document.getElementById("btn-swap-confirm");
+  const btnSwapPass = document.getElementById("btn-swap-pass");
+
+  btnSwapConfirm?.addEventListener("click", () => {
+    if (currentEngine instanceof SwapEngine) {
+      currentEngine.applySwap(moveHistory, rightPanel.board);
+      rightPanel.refresh();
+      leftPanel.renderAllPieces(rightPanel.board, focusZ);
+      updateTurnIndicator(currentPlayer);
+      overlayManager.showToast(i18n.t("SWAP_DONE"));
+    }
+    hideSwapBar();
+  });
+
+  btnSwapPass?.addEventListener("click", () => {
+    hideSwapBar();
+    updateTurnIndicator(currentPlayer);
+    overlayManager.showToast(i18n.t("PASS_DONE"));
+    const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
+    if (isPvEMode && currentPlayer === aiColor) {
+      triggerAIMove();
+    }
+  });
 
   // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
   const renderSaveSlots = (): void => {
@@ -762,6 +828,7 @@ const exitReplay = (): void => {
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
       eventBus.emit(Events.GAME_RESET);
     gameStore.appState = AppState.TITLE;
+    hideSwapBar();
     hideAllOverlays();
     startScreen?.classList.remove("hidden");
     startScreen?.classList.remove("fade-out");
@@ -1008,6 +1075,7 @@ const exitReplay = (): void => {
     rightPanel.refresh();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
     gameStore.appState = AppState.PLAYING;
+    hideSwapBar();
     audioManager.playBGM("game");
   };
 

@@ -2,6 +2,12 @@ export type CellState = 0 | 1 | 2;
 
 export const BLACK = 1;
 export const WHITE = 2;
+export interface Move {
+  x: number;
+  y: number;
+  z: number;
+  player: 1 | 2;
+}
 
 export interface Vector3Int {
   x: number;

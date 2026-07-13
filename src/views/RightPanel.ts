@@ -7,6 +7,7 @@ import { DIRECTIONS_3D } from "../utils/MathUtils";
 import { BOARD_SIZE, LAYER_COUNT, DEFAULT_LAYER_SPACING, HOVER_PIECE_OPACITY, COLOR_SELF_NORMAL, COLOR_ENEMY_NORMAL, COLOR_SELF_BLIND, COLOR_ENEMY_BLIND, COLOR_AUX_RED, COLOR_AUX_BLUE } from "../core/Config";
 import { eventBus, Events } from "../core/EventBus";
 import { resourceManager } from "../utils/ResourceManager";
+import type { IRuleEngine } from "../core/rules/IRuleEngine";
 
 const LAYER_SPACING = DEFAULT_LAYER_SPACING;
 const GHOST_OPACITY = HOVER_PIECE_OPACITY;
@@ -67,6 +68,7 @@ export class RightPanel {
   public onHoverChanged: ((x: number, y: number, z: number) => void) | null = null;
   public onPiecePlaced: ((x: number, y: number, z: number, player: number) => void) | null = null;
   public onGameWonCallback: ((winner: 1 | 2) => void) | null = null;
+  public ruleEngine: IRuleEngine | null = null;
 
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
@@ -296,12 +298,14 @@ export class RightPanel {
   /** Place a piece for the AI opponent. */
   public placeAIPiece(x: number, y: number, z: number): void {
     if (this.board.get(x, y, z) !== 0) return;
+    // Rule engine: legality check
+    if (this.ruleEngine && !this.ruleEngine.isLegalMove(x, y, z, this._currentPlayer as 1 | 2, [], this.board)) return;
     this.board.set(x, y, z, this._currentPlayer);
     this.lastMove = { x, y, z };
     this.renderPieces();
     if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
 
-    const winner = checkWinner(this.board, x, y, z);
+    const winner = this._checkWin(x, y, z, this._currentPlayer as 1 | 2);
     if (winner !== 0) {
       if (this.onGameWonCallback) this.onGameWonCallback(winner as 1 | 2);
       return;
@@ -312,6 +316,14 @@ export class RightPanel {
     this.clearAllOverlays();
   }
   getCurrentPlayer(): CellState {return this.currentPlayer;}
+
+  /** Use rule engine for win check when available, fallback to Rules.ts */
+  private _checkWin(x: number, y: number, z: number, player: 1 | 2): 0 | 1 | 2 {
+    if (this.ruleEngine) {
+      return this.ruleEngine.checkWin(x, y, z, player, this.board) ? player : 0;
+    }
+    return checkWinner(this.board, x, y, z);
+  }
 
   setCurrentPlayer(state: CellState): void {
     if (state === 1 || state === 2) {this._currentPlayer = state;}
@@ -590,6 +602,8 @@ export class RightPanel {
     if (!this.hoverValid) return;
     const gx = this.hoverX,gy = this.hoverY;
     if (gx < 0 || gx >= this._boardSize || gy < 0 || gy >= this._boardSize || this.board.get(gx, gy, this.focusZ) !== 0) return;
+    // Rule engine: legality check
+    if (this.ruleEngine && !this.ruleEngine.isLegalMove(gx, gy, this.focusZ, this._currentPlayer as 1 | 2, [], this.board)) return;
     this.board.set(gx, gy, this.focusZ, this._currentPlayer);
     this.lastMove = { x: gx, y: gy, z: this.focusZ };
     const actualState = this.board.get(gx, gy, this.focusZ);
@@ -598,7 +612,7 @@ export class RightPanel {
     this.renderPieces();
     if (this.onPieceChanged) this.onPieceChanged(this.board, this.focusZ);
 
-    const winner = checkWinner(this.board, gx, gy, this.focusZ);
+    const winner = this._checkWin(gx, gy, this.focusZ, this._currentPlayer as 1 | 2);
     console.log(`[Rules] checkWinner returned: ${winner} (${winner === BLACK ? "BLACK" : winner === WHITE ? "WHITE" : "NONE"})`);
 
     if (winner !== 0) {

@@ -125,6 +125,14 @@ const enUS = {
 
 
   WIN_LENGTH_LABEL: "Win Length",
+
+  // Swap2
+  SWAP_PROMPT: "White: Choose Swap or Pass",
+  BTN_SWAP: "Swap",
+  BTN_PASS: "Pass",
+  SWAP_DONE: "Colors swapped! You are now Black.",
+  PASS_DONE: "No swap. White continues.",
+
 } as const;
 
 export default enUS;

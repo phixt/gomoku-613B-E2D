@@ -37,7 +37,8 @@
                 <button id="esc-save" class="esc-btn"><span data-i18n="BTN_SAVE">保存进度</span> <kbd>S</kbd></button>
                 <button id="esc-load" class="esc-btn"><span data-i18n="BTN_LOAD">加载进度</span> <kbd>L</kbd></button>
                 <button id="esc-guide" class="esc-btn"><span data-i18n="BTN_GUIDE">快捷键说明</span> <kbd>G</kbd></button>
-                <button id="esc-title" class="esc-btn danger"><span data-i18n="BTN_BACK">回到标题</span> <kbd>B</kbd></button>
+                <button id="esc-title" class="esc-btn danger"><span data-i18n="BTN_BACK">回到标题</span>
+                    <kbd>B</kbd></button>
             </div>
         </div>
     </div>
@@ -120,15 +121,15 @@
             <!-- 右侧：存档槽位（保持不变）-->
             <div class="start-right action-area">
                 <!-- 语言切换 -->
-            <div class="setting-group">
-                <label class="setting-label" for="lang-select" data-i18n="SETTING_LANGUAGE">语言 / Language</label>
-                <select id="lang-select" class="custom-select">
-                    <option value="zh-CN">简体中文</option>
-                    <option value="en-US">English</option>
-                    <option value="ja-JP">日本語</option>
-                    <option value="zh-Hant">繁體中文</option>
-                </select>
-            </div>
+                <div class="setting-group">
+                    <label class="setting-label" for="lang-select" data-i18n="SETTING_LANGUAGE">语言 / Language</label>
+                    <select id="lang-select" class="custom-select">
+                        <option value="zh-CN">简体中文</option>
+                        <option value="en-US">English</option>
+                        <option value="ja-JP">日本語</option>
+                        <option value="zh-Hant">繁體中文</option>
+                    </select>
+                </div>
                 <div class="save-area">
                     <h3 data-i18n="SAVE_SLOTS_TITLE">存档槽位</h3>
                     <div id="save-slots-list" class="save-slots-list">
@@ -178,15 +179,24 @@
                 </div>
 
                 <div class="key-desc-grid">
-                    <div class="desc-item"><span class="key-tag active">Q / E</span> <span data-i18n="KEY_Q">旋转 3D 视角</span></div>
-                    <div class="desc-item"><span class="key-tag active">W / S</span> <span data-i18n="KEY_W">推拉 3D 视角</span></div>
-                    <div class="desc-item"><span class="key-tag active">A / D</span> <span data-i18n="KEY_A">切换层级 (循环)</span></div>
-                    <div class="desc-item"><span class="key-tag active">Z / C</span> <span data-i18n="KEY_Z">调整层间距</span></div>
-                    <div class="desc-item"><span class="key-tag active">R</span> <span data-i18n="KEY_R">重新开始</span></div>
-                    <div class="desc-item"><span class="key-tag active">F</span> <span data-i18n="KEY_F">翻转 2D 棋盘</span></div>
-                    <div class="desc-item"><span class="key-tag active">H</span> <span data-i18n="KEY_H">开关辅助线</span></div>
-                    <div class="desc-item"><span class="key-tag active">T</span> <span data-i18n="KEY_T">切换主题</span></div>
-                    <div class="desc-item"><span class="key-tag active">V</span> <span data-i18n="KEY_V">切换色弱模式 (开启/关闭)</span></div>
+                    <div class="desc-item"><span class="key-tag active">Q / E</span> <span data-i18n="KEY_Q">旋转 3D
+                            视角</span></div>
+                    <div class="desc-item"><span class="key-tag active">W / S</span> <span data-i18n="KEY_W">推拉 3D
+                            视角</span></div>
+                    <div class="desc-item"><span class="key-tag active">A / D</span> <span data-i18n="KEY_A">切换层级
+                            (循环)</span></div>
+                    <div class="desc-item"><span class="key-tag active">Z / C</span> <span
+                            data-i18n="KEY_Z">调整层间距</span></div>
+                    <div class="desc-item"><span class="key-tag active">R</span> <span data-i18n="KEY_R">重新开始</span>
+                    </div>
+                    <div class="desc-item"><span class="key-tag active">F</span> <span data-i18n="KEY_F">翻转 2D 棋盘</span>
+                    </div>
+                    <div class="desc-item"><span class="key-tag active">H</span> <span data-i18n="KEY_H">开关辅助线</span>
+                    </div>
+                    <div class="desc-item"><span class="key-tag active">T</span> <span data-i18n="KEY_T">切换主题</span>
+                    </div>
+                    <div class="desc-item"><span class="key-tag active">V</span> <span data-i18n="KEY_V">切换色弱模式
+                            (开启/关闭)</span></div>
                 </div>
             </div>
 
@@ -213,7 +223,8 @@
 
             <!-- 改动：底部提示左对齐，单行，不跨行 -->
             <div class="guide-bottom-tip">
-                <span data-i18n="GUIDE_TIP_PREFIX">💡 提示：游戏开始后，按 </span><kbd>S</kbd> <span data-i18n="GUIDE_TIP_SUFFIX">拉远视角</span>
+                <span data-i18n="GUIDE_TIP_PREFIX">💡 提示：游戏开始后，按 </span><kbd>S</kbd> <span
+                    data-i18n="GUIDE_TIP_SUFFIX">拉远视角</span>
             </div>
             <!-- 改动结束 -->
         </div>
@@ -274,7 +285,7 @@
             <h3 data-i18n="LEVEL_SELECT_TITLE">关卡选择</h3>
             <div id="level-list" class="level-list"></div>
             <div class="modal-actions">
-                <button id="level-select-cancel" class="btn-secondary" data-i18n="SLOT_CANCEL">鍙栨秷</button>
+                <button id="level-select-cancel" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
             </div>
         </div>
     </div>
@@ -288,7 +299,8 @@
             <div class="setting-group">
                 <label class="setting-label" data-i18n="BOARD_SIZE_LABEL">棋盘规模 (奇数)</label>
                 <div class="slider-container">
-                    <input type="range" id="custom-board-size" class="custom-slider" min="5" max="19" step="2" value="9">
+                    <input type="range" id="custom-board-size" class="custom-slider" min="5" max="19" step="2"
+                        value="9">
                     <output id="custom-board-size-val" class="slider-value">9</output>
                 </div>
             </div>
@@ -309,11 +321,28 @@
                 </div>
             </div>
 
+            <div id="swap-decision-modal" class="hidden modal-overlay">
+                <div class="modal-content">
+                    <h3 data-i18n="SWAP_DECISION_TITLE">开局交换决定</h3>
+                    <p data-i18n="SWAP_DECISION_MSG">白方是否选择交换颜色？</p>
+                    <div class="modal-actions">
+                        <button id="btn-swap-yes" class="btn-primary" data-i18n="BTN_SWAP">交换 (Swap)</button>
+                        <button id="btn-swap-no" class="btn-secondary" data-i18n="BTN_PASS">不交换 (Pass)</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-actions" style="margin-top: 24px;">
                 <button id="btn-start-custom" class="btn-primary" data-i18n="BTN_START_CUSTOM">开始自定义对局</button>
                 <button id="btn-cancel-custom" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
             </div>
         </div>
+    </div>
+    <!-- Swap2 Decision Bar (shown during swap phase) -->
+    <div id="swap-decision-bar" class="hidden">
+        <span data-i18n="SWAP_PROMPT">白方：选择交换或跳过</span>
+        <button id="btn-swap-confirm" class="esc-btn" data-i18n="BTN_SWAP">交换</button>
+        <button id="btn-swap-pass" class="esc-btn" data-i18n="BTN_PASS">跳过</button>
     </div>
 
 </body>

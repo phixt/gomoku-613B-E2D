@@ -126,6 +126,14 @@ const jaJP = {
 
 
   WIN_LENGTH_LABEL: "勝利連子数",
+
+  // Swap2
+  SWAP_PROMPT: "白：スワップまたはパスを選択",
+  BTN_SWAP: "スワップ",
+  BTN_PASS: "パス",
+  SWAP_DONE: "色が入れ替わりました！あなたは黒になりました。",
+  PASS_DONE: "スワップなし。白が続行。"
+
 } as const;
 
 export default jaJP;

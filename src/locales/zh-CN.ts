@@ -125,6 +125,14 @@ const zhCN = {
 
 
   WIN_LENGTH_LABEL: "获胜连子数",
+
+  // Swap2
+  SWAP_PROMPT: "白方：选择交换或跳过",
+  BTN_SWAP: "交换",
+  BTN_PASS: "跳过",
+  SWAP_DONE: "颜色已交换！你现在是黑方。",
+  PASS_DONE: "未交换。白方继续。",
+
 } as const;
 
 export default zhCN;

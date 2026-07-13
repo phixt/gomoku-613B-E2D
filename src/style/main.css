@@ -1912,3 +1912,44 @@ body.dark-theme .slot-dims {
 #start-screen .start-left.brand-area .action-buttons {
     flex-shrink: 0;
 }
+
+
+/* ===== Swap2 Decision Bar ===== */
+#swap-decision-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 40, 45, 0.95);
+  border: 1px solid rgba(100, 160, 170, 0.4);
+  border-radius: 10px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  font-size: 15px;
+  color: #c8e0e4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+#swap-decision-bar.hidden { display: none; }
+#swap-decision-bar .esc-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 160, 170, 0.3);
+  background: rgba(60, 90, 100, 0.4);
+  color: #c8e0e4;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#swap-decision-bar .esc-btn:hover {
+  background: rgba(80, 120, 130, 0.6);
+}
+#btn-swap-confirm {
+  background: rgba(50, 140, 120, 0.5) !important;
+  border-color: rgba(80, 200, 160, 0.5) !important;
+}
+#btn-swap-confirm:hover {
+  background: rgba(60, 170, 140, 0.7) !important;
+}

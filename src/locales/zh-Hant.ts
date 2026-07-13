@@ -127,6 +127,14 @@ const zhHant = {
 
 
   WIN_LENGTH_LABEL: "獲勝連子數",
+
+  // Swap2
+  SWAP_PROMPT: "白方：選擇交換或跳過",
+  BTN_SWAP: "交換",
+  BTN_PASS: "跳過",
+  SWAP_DONE: "顏色已交換！你現在是黑方。",
+  PASS_DONE: "未交換。白方繼續。"
+
 } as const;
 
 export default zhHant;
