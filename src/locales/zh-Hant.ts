@@ -144,7 +144,7 @@ const zhHant = {
   SWAP_DECISION_MSG: "白方是否選擇交換顏色？",
 
   LEVEL_LOADING: "正在載入: {0}",
-  LEVEL_STARTING: "正在開始: {0}",
+  LEVEL_STARTING: "開始: {0}",
 
   SLOT_RULE_GOMOKU: "標準",
   SLOT_RULE_SWAP2: "Swap2",

@@ -144,7 +144,7 @@ const zhCN = {
   SWAP_DECISION_MSG: "白方是否选择交换颜色？",
 
   LEVEL_LOADING: "正在加载: {0}",
-  LEVEL_STARTING: "正在开始: {0}",
+  LEVEL_STARTING: "开始: {0}",
 
   SLOT_RULE_GOMOKU: "标准",
   SLOT_RULE_SWAP2: "Swap2",
