@@ -408,7 +408,7 @@ async function main(): Promise<void> {
       console.warn("[Level] Unknown level ID:", id);
       return;
     }
-    overlayManager.showToast("Loading: " + config.name);
+    overlayManager.showToast(i18n.t("LEVEL_LOADING", config.name));
     initGameContext(config);
   };
 
@@ -454,7 +454,7 @@ async function main(): Promise<void> {
         initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
       };
       modal.classList.add("hidden");
-      overlayManager.showToast("Starting: " + customConfig.name);
+      overlayManager.showToast(i18n.t("LEVEL_STARTING", customConfig.name));
       initGameContext(customConfig);
     });
 
