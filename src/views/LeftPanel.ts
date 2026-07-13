@@ -156,10 +156,9 @@ export class LeftPanel {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(theme.bgColor);
 
-    this.camera = new THREE.PerspectiveCamera(15, w / h, 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 200);
     this.camera.up.set(0, 1, 0);
-    this.camera.position.set(20, 8, 40);
-    const c_look = (this._boardSize - 1) / 2; const cz_look = (this._layerCount - 1) * LAYER_SPACING / 2; this.camera.lookAt(c_look, c_look, cz_look);
+    this.updateCameraForBoardSize();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(w, h);
@@ -186,6 +185,9 @@ export class LeftPanel {
     this.scene.add(this.lastMoveRing);
 
     this.checkBoundarySafety();
+
+    // Apply adaptive camera after initial rotation
+    this.updateCameraForBoardSize();
     this.rotateY(2);
 
     // Subscribe to events
@@ -313,6 +315,61 @@ export class LeftPanel {
 
 
   /**
+   * Adaptive camera: calculates optimal pitch, FOV, and distance
+   * based on board dimensions to maintain consistent visual size
+   * and minimize perspective distortion across all board sizes.
+   */
+  public updateCameraForBoardSize(): void {
+    const BASE_BOARD_SIZE = 13;
+    const BASE_LAYERS = 6;
+    const BASE_SPACING = 3.5;
+    const BASE_DIAGONAL = Math.sqrt(
+      (BASE_BOARD_SIZE - 1) * (BASE_BOARD_SIZE - 1) +
+      (BASE_LAYERS - 1) * BASE_SPACING * (BASE_LAYERS - 1) * BASE_SPACING
+    );
+
+    const MIN_VISUAL_SCALE = 0.8;
+    const MAX_VISUAL_SCALE = 1.2;
+
+    const width = (this._boardSize - 1);
+    const height = (this._layerCount - 1) * this._layerSpacing;
+    const aspectRatio = height / Math.max(1, width);
+
+    // Dynamic Pitch: clamp between 35 deg (tall boards) and 85 deg (flat boards)
+    const MIN_PITCH = 35 * (Math.PI / 180);
+    const MAX_PITCH = 85 * (Math.PI / 180);
+    const pitch = MAX_PITCH - (MAX_PITCH - MIN_PITCH) * Math.min(1, aspectRatio * 2.5);
+
+    // Dynamic FOV: lower FOV for flat boards reduces side compression
+    const MIN_FOV = 30;
+    const MAX_FOV = 60;
+    const fov = MAX_FOV - (MAX_FOV - MIN_FOV) * Math.min(1, aspectRatio * 2.5);
+    this.camera.fov = fov;
+
+    const currentDiagonal = Math.sqrt(width * width + height * height);
+    const targetDiagonal = Math.max(
+      BASE_DIAGONAL * MIN_VISUAL_SCALE,
+      Math.min(BASE_DIAGONAL * MAX_VISUAL_SCALE, currentDiagonal)
+    );
+
+    const fovRad = fov * (Math.PI / 180);
+    const distance = (targetDiagonal / 2) / Math.sin(fovRad / 2) * 1.3;
+
+    const center = new THREE.Vector3(
+      (this._boardSize - 1) / 2,
+      (this._layerCount - 1) * this._layerSpacing / 2,
+      (this._boardSize - 1) / 2
+    );
+
+    const yaw = 45 * (Math.PI / 180);
+    this.camera.position.x = center.x + distance * Math.cos(pitch) * Math.cos(yaw);
+    this.camera.position.y = center.y + distance * Math.sin(pitch);
+    this.camera.position.z = center.z + distance * Math.cos(pitch) * Math.sin(yaw);
+    this.camera.lookAt(center);
+    this.camera.updateProjectionMatrix();
+  }
+
+  /**
    * Zoom the view.
    * @param delta  Positive = zoom in (closer), negative = zoom out (farther).
    * @param anchorPoint  Optional 3D anchor. When provided, moves camera position
@@ -338,7 +395,7 @@ export class LeftPanel {
         this.camera.position.add(dir.clone().multiplyScalar(delta * 0.15));
       }
 
-      const c_look = (this._boardSize - 1) / 2; const cz_look = (this._layerCount - 1) * LAYER_SPACING / 2; this.camera.lookAt(c_look, c_look, cz_look);
+      const cz_look = (this._layerCount - 1) * this._layerSpacing / 2; this.camera.lookAt((this._boardSize - 1) / 2, (this._boardSize - 1) / 2, cz_look);
       this.camera.updateProjectionMatrix();
     } else {
 
@@ -559,8 +616,7 @@ export class LeftPanel {
     }
 
     // Sync camera lookAt to new Z center
-    const newCenterZ = (this._layerCount - 1) * this._layerSpacing / 2;
-    const c_ncz = (this._boardSize - 1) / 2; this.camera.lookAt(c_ncz, c_ncz, newCenterZ);
+    this.updateCameraForBoardSize();
     this._refreshLastMoveRing();
     this.checkBoundarySafety();
   }
