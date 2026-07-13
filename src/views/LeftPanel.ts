@@ -132,6 +132,7 @@ export class LeftPanel {
   private _boardSize: number;
   private _layerCount: number;
   private _layerSpacing: number = 3.5;
+  private _lastMoveCoords: { x: number; y: number; z: number } | null = null;
   private _previousSpacing: number | null = null;
   private _board: Board | null = null;
 
@@ -560,6 +561,7 @@ export class LeftPanel {
     // Sync camera lookAt to new Z center
     const newCenterZ = (this._layerCount - 1) * this._layerSpacing / 2;
     const c_ncz = (this._boardSize - 1) / 2; this.camera.lookAt(c_ncz, c_ncz, newCenterZ);
+    this._refreshLastMoveRing();
     this.checkBoundarySafety();
   }
 
@@ -576,8 +578,14 @@ export class LeftPanel {
   }
 
   updateLastMoveUI(x: number, y: number, z: number): void {
-    // Boundary check: reject out-of-range coordinates (phantom ring prevention)
     if (x < 0 || x >= this._boardSize || y < 0 || y >= this._boardSize || z < 0 || z >= this._layerCount) return;
+    this._lastMoveCoords = { x, y, z };
+    this._refreshLastMoveRing();
+  }
+
+  private _refreshLastMoveRing(): void {
+    if (!this._lastMoveCoords) { this.lastMoveRing.visible = false; return; }
+    const { x, y, z } = this._lastMoveCoords;
     const zPos = z * this._layerSpacing;
     this.lastMoveRing.position.set(x, y, zPos + 0.1);
     this.lastMoveRing.visible = true;

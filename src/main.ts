@@ -3,7 +3,7 @@ import { LIGHT_THEME, DARK_THEME } from "./core/Types";
 import type { Theme } from "./core/Types";
 import { LeftPanel } from "./views/LeftPanel";
 import { RightPanel } from "./views/RightPanel";
-import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX } from "./core/Config";
+import { LAYER_COUNT, PANEL_RATIO, SAVE_SLOT_COUNT, QUICK_SAVE_INDEX, WIN_LENGTH, setWinLength } from "./core/Config";
 import { eventBus, Events } from "./core/EventBus";
 import { gameStore } from "./core/GameStore";
 import { SaveManager, type SaveData } from "./core/SaveManager";
@@ -250,8 +250,12 @@ async function main(): Promise<void> {
 
 
 
-  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
+  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; winLength?: number; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
     console.log("[Context] Initializing with size: " + levelConfig.boardSize + "x" + levelConfig.layers);
+
+    // Apply win length from config (default 5)
+    setWinLength(levelConfig.winLength ?? 5);
+    console.log("[Context] Win length set to: " + WIN_LENGTH);
 
     if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
     isAIThinking = false;
@@ -370,6 +374,9 @@ async function main(): Promise<void> {
     const cancelBtn = document.getElementById("btn-cancel-custom");
     const customBtn = document.getElementById("custom-btn");
 
+    const winSlider = document.getElementById("custom-win-length") as HTMLInputElement | null;
+    const winVal = document.getElementById("custom-win-length-val");
+
     if (!modal || !sizeSlider || !layerSlider || !startBtn || !cancelBtn) return;
 
     sizeSlider.addEventListener("input", () => {
@@ -378,15 +385,20 @@ async function main(): Promise<void> {
     layerSlider.addEventListener("input", () => {
       if (layerVal) layerVal.textContent = layerSlider.value;
     });
+    winSlider?.addEventListener("input", () => {
+      if (winVal) winVal.textContent = winSlider.value;
+    });
 
     startBtn.addEventListener("click", () => {
       const size = parseInt(sizeSlider.value, 10);
       const layers = parseInt(layerSlider.value, 10);
+      const winLen = winSlider ? parseInt(winSlider.value, 10) : 5;
       const customConfig = {
         id: "custom_sandbox",
         name: "Custom " + size + "x" + size + "x" + layers,
         boardSize: size,
         layers: layers,
+        winLength: winLen,
         initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
       };
       modal.classList.add("hidden");

@@ -637,7 +637,7 @@ export class RightPanel {
     if (this.lastMove && this.lastMove.z === this.focusZ
         && this.lastMove.x >= 0 && this.lastMove.x < this._boardSize
         && this.lastMove.y >= 0 && this.lastMove.y < this._boardSize) {
-      this.lastMoveRing.position.set(this.lastMove.x, this.lastMove.y, 0.02);
+      this.lastMoveRing.position.set(this.lastMove.x, this.lastMove.y, 0.03);
       this.lastMoveRing.visible = true;
     } else {
       this.lastMoveRing.visible = false;

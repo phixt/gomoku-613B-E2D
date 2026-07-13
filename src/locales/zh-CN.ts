@@ -123,6 +123,8 @@ const zhCN = {
   LAYER_COUNT_LABEL: "层数",
   BTN_START_CUSTOM: "开始自定义对局",
 
+
+  WIN_LENGTH_LABEL: "获胜连子数",
 } as const;
 
 export default zhCN;

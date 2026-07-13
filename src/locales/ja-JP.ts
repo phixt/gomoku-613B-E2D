@@ -124,6 +124,8 @@ const jaJP = {
   LAYER_COUNT_LABEL: "層数",
   BTN_START_CUSTOM: "カスタム対局を開始",
 
+
+  WIN_LENGTH_LABEL: "勝利連子数",
 } as const;
 
 export default jaJP;

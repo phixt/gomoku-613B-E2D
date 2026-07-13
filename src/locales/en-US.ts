@@ -123,6 +123,8 @@ const enUS = {
   LAYER_COUNT_LABEL: "Layers",
   BTN_START_CUSTOM: "Start Custom Game",
 
+
+  WIN_LENGTH_LABEL: "Win Length",
 } as const;
 
 export default enUS;

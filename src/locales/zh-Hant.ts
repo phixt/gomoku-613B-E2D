@@ -125,6 +125,8 @@ const zhHant = {
   LAYER_COUNT_LABEL: "層數",
   BTN_START_CUSTOM: "開始自訂對局",
 
+
+  WIN_LENGTH_LABEL: "獲勝連子數",
 } as const;
 
 export default zhHant;

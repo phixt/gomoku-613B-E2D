@@ -6,7 +6,11 @@ if (BOARD_SIZE % 2 !== 1) {
 }
 
 export const LAYER_COUNT = 6;
-export const WIN_LENGTH =5;
+export let WIN_LENGTH = 5;
+
+export function setWinLength(value: number): void {
+  WIN_LENGTH = value;
+}
 export const DEFAULT_LAYER_SPACING = 3.5;
 export const MIN_LAYER_SPACING = 2.0;
 export const MAX_LAYER_SPACING = 6.0;
