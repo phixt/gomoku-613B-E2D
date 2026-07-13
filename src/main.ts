@@ -269,7 +269,9 @@ async function main(): Promise<void> {
     setWinLength(levelConfig.winLength ?? 5);
     console.log("[Context] Win length set to: " + WIN_LENGTH);
 
-    if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
+    // Cancel any running AI without narrowing the module-level variable
+    const runningAI = aiEngine;
+    if (runningAI) { runningAI.cancel(); }
     isAIThinking = false;
 
     if (leftPanel) {
@@ -395,10 +397,20 @@ async function main(): Promise<void> {
     forceCorrectSize();
 
     if (isPvEMode) {
+      // Ensure AI engine exists and is initialized for this sandbox
+      if (!aiEngine) {
+        const diff = document.getElementById("ai-difficulty") as HTMLSelectElement;
+        aiEngine = new AIEngine((diff?.value || "Easy") as "Easy" | "Medium" | "Hard");
+      }
+      aiEngine.init(levelConfig.boardSize, levelConfig.layers, levelConfig.winLength ?? 5);
+
       const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
       if (currentPlayer === aiColor) {
         setTimeout(() => triggerAIMove(), 300);
       }
+    } else {
+      // In PvP mode, no AI needed ? clean up any existing engine
+      if (aiEngine) { aiEngine.cancel(); aiEngine = null; }
     }
   };
 
@@ -986,6 +998,7 @@ const exitReplay = (): void => {
       if (data.gameMode === "pve") {
         isPvEMode = true;
         aiEngine = new AIEngine(data.aiDifficulty as "Easy" | "Medium" | "Hard" || "Easy");
+        aiEngine.init(data.boardSize, data.layers, 5);
         isAIThinking = false;
       } else {
         isPvEMode = false;

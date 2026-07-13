@@ -143,6 +143,9 @@ const zhHant = {
   SWAP_DECISION_TITLE: "開局交換決定",
   SWAP_DECISION_MSG: "白方是否選擇交換顏色？",
 
+  LEVEL_LOADING: "正在載入: {0}",
+  LEVEL_STARTING: "正在開始: {0}",
+
 } as const;
 
 export default zhHant;

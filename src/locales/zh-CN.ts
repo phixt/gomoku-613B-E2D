@@ -143,6 +143,9 @@ const zhCN = {
   SWAP_DECISION_TITLE: "开局交换决定",
   SWAP_DECISION_MSG: "白方是否选择交换颜色？",
 
+  LEVEL_LOADING: "正在加载: {0}",
+  LEVEL_STARTING: "正在开始: {0}",
+
 } as const;
 
 export default zhCN;

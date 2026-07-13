@@ -143,6 +143,9 @@ const enUS = {
   SWAP_DECISION_TITLE: "Opening Swap Decision",
   SWAP_DECISION_MSG: "Does White choose to swap colors?",
 
+  LEVEL_LOADING: "Loading: {0}",
+  LEVEL_STARTING: "Starting: {0}",
+
 } as const;
 
 export default enUS;

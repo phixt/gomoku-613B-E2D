@@ -321,17 +321,19 @@
                 </div>
             </div>
 
+            <div class="setting-group">
+                <label data-i18n="GAME_RULE_LABEL">开局规则</label>
+                <select id="custom-rule-select" class="custom-select">
+                    <option value="standard" data-i18n="RULE_STANDARD">标准五子棋</option>
+                    <option value="swap2" data-i18n="RULE_SWAP2">Swap2 (开局交换)</option>
+                </select>
+            </div>
+
             <div class="modal-actions" style="margin-top: 24px;">
                 <button id="btn-start-custom" class="btn-primary" data-i18n="BTN_START_CUSTOM">开始自定义对局</button>
                 <button id="btn-cancel-custom" class="btn-secondary" data-i18n="SLOT_CANCEL">取消</button>
             </div>
         </div>
-    </div>
-    <!-- Swap2 Decision Bar (shown during swap phase) -->
-    <div id="swap-decision-bar" class="hidden">
-        <span data-i18n="SWAP_PROMPT">白方：选择交换或跳过</span>
-        <button id="btn-swap-confirm" class="esc-btn" data-i18n="BTN_SWAP">交换</button>
-        <button id="btn-swap-pass" class="esc-btn" data-i18n="BTN_PASS">跳过</button>
     </div>
 
     <div id="swap-decision-modal" class="hidden modal-overlay">

@@ -142,6 +142,9 @@ const jaJP = {
   SWAP_DECISION_TITLE: "開始交換の決定",
   SWAP_DECISION_MSG: "白は色を交換しますか？",
 
+  LEVEL_LOADING: "読み込み中: {0}",
+  LEVEL_STARTING: "開始中: {0}",
+
 } as const;
 
 export default jaJP;

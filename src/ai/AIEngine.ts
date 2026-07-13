@@ -3,6 +3,7 @@
 
 import type { Board } from "../core/Board";
 import { BOARD_SIZE, LAYER_COUNT } from "../core/Config";
+import type { IAIEngine } from "./IAIEngine";
 
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
@@ -31,13 +32,27 @@ const SCORE_LIVE_TWO = 1000;
 const SCORE_SLEEP_TWO = 100;
 const SCORE_ONE = 10;
 
-export class AIEngine {
+export class AIEngine implements IAIEngine {
   private difficulty: Difficulty;
   private cancelled: boolean = false;
   private thinkingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private boardSize = BOARD_SIZE;
+  private layers = LAYER_COUNT;
+  private winLength = 5;
 
   constructor(difficulty: Difficulty = "Easy") {
     this.difficulty = difficulty;
+  }
+
+  init(boardSize: number, layers: number, winLength: number): void {
+    this.boardSize = boardSize;
+    this.layers = layers;
+    this.winLength = winLength;
+    console.log(`[AI] Initialized for ${boardSize}x${boardSize}x${layers}, WinLength: ${winLength}`);
+  }
+
+  async getBestMove(board: Board, _currentPlayer: 1 | 2): Promise<AIMove | null> {
+    return this.think(board);
   }
 
   setDifficulty(d: Difficulty): void {
@@ -124,9 +139,9 @@ export class AIEngine {
 
     // 3. Fallback: pure random
     const empty: AIMove[] = [];
-    for (let z = 0; z < LAYER_COUNT; z++)
-      for (let y = 0; y < BOARD_SIZE; y++)
-        for (let x = 0; x < BOARD_SIZE; x++)
+    for (let z = 0; z < this.layers; z++)
+      for (let y = 0; y < this.boardSize; y++)
+        for (let x = 0; x < this.boardSize; x++)
           if (board.get(x, y, z) === 0) empty.push({ x, y, z });
     if (empty.length === 0) return null;
     await new Promise<void>((r) => setTimeout(r, this.getThinkTime()));
@@ -137,9 +152,9 @@ export class AIEngine {
   //  Find a cell that blocks opponent's 4-in-a-row (3D-aware)
   // ============================================================
   private findImmediateThreat(board: Board, opponent: 1 | 2): AIMove | null {
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let z = 0; z < this.layers; z++) {
+      for (let y = 0; y < this.boardSize; y++) {
+        for (let x = 0; x < this.boardSize; x++) {
           if (board.get(x, y, z) !== 0) continue;
           const score = this.evaluatePoint(board, x, y, z, opponent, DIRECTIONS_3D);
           if (score >= SCORE_RUSH_FOUR) return { x, y, z };
@@ -154,9 +169,9 @@ export class AIEngine {
   // ============================================================
   private detectAIPlayer(board: Board): 1 | 2 {
     let c1 = 0, c2 = 0;
-    for (let z = 0; z < LAYER_COUNT; z++)
-      for (let y = 0; y < BOARD_SIZE; y++)
-        for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let z = 0; z < this.layers; z++)
+      for (let y = 0; y < this.boardSize; y++)
+        for (let x = 0; x < this.boardSize; x++) {
           const v = board.get(x, y, z);
           if (v === 1) c1++;
           else if (v === 2) c2++;
@@ -169,7 +184,9 @@ export class AIEngine {
   // ============================================================
   private getCandidates(board: Board): AIMove[] {
     if (!this.boardHasPieces(board)) {
-      return [{ x: 6, y: 6, z: 2 }];
+      const cx = Math.floor(this.boardSize / 2);
+      const cz = Math.floor(this.layers / 2);
+      return [{ x: cx, y: cx, z: cz }];
     }
 
     if (this.difficulty === "Medium") {
@@ -187,9 +204,9 @@ export class AIEngine {
     const result: AIMove[] = [];
     const key = (x: number, y: number, z: number) => x * 10000 + y * 100 + z;
 
-    for (let z = 0; z < LAYER_COUNT; z++) {
-      for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let z = 0; z < this.layers; z++) {
+      for (let y = 0; y < this.boardSize; y++) {
+        for (let x = 0; x < this.boardSize; x++) {
           if (board.get(x, y, z) === 0) continue;
 
           // Found a piece -?add all empty cells within radius
@@ -198,7 +215,7 @@ export class AIEngine {
               for (let dy = -radius; dy <= radius; dy++) {
                 if (dx === 0 && dy === 0 && dz === 0) continue;
                 const nx = x + dx, ny = y + dy, nz = z + dz;
-                if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE || nz < 0 || nz >= LAYER_COUNT) continue;
+                if (nx < 0 || nx >= this.boardSize || ny < 0 || ny >= this.boardSize || nz < 0 || nz >= this.layers) continue;
                 if (board.get(nx, ny, nz) !== 0) continue;
                 const k = key(nx, ny, nz);
                 if (visited.has(k)) continue;
@@ -215,9 +232,9 @@ export class AIEngine {
   }
 
   private boardHasPieces(board: Board): boolean {
-    for (let z = 0; z < LAYER_COUNT; z++)
-      for (let y = 0; y < BOARD_SIZE; y++)
-        for (let x = 0; x < BOARD_SIZE; x++)
+    for (let z = 0; z < this.layers; z++)
+      for (let y = 0; y < this.boardSize; y++)
+        for (let x = 0; x < this.boardSize; x++)
           if (board.get(x, y, z) !== 0) return true;
     return false;
   }
@@ -239,7 +256,7 @@ export class AIEngine {
 
       // Scan forward
       let fx = x + dx, fy = y + dy, fz = z + dz;
-      while (fx >= 0 && fx < BOARD_SIZE && fy >= 0 && fy < BOARD_SIZE && fz >= 0 && fz < LAYER_COUNT) {
+      while (fx >= 0 && fx < this.boardSize && fy >= 0 && fy < this.boardSize && fz >= 0 && fz < this.layers) {
         const v = board.get(fx, fy, fz);
         if (v === player) { count++; fx += dx; fy += dy; fz += dz; }
         else if (v === 0) { openEnds++; break; }
@@ -248,7 +265,7 @@ export class AIEngine {
 
       // Scan backward
       let bx = x - dx, by = y - dy, bz = z - dz;
-      while (bx >= 0 && bx < BOARD_SIZE && by >= 0 && by < BOARD_SIZE && bz >= 0 && bz < LAYER_COUNT) {
+      while (bx >= 0 && bx < this.boardSize && by >= 0 && by < this.boardSize && bz >= 0 && bz < this.layers) {
         const v = board.get(bx, by, bz);
         if (v === player) { count++; bx -= dx; by -= dy; bz -= dz; }
         else if (v === 0) { openEnds++; break; }
@@ -262,7 +279,7 @@ export class AIEngine {
   }
 
   private patternScore(count: number, openEnds: number): number {
-    if (count >= 5) return SCORE_FIVE;
+    if (count >= this.winLength) return SCORE_FIVE;
     switch (count) {
       case 4: return openEnds === 2 ? SCORE_LIVE_FOUR : openEnds === 1 ? SCORE_RUSH_FOUR : 0;
       case 3: return openEnds === 2 ? SCORE_LIVE_THREE : openEnds === 1 ? SCORE_SLEEP_THREE : 0;
