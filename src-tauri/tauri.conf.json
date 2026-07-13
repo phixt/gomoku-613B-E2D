@@ -1,7 +1,7 @@
 {
   "productName": "GomokuE2D",
   "identifier": "com.phixt.gomoku-613b-e2d",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "Gomoku-613B-E2D v0.6.3",
+        "title": "Gomoku-613B-E2D v0.6.4",
         "width": 1400,
         "height": 900,
         "minWidth": 1000,
