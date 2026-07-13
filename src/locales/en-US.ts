@@ -133,6 +133,16 @@ const enUS = {
   SWAP_DONE: "Colors swapped! You are now Black.",
   PASS_DONE: "No swap. White continues.",
 
+
+  // Opening rules
+  GAME_RULE_LABEL: "Opening Rule",
+  RULE_STANDARD: "Standard Gomoku",
+  RULE_SWAP2: "Swap2 (Opening Swap)",
+
+  // Swap decision modal
+  SWAP_DECISION_TITLE: "Opening Swap Decision",
+  SWAP_DECISION_MSG: "Does White choose to swap colors?",
+
 } as const;
 
 export default enUS;

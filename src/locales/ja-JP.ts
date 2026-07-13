@@ -132,7 +132,15 @@ const jaJP = {
   BTN_SWAP: "スワップ",
   BTN_PASS: "パス",
   SWAP_DONE: "色が入れ替わりました！あなたは黒になりました。",
-  PASS_DONE: "スワップなし。白が続行。"
+  PASS_DONE: "スワップなし。白が続行。",
+  // Opening rules
+  GAME_RULE_LABEL: "開始ルール",
+  RULE_STANDARD: "標準五目並べ",
+  RULE_SWAP2: "Swap2 (開始交換)",
+
+  // Swap decision modal
+  SWAP_DECISION_TITLE: "開始交換の決定",
+  SWAP_DECISION_MSG: "白は色を交換しますか？",
 
 } as const;
 

@@ -332,7 +332,27 @@ async function main(): Promise<void> {
       if (currentEngine) {
         const ts = currentEngine.getNextTurnState(moveHistory, currentPlayer);
         if (ts.isSwapPhase) {
-          showSwapBar();
+          showSwapDecisionModal(
+            () => {
+              // onSwap: flip colors
+              if (currentEngine instanceof SwapEngine) {
+                currentEngine.applySwap(moveHistory, rightPanel.board);
+                rightPanel.refresh();
+                leftPanel.renderAllPieces(rightPanel.board, focusZ);
+                updateTurnIndicator(currentPlayer);
+                overlayManager.showToast(i18n.t("SWAP_DONE"));
+              }
+            },
+            () => {
+              // onPass: just continue
+              updateTurnIndicator(currentPlayer);
+              overlayManager.showToast(i18n.t("PASS_DONE"));
+              const aiColor2: 1 | 2 = playerColor === 1 ? 2 : 1;
+              if (isPvEMode && currentPlayer === aiColor2) {
+                triggerAIMove();
+              }
+            }
+          );
           // Keep currentPlayer unchanged during swap phase; wait for user decision
         } else {
           currentPlayer = ts.nextPlayer;
@@ -370,7 +390,6 @@ async function main(): Promise<void> {
     }
     guideScreen?.classList.add("hidden");
     gameStore.appState = AppState.PLAYING;
-    hideSwapBar();
     audioManager.playBGM("game");
     updateTurnIndicator(currentPlayer);
     forceCorrectSize();
@@ -423,12 +442,15 @@ async function main(): Promise<void> {
       const size = parseInt(sizeSlider.value, 10);
       const layers = parseInt(layerSlider.value, 10);
       const winLen = winSlider ? parseInt(winSlider.value, 10) : 5;
+      const ruleSelect = document.getElementById("custom-rule-select") as HTMLSelectElement | null;
+      const rules = (ruleSelect?.value || "standard") as "gomoku" | "swap2";
       const customConfig = {
         id: "custom_sandbox",
         name: "Custom " + size + "x" + size + "x" + layers,
         boardSize: size,
         layers: layers,
         winLength: winLen,
+        rules: rules,
         initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
       };
       modal.classList.add("hidden");
@@ -491,41 +513,36 @@ async function main(): Promise<void> {
     if (escMenu) escMenu.classList.add("hidden");
   };
 
-  // ===== Swap2 Decision Bar =====
-  const showSwapBar = (): void => {
-    const bar = document.getElementById("swap-decision-bar");
-    if (bar) bar.classList.remove("hidden");
+  // ===== Swap2 Decision Modal =====
+  const showSwapDecisionModal = (onSwap: () => void, onPass: () => void): void => {
+    const modal = document.getElementById("swap-decision-modal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+
+    // Clean re-bind: clone nodes to prevent duplicate listeners
+    const btnYes = document.getElementById("btn-swap-yes");
+    const btnNo = document.getElementById("btn-swap-no");
+    if (btnYes && btnNo) {
+      const newYes = btnYes.cloneNode(true) as HTMLButtonElement;
+      const newNo = btnNo.cloneNode(true) as HTMLButtonElement;
+      btnYes.parentNode?.replaceChild(newYes, btnYes);
+      btnNo.parentNode?.replaceChild(newNo, btnNo);
+
+      newYes.addEventListener("click", () => {
+        modal.classList.add("hidden");
+        onSwap();
+      });
+      newNo.addEventListener("click", () => {
+        modal.classList.add("hidden");
+        onPass();
+      });
+    }
   };
 
-  const hideSwapBar = (): void => {
-    const bar = document.getElementById("swap-decision-bar");
-    if (bar) bar.classList.add("hidden");
+  const hideSwapDecisionModal = (): void => {
+    const modal = document.getElementById("swap-decision-modal");
+    if (modal) modal.classList.add("hidden");
   };
-
-  // Bind swap decision buttons
-  const btnSwapConfirm = document.getElementById("btn-swap-confirm");
-  const btnSwapPass = document.getElementById("btn-swap-pass");
-
-  btnSwapConfirm?.addEventListener("click", () => {
-    if (currentEngine instanceof SwapEngine) {
-      currentEngine.applySwap(moveHistory, rightPanel.board);
-      rightPanel.refresh();
-      leftPanel.renderAllPieces(rightPanel.board, focusZ);
-      updateTurnIndicator(currentPlayer);
-      overlayManager.showToast(i18n.t("SWAP_DONE"));
-    }
-    hideSwapBar();
-  });
-
-  btnSwapPass?.addEventListener("click", () => {
-    hideSwapBar();
-    updateTurnIndicator(currentPlayer);
-    overlayManager.showToast(i18n.t("PASS_DONE"));
-    const aiColor: 1 | 2 = playerColor === 1 ? 2 : 1;
-    if (isPvEMode && currentPlayer === aiColor) {
-      triggerAIMove();
-    }
-  });
 
   // ===== OverlayManager handles Toast & Save Slots =====Save Slots List (EventBus-driven) =====
   const renderSaveSlots = (): void => {
@@ -828,7 +845,7 @@ const exitReplay = (): void => {
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
       eventBus.emit(Events.GAME_RESET);
     gameStore.appState = AppState.TITLE;
-    hideSwapBar();
+    hideSwapDecisionModal();
     hideAllOverlays();
     startScreen?.classList.remove("hidden");
     startScreen?.classList.remove("fade-out");
@@ -1075,7 +1092,6 @@ const exitReplay = (): void => {
     rightPanel.refresh();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
     gameStore.appState = AppState.PLAYING;
-    hideSwapBar();
     audioManager.playBGM("game");
   };
 

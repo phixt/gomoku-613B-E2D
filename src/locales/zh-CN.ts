@@ -128,10 +128,20 @@ const zhCN = {
 
   // Swap2
   SWAP_PROMPT: "白方：选择交换或跳过",
-  BTN_SWAP: "交换",
-  BTN_PASS: "跳过",
+  BTN_SWAP: "交换 (Swap)",
+  BTN_PASS: "不交换 (Pass)",
   SWAP_DONE: "颜色已交换！你现在是黑方。",
   PASS_DONE: "未交换。白方继续。",
+
+
+  // Opening rules
+  GAME_RULE_LABEL: "开局规则",
+  RULE_STANDARD: "标准五子棋",
+  RULE_SWAP2: "Swap2 (开局交换)",
+
+  // Swap decision modal
+  SWAP_DECISION_TITLE: "开局交换决定",
+  SWAP_DECISION_MSG: "白方是否选择交换颜色？",
 
 } as const;
 

@@ -1953,3 +1953,125 @@ body.dark-theme .slot-dims {
 #btn-swap-confirm:hover {
   background: rgba(60, 170, 140, 0.7) !important;
 }
+
+/* =========================================
+   Swap Decision Modal (及通用 Modal 样式补全)
+   ========================================= */
+
+/* 1. 遮罩层：全屏覆盖，半透明黑色背景 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明遮罩 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* 确保在最顶层，覆盖 3D Canvas */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* 隐藏状态 */
+.modal-overlay.hidden {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 2. 模态框内容区：水绿/墨绿极简风 */
+.modal-content {
+    background-color: #FFFFFF;
+    border: 1px solid #C5D5C0;
+    border-radius: 8px;
+    padding: 25px 30px;
+    min-width: 300px;
+    max-width: 90%;
+    box-shadow: 0 10px 25px rgba(44, 74, 78, 0.15);
+    text-align: center;
+    font-family: 'LXGW WenKai', sans-serif;
+    color: #2C4A4E;
+}
+
+/* 暗色主题适配 */
+body.dark-theme .modal-content {
+    background-color: #1A2629;
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. 标题和消息文本 */
+.modal-title, .modal-content h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.5em;
+    font-weight: normal;
+    color: #2C4A4E;
+}
+
+.modal-message, .modal-content p {
+    margin: 0 0 25px 0;
+    font-size: 1.1em;
+    color: #5A7A7E;
+}
+
+body.dark-theme .modal-title, 
+body.dark-theme .modal-content h3 {
+    color: #C8E0E4;
+}
+
+body.dark-theme .modal-message, 
+body.dark-theme .modal-content p {
+    color: #8A9A9E;
+}
+
+/* 4. 按钮容器 */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* 5. 按钮基础样式 (复用并强化) */
+.modal-actions button, .btn-primary, .btn-secondary {
+    background: transparent;
+    border: 1px solid #C5D5C0;
+    border-radius: 4px;
+    padding: 8px 25px;
+    font-family: 'LXGW WenKai', sans-serif;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.btn-primary {
+    color: #2C4A4E;
+}
+
+.btn-secondary {
+    color: #5A7A7E;
+}
+
+/* 按钮悬停效果 */
+.modal-actions button:hover, .btn-primary:hover, .btn-secondary:hover {
+    background-color: rgba(44, 74, 78, 0.1);
+    border-color: #2C4A4E;
+}
+
+/* 暗色主题按钮适配 */
+body.dark-theme .modal-actions button, 
+body.dark-theme .btn-primary, 
+body.dark-theme .btn-secondary {
+    border-color: #3A4A4E;
+    color: #C8E0E4;
+}
+
+body.dark-theme .modal-actions button:hover, 
+body.dark-theme .btn-primary:hover, 
+body.dark-theme .btn-secondary:hover {
+    background-color: rgba(200, 224, 228, 0.1);
+    border-color: #C8E0E4;
+}

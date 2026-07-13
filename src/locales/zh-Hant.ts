@@ -133,7 +133,15 @@ const zhHant = {
   BTN_SWAP: "交換",
   BTN_PASS: "跳過",
   SWAP_DONE: "顏色已交換！你現在是黑方。",
-  PASS_DONE: "未交換。白方繼續。"
+  PASS_DONE: "未交換。白方繼續。",
+  // Opening rules
+  GAME_RULE_LABEL: "開局規則",
+  RULE_STANDARD: "標準五子棋",
+  RULE_SWAP2: "Swap2 (開局交換)",
+
+  // Swap decision modal
+  SWAP_DECISION_TITLE: "開局交換決定",
+  SWAP_DECISION_MSG: "白方是否選擇交換顏色？",
 
 } as const;
 
