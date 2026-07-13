@@ -146,6 +146,9 @@ const enUS = {
   LEVEL_LOADING: "Loading: {0}",
   LEVEL_STARTING: "Starting: {0}",
 
+  SLOT_RULE_GOMOKU: "Standard",
+  SLOT_RULE_SWAP2: "Swap2",
+
 } as const;
 
 export default enUS;

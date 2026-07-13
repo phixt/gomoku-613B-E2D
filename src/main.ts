@@ -581,9 +581,10 @@ async function main(): Promise<void> {
       const movesCount = quickData.moves ? quickData.moves.length : 0;
       const aiDiff = quickData.aiDifficulty ? " (" + quickData.aiDifficulty + ")" : "";
       const dims = quickData.boardSize + "×" + quickData.boardSize + "×" + quickData.layers;
+      const ruleLabel = quickData.rules === "swap2" ? i18n.t("SLOT_RULE_SWAP2") : i18n.t("SLOT_RULE_GOMOKU");
       quickDiv.innerHTML =
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
-        '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
+        '<span class="slot-meta">' + modeStr + aiDiff + " | " + ruleLabel + " | " + dims + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
         '<span class="slot-actions">' +
           '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
           '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
@@ -624,9 +625,10 @@ async function main(): Promise<void> {
         const movesCount = data.moves ? data.moves.length : 0;
         const aiDiff = data.aiDifficulty ? " (" + data.aiDifficulty + ")" : "";
         const dims2 = data.boardSize + "×" + data.boardSize + "×" + data.layers;
+        const ruleLabel2 = data.rules === "swap2" ? i18n.t("SLOT_RULE_SWAP2") : i18n.t("SLOT_RULE_GOMOKU");
         div.innerHTML =
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
-          '<span class="slot-meta">' + modeStr + aiDiff + " | " + dims2 + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
+          '<span class="slot-meta">' + modeStr + aiDiff + " | " + ruleLabel2 + " | " + dims2 + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
             '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
             '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +
@@ -881,7 +883,7 @@ const exitReplay = (): void => {
       timestamp: Date.now(),
       boardState,
       moves,
-      rules: "gomoku" as const,
+      rules: (currentEngine instanceof SwapEngine ? "swap2" : "gomoku") as "gomoku" | "swap2",
       gameMode: isPvEMode ? "pve" as const : "pvp" as const,
       aiDifficulty: aiEngine?.getDifficulty()?.toLowerCase() as "easy" | "medium" | "hard" | undefined,
       status: gameStatus,

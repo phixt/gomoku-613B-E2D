@@ -146,6 +146,9 @@ const zhCN = {
   LEVEL_LOADING: "正在加载: {0}",
   LEVEL_STARTING: "正在开始: {0}",
 
+  SLOT_RULE_GOMOKU: "标准",
+  SLOT_RULE_SWAP2: "Swap2",
+
 } as const;
 
 export default zhCN;

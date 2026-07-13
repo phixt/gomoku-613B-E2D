@@ -145,6 +145,9 @@ const jaJP = {
   LEVEL_LOADING: "読み込み中: {0}",
   LEVEL_STARTING: "開始中: {0}",
 
+  SLOT_RULE_GOMOKU: "標準",
+  SLOT_RULE_SWAP2: "Swap2",
+
 } as const;
 
 export default jaJP;
