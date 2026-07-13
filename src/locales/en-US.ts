@@ -56,18 +56,32 @@ const enUS = {
   MUTE_ON: "Muted",
   MUTE_OFF: "Unmuted",
 
-  // Shortcut key descriptions
+  // Keyboard Legend
+  LEGEND_BASE: "Battle Mode",
+  LEGEND_REPLAY: "Replay Mode",
+  LEGEND_PAUSE: "Pause/Menu",
+  LEGEND_BASE_REPLAY: "Battle + Replay",
+  LEGEND_BASE_PAUSE: "Battle + Pause",
+  LEGEND_GLOBAL: "Global (All Modes)",
+
+  // Keyboard Shortcuts
   KEY_Q: "Rotate 3D View",
   KEY_W: "Zoom 3D View",
   KEY_A: "Switch Layer (Cycle)",
   KEY_Z: "Adjust Layer Spacing",
-  KEY_F: "Flip 2D Board",
-  KEY_H: "Toggle Guide Lines",
-  KEY_T: "Toggle Light/Dark Theme",
-  KEY_R: "Pause / Menu",
   KEY_X: "Reset Layer Spacing",
-  KEY_V: "Toggle Colorblind Mode (Blue/Yellow)",
-  KEY_M: "Toggle Mute",
+  KEY_F: "Flip 2D Board",
+  KEY_V: "Toggle Colorblind Mode",
+  KEY_H: "Toggle Guide Lines",
+  KEY_R: "Restart Match",
+  KEY_T: "Toggle Light/Dark Theme",
+  KEY_M: "Global Mute",
+  KEY_ESC: "Pause/Menu or Close/Back",
+  KEY_REPLAY_PREV_NEXT: "Previous / Next Step",
+  KEY_SAVE_PAUSE: "Save (in Pause)",
+  KEY_LOAD_ANY: "Load (Title/Pause)",
+  KEY_GUIDE: "Open Guide (Shortcuts)",
+  KEY_BACK_TITLE: "Back to Title (Pause)",
 
   // Colorblind mode
   COLORBLIND_ON: "Colorblind Mode: ON (Blue/Yellow)",

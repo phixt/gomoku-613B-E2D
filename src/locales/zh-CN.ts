@@ -56,18 +56,32 @@ const zhCN = {
   MUTE_ON: "已静音",
   MUTE_OFF: "已取消静音",
 
-  // Shortcut key descriptions
+  // Shortcuts Legend
+  LEGEND_BASE: "对战模式",
+  LEGEND_REPLAY: "复盘模式",
+  LEGEND_PAUSE: "暂停/菜单",
+  LEGEND_BASE_REPLAY: "对战+复盘",
+  LEGEND_BASE_PAUSE: "对战+暂停",
+  LEGEND_GLOBAL: "全局（三种模式）",
+
+  // Shortcuts
   KEY_Q: "旋转 3D 视角",
   KEY_W: "推拉 3D 视角",
   KEY_A: "切换层级 (循环)",
   KEY_Z: "调整层间距",
-  KEY_F: "翻转 2D 主战场",
-  KEY_H: "开关辅助线",
-  KEY_T: "切换 亮/暗 主题",
-  KEY_R: "暂停/菜单",
   KEY_X: "复位层间距",
-  KEY_V: "切换色弱模式 (蓝/黄)",
-  KEY_M: "切换人机模式",
+  KEY_F: "翻转 2D 棋盘",
+  KEY_V: "切换色弱模式",
+  KEY_H: "开关辅助线",
+  KEY_R: "重新开始对局",
+  KEY_T: "切换亮/暗主题",
+  KEY_M: "全局静音",
+  KEY_ESC: "暂停 / 呼出菜单 或 关闭菜单/返回",
+  KEY_REPLAY_PREV_NEXT: "上一步 / 下一步",
+  KEY_SAVE_PAUSE: "存档（暂停下）",
+  KEY_LOAD_ANY: "读档（开始/暂停页面均可）",
+  KEY_GUIDE: "进入快捷键说明（指南页）",
+  KEY_BACK_TITLE: "返回标题（暂停界面）",
 
   // Colorblind mode
   COLORBLIND_ON: "色弱模式已开启 (蓝/黄)",
@@ -148,6 +162,9 @@ const zhCN = {
 
   SLOT_RULE_GOMOKU: "标准",
   SLOT_RULE_SWAP2: "Swap2",
+
+  LEVEL_TUTORIAL: "9x9 教程关",
+  LEVEL_RESIDUAL: "13x13 残局挑战",
 
 } as const;
 
