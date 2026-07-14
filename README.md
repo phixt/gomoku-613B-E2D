@@ -1,7 +1,7 @@
 # Gomoku 613B-E2D
 
 <p align="center">
-  <img src="public/favicon.svg" width="120" alt="Gomoku 613B-E2D" />
+  <img src="pics/icon-source.png" width="120" alt="Gomoku 613B-E2D" />
 </p>
 
 <h1 align="center">Gomoku 613B-E2D</h1>
@@ -249,5 +249,5 @@ npm run tauri build
 
 ---
 
-> 本游戏遵循开源协议，欢迎 Star、Fork 和贡献！  
+> 本游戏遵循开源协议MIT，欢迎 Star、Fork 和贡献！  
 > 项目地址：[https://github.com/phixt/gomoku-613B-E2D](https://github.com/phixt/gomoku-613B-E2D)
