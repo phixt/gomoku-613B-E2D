@@ -19,6 +19,9 @@ const zhCN = {
   QUICK_SAVE_LABEL: "快速存档",
   SAVE_SLOT_LABEL: "存档 {0}",
   SLOT_MOVES: "{0} 步",
+  INPUT_DIALOG_TITLE: "导入存档",
+  INPUT_DIALOG_MSG: "请粘贴 Base64 存档数据：",
+  INPUT_DIALOG_PLACEHOLDER: "在此粘贴数据...", // 必须存在
 
   // Buttons & menus
   BTN_START_GAME: "开始游戏",

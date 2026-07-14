@@ -20,6 +20,7 @@ const zhHant = {
   QUICK_SAVE_LABEL: "快速存檔",
   SAVE_SLOT_LABEL: "存檔 {0}",
   SLOT_MOVES: "{0} 步",
+  INPUT_DIALOG_PLACEHOLDER: "在此貼上資料",
 
   // Buttons & menus
   BTN_START_GAME: "開始遊戲",

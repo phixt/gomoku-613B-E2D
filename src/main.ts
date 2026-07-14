@@ -94,9 +94,9 @@ async function main(): Promise<void> {
       await saveManager.delete(index);
       overlayManager.showToast(i18n.t("DELETE_SUCCESS", index + 1));
     },
-    serializeState: function () {return serializeBoardState();},
-    onGetSlots: function () {return saveManager.getSlots();},
-    onLoadByIndex: function (index) {return saveManager.load(index);}
+    serializeState: function () { return serializeBoardState(); },
+    onGetSlots: function () { return saveManager.getSlots(); },
+    onLoadByIndex: function (index) { return saveManager.load(index); }
   });
 
   rightPanel.onPieceChanged = (board: import("./core/Board").Board, z: number): void => {
@@ -108,8 +108,8 @@ async function main(): Promise<void> {
   };
 
   rightPanel.onHoverChanged = (x, y, z): void => {
-    if (x >= 0) leftPanel.updateHoverMarker(x, y, z);else
-    leftPanel.clearHoverMarker();
+    if (x >= 0) leftPanel.updateHoverMarker(x, y, z); else
+      leftPanel.clearHoverMarker();
   };
 
   // Turn control and placement callback
@@ -168,7 +168,7 @@ async function main(): Promise<void> {
     leftPanel.resize(lw, h);
     rightPanel.resize(rw, h);
   };
-  requestAnimationFrame(() => {requestAnimationFrame(forceCorrectSize);});
+  requestAnimationFrame(() => { requestAnimationFrame(forceCorrectSize); });
 
   let focusZ = 0;
   let isColorblindMode = false;
@@ -178,11 +178,11 @@ async function main(): Promise<void> {
   let aiEngine: AIEngine | null = null;
   let isAIThinking = false;
   let moveCount = 0;
-  let moveHistory: Array<{x: number; y: number; z: number; player: 1 | 2;}> = [];
+  let moveHistory: Array<{ x: number; y: number; z: number; player: 1 | 2; }> = [];
   let isReplayMode = false;
   let currentEngine: IRuleEngine | null = null;
   const STANDARD_LEVEL = {
-    id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
+    id: "standard", name: "Standard 13x13x6", boardSize: 13, layers: 6, initialMoves: [] as Array<{ x: number; y: number; z: number; player: 1 | 2 }>
   };
 
   // == 3D Turn Indicator (isolated scene) =================
@@ -221,7 +221,7 @@ async function main(): Promise<void> {
     indicatorScene.add(indicatorMesh);
   }
 
-    const updateTurnIndicator = (player: 1 | 2, isThinking: boolean = false): void => {
+  const updateTurnIndicator = (player: 1 | 2, isThinking: boolean = false): void => {
     const textEl = document.getElementById("turn-indicator-text");
     const containerEl = document.getElementById("turn-indicator-container");
     if (textEl) {
@@ -268,7 +268,7 @@ async function main(): Promise<void> {
 
 
 
-  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; winLength?: number; rules?: string; initialMoves: Array<{x: number; y: number; z: number; player: 1 | 2}> }): void => {
+  const initGameContext = (levelConfig: { id: string; name: string; boardSize: number; layers: number; winLength?: number; rules?: string; initialMoves: Array<{ x: number; y: number; z: number; player: 1 | 2 }> }): void => {
     console.log("[Context] Initializing with size: " + levelConfig.boardSize + "x" + levelConfig.layers);
 
     // Apply win length from config (default 5)
@@ -426,7 +426,7 @@ async function main(): Promise<void> {
       console.warn("[Level] Unknown level ID:", id);
       return;
     }
-    overlayManager.showToast(i18n.t("LEVEL_LOADING", config.name));
+    overlayManager.showToast(i18n.t('LEVEL_LOADING', i18n.t(config.name as any)));
     initGameContext(config);
   };
 
@@ -469,7 +469,7 @@ async function main(): Promise<void> {
         layers: layers,
         winLength: winLen,
         rules: rules,
-        initialMoves: [] as Array<{x: number; y: number; z: number; player: 1 | 2}>
+        initialMoves: [] as Array<{ x: number; y: number; z: number; player: 1 | 2 }>
       };
       modal.classList.add("hidden");
       overlayManager.showToast(i18n.t("LEVEL_STARTING", customConfig.name));
@@ -498,7 +498,8 @@ async function main(): Promise<void> {
     } catch (_err) {
 
       // cancelled or no valid moves
-    } finally {isAIThinking = false;
+    } finally {
+      isAIThinking = false;
     }
   };
 
@@ -592,15 +593,15 @@ async function main(): Promise<void> {
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
         '<span class="slot-meta">' + modeStr + aiDiff + " | " + ruleLabel + " | " + dims + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
         '<span class="slot-actions">' +
-          '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
-          '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
+        '<button data-action="quick-load">' + i18n.t("SLOT_READ") + '</button>' +
+        '<button data-action="quick-save">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
         '</span>';
     } else {
       quickDiv.innerHTML =
         '<span class="slot-index">' + i18n.t("QUICK_SAVE_LABEL") + '</span>' +
         '<span class="slot-info">' + i18n.t("EMPTY_SLOT") + '</span>' +
         '<span class="slot-actions">' +
-          '<button data-action="quick-save">' + i18n.t("SLOT_QUICK") + '</button>' +
+        '<button data-action="quick-save">' + i18n.t("SLOT_QUICK") + '</button>' +
         '</span>';
     }
     list.appendChild(quickDiv);
@@ -618,7 +619,7 @@ async function main(): Promise<void> {
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
           '<span class="slot-info">' + i18n.t("EMPTY_SLOT") + '</span>' +
           '<span class="slot-actions">' +
-            '<button data-action="fill" data-index="' + i + '">' + i18n.t("SLOT_FILL") + '</button>' +
+          '<button data-action="fill" data-index="' + i + '">' + i18n.t("SLOT_FILL") + '</button>' +
           '</span>';
       } else {
         const date = new Date(data.timestamp);
@@ -636,10 +637,10 @@ async function main(): Promise<void> {
           '<span class="slot-index">' + i18n.t("SAVE_SLOT_LABEL", i + 1) + '</span>' +
           '<span class="slot-meta">' + modeStr + aiDiff + " | " + ruleLabel2 + " | " + dims2 + " | " + i18n.t("SLOT_MOVES", movesCount) + " | " + timeStr + '</span>' +
           '<span class="slot-actions">' +
-            '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
-            '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +
-            '<button data-action="overwrite" data-index="' + i + '">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
-            '<button data-action="delete" data-index="' + i + '">' + i18n.t("SLOT_DELETE") + '</button>' +
+          '<button data-action="load" data-index="' + i + '">' + i18n.t("SLOT_READ") + '</button>' +
+          '<button data-action="replay" data-index="' + i + '">' + i18n.t("BTN_REPLAY") + '</button>' +
+          '<button data-action="overwrite" data-index="' + i + '">' + i18n.t("SLOT_OVERWRITE") + '</button>' +
+          '<button data-action="delete" data-index="' + i + '">' + i18n.t("SLOT_DELETE") + '</button>' +
           '</span>';
       }
       list.appendChild(div);
@@ -707,7 +708,7 @@ async function main(): Promise<void> {
 
   let confirmCallback: (() => void) | null = null;
 
-const showConfirmDialog = (message: string, onConfirm: () => void): void => {
+  const showConfirmDialog = (message: string, onConfirm: () => void): void => {
     const dialog = document.getElementById("confirm-dialog");
     const msgEl = document.getElementById("confirm-message");
     const yesBtn = document.getElementById("confirm-yes");
@@ -726,16 +727,16 @@ const showConfirmDialog = (message: string, onConfirm: () => void): void => {
     noBtn.parentNode?.replaceChild(newNoBtn, noBtn);
 
     newYesBtn.addEventListener("click", () => {
-        dialog.classList.add("hidden");
-        if (confirmCallback) confirmCallback();
+      dialog.classList.add("hidden");
+      if (confirmCallback) confirmCallback();
     });
 
     newNoBtn.addEventListener("click", () => {
-        dialog.classList.add("hidden");
-        confirmCallback = null;
+      dialog.classList.add("hidden");
+      confirmCallback = null;
     });
-};
-const startReplay = (data: SaveData): void => {
+  };
+  const startReplay = (data: SaveData): void => {
     console.log("[Replay] Starting replay for save:", data.id);
 
     // 0. Ensure board context matches save dimensions
@@ -761,7 +762,7 @@ const startReplay = (data: SaveData): void => {
     // Clear any residual lastMove ring from previous game
     rightPanel.resetGame();
     eventBus.emit(Events.GAME_RESET);
-    
+
     // 3. Set strict REPLAY state
     isReplayMode = true;
     gameStore.appState = AppState.PLAYING;
@@ -770,46 +771,46 @@ const startReplay = (data: SaveData): void => {
     focusZ = data.focusZ ?? 0;
     gameStore.setFocusZ(focusZ);
     replayState = {
-        moves: [...data.moves],
-        currentIndex: 0
+      moves: [...data.moves],
+      currentIndex: 0
     };
 
     // 5. Inject Replay Controls UI
     let controls = document.getElementById("replay-controls");
     if (!controls) {
-        controls = document.createElement("div");
-        controls.id = "replay-controls";
-        controls.innerHTML =
-            '<button id="btn-replay-prev">' + i18n.t("BTN_REPLAY_PREV") + '</button>' +
-            '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
-            '<button id="btn-replay-next">' + i18n.t("BTN_REPLAY_NEXT") + '</button>' +
-            '<button id="btn-replay-exit">' + i18n.t("BTN_REPLAY_EXIT") + '</button>';
-        document.body.appendChild(controls);
+      controls = document.createElement("div");
+      controls.id = "replay-controls";
+      controls.innerHTML =
+        '<button id="btn-replay-prev">' + i18n.t("BTN_REPLAY_PREV") + '</button>' +
+        '<span id="replay-step-info">0 / ' + data.moves.length + '</span>' +
+        '<button id="btn-replay-next">' + i18n.t("BTN_REPLAY_NEXT") + '</button>' +
+        '<button id="btn-replay-exit">' + i18n.t("BTN_REPLAY_EXIT") + '</button>';
+      document.body.appendChild(controls);
 
-        document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
-        document.getElementById("btn-replay-next")?.addEventListener("click", () => replayStep(1));
-        document.getElementById("btn-replay-exit")?.addEventListener("click", exitReplay);
+      document.getElementById("btn-replay-prev")?.addEventListener("click", () => replayStep(-1));
+      document.getElementById("btn-replay-next")?.addEventListener("click", () => replayStep(1));
+      document.getElementById("btn-replay-exit")?.addEventListener("click", exitReplay);
     }
 
     // 6. Initial render
     updateReplayUI();
     overlayManager.showToast(i18n.t("REPLAY_ENTER").replace("{0}", String(data.moves.length)));
-};
+  };
 
-let replayState: {
-    moves: Array<{x: number; y: number; z: number; player: 1 | 2}>;
+  let replayState: {
+    moves: Array<{ x: number; y: number; z: number; player: 1 | 2 }>;
     currentIndex: number;
-} | null = null;
+  } | null = null;
 
-const replayStep = (direction: number): void => {
+  const replayStep = (direction: number): void => {
     if (!replayState) return;
     const newIndex = replayState.currentIndex + direction;
     if (newIndex < 0 || newIndex > replayState.moves.length) return;
     replayState.currentIndex = newIndex;
     updateReplayUI();
-};
+  };
 
-const updateReplayUI = (): void => {
+  const updateReplayUI = (): void => {
     if (!replayState) return;
     // Clear board for replay (board data only; lastMove already cleared in startReplay)
     rightPanel.board.reset();
@@ -817,10 +818,10 @@ const updateReplayUI = (): void => {
     const lc = rightPanel.board.layers;
     // Replay moves up to currentIndex
     for (let i = 0; i < replayState.currentIndex; i++) {
-        const m = replayState.moves[i];
-        if (m.x >= 0 && m.x < bs && m.y >= 0 && m.y < bs && m.z >= 0 && m.z < lc) {
-          rightPanel.board.set(m.x, m.y, m.z, m.player);
-        }
+      const m = replayState.moves[i];
+      if (m.x >= 0 && m.x < bs && m.y >= 0 && m.y < bs && m.z >= 0 && m.z < lc) {
+        rightPanel.board.set(m.x, m.y, m.z, m.player);
+      }
     }
     rightPanel.refresh();
     // Show last move ring for current replay step (skip step 0 = empty board, bounds-safe)
@@ -838,11 +839,11 @@ const updateReplayUI = (): void => {
     // Update step info text
     const info = document.getElementById("replay-step-info");
     if (info) {
-        info.textContent = replayState.currentIndex + " / " + replayState.moves.length;
+      info.textContent = replayState.currentIndex + " / " + replayState.moves.length;
     }
-};
+  };
 
-const exitReplay = (): void => {
+  const exitReplay = (): void => {
     console.log("[Replay] Exiting replay mode");
     isReplayMode = false;
     const controls = document.getElementById("replay-controls");
@@ -850,7 +851,7 @@ const exitReplay = (): void => {
     replayState = null;
     overlayManager.showToast(i18n.t("REPLAY_EXIT"));
     returnToTitle();
-};
+  };
 
   const returnToTitle = (): void => {
     document.getElementById("victory-modal")?.classList.add("hidden");
@@ -863,7 +864,7 @@ const exitReplay = (): void => {
     focusZ = 0;
     rightPanel.resetGame();
     leftPanel.renderAllPieces(rightPanel.board, focusZ);
-      eventBus.emit(Events.GAME_RESET);
+    eventBus.emit(Events.GAME_RESET);
     gameStore.appState = AppState.TITLE;
     hideSwapDecisionModal();
     hideAllOverlays();
@@ -921,11 +922,11 @@ const exitReplay = (): void => {
 
   const loadGameFromData = (data: SaveData): void => {
     try {
-      if (!data) {overlayManager.showToast(i18n.t("INVALID_SAVE"), true);return;}
+      if (!data) { overlayManager.showToast(i18n.t("INVALID_SAVE"), true); return; }
 
       // Ensure board dimensions match before validating/loading
       ensureContextMatches(data);
-      
+
       // === Deep validation pipeline ===
       const saveError = SaveManager.validateSaveData(data);
       if (saveError) {
@@ -1016,7 +1017,7 @@ const exitReplay = (): void => {
       // Sync 3D view
       leftPanel.renderAllPieces(rightPanel.board, focusZ);
       eventBus.emit(Events.GAME_RESET);
-      
+
       // Restore last move ring from save data (bounds-safe)
       if (data.moves && data.moves.length > 0) {
         const lastMv = data.moves[data.moves.length - 1];
@@ -1065,7 +1066,7 @@ const exitReplay = (): void => {
     // Find first empty slot, or overwrite quick save slot if all full
     let targetIndex = -1;
     for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
-      if (saveManager.getSlots()[i] === null) {targetIndex = i;break;}
+      if (saveManager.getSlots()[i] === null) { targetIndex = i; break; }
     }
     if (targetIndex === -1) targetIndex = QUICK_SAVE_INDEX;
     await saveManager.save(targetIndex, data);
@@ -1128,11 +1129,11 @@ const exitReplay = (): void => {
     const btnP = document.getElementById("guide-btn-primary");
     const btnS = document.getElementById("guide-btn-secondary");
     if (gameStore.appState === AppState.GUIDE_FROM_TITLE) {
-      if (btnP) {btnP.textContent = i18n.t("BTN_START_GAME");btnP.addEventListener("click", () => {hideAllOverlays();startGame();});}
-      if (btnS) {btnS.textContent = i18n.t("BTN_BACK");btnS.addEventListener("click", backToTitle);}
+      if (btnP) { btnP.textContent = i18n.t("BTN_START_GAME"); btnP.addEventListener("click", () => { hideAllOverlays(); startGame(); }); }
+      if (btnS) { btnS.textContent = i18n.t("BTN_BACK"); btnS.addEventListener("click", backToTitle); }
     } else {
-      if (btnP) {btnP.textContent = i18n.t("BTN_NEW_GAME");btnP.addEventListener("click", () => {hideAllOverlays();gameStore.appState = AppState.PLAYING;confirmRestart();});}
-      if (btnS) {btnS.textContent = i18n.t("BTN_RESUME");btnS.addEventListener("click", backToGame);}
+      if (btnP) { btnP.textContent = i18n.t("BTN_NEW_GAME"); btnP.addEventListener("click", () => { hideAllOverlays(); gameStore.appState = AppState.PLAYING; confirmRestart(); }); }
+      if (btnS) { btnS.textContent = i18n.t("BTN_RESUME"); btnS.addEventListener("click", backToGame); }
     }
   };
 
@@ -1151,7 +1152,8 @@ const exitReplay = (): void => {
       if (!config) return;
       const item = document.createElement("div");
       item.className = "level-item";
-      item.innerHTML = '<div class="level-name">' + config.name + '</div>' +
+      const translatedName = i18n.t(config.name as any);
+      item.innerHTML = '<div class="level-name">' + translatedName + '</div>' +
         '<div class="level-dims">' + config.boardSize + '×' + config.boardSize + '×' + config.layers + '</div>';
       item.addEventListener("click", () => {
         levelSelectModal.classList.add("hidden");
@@ -1184,7 +1186,7 @@ const exitReplay = (): void => {
   });
 
   escResume?.addEventListener("click", () => { closeEscMenu(); audioManager.playBGM("game"); });
-  escRestart?.addEventListener("click", () => {closeEscMenu();confirmRestart();});
+  escRestart?.addEventListener("click", () => { closeEscMenu(); confirmRestart(); });
   document.getElementById("btn-victory-restart")?.addEventListener("click", () => {
     document.getElementById("victory-modal")?.classList.add("hidden");
     confirmRestart();
@@ -1193,15 +1195,15 @@ const exitReplay = (): void => {
     document.getElementById("victory-modal")?.classList.add("hidden");
     returnToTitle();
   });
-  escSave?.addEventListener("click", () => {closeEscMenu();saveGame();});
-  escTitle?.addEventListener("click", () => {closeEscMenu();returnToTitle();});
+  escSave?.addEventListener("click", () => { closeEscMenu(); saveGame(); });
+  escTitle?.addEventListener("click", () => { closeEscMenu(); returnToTitle(); });
   const escLoad = document.getElementById("esc-load");
   escLoad?.addEventListener("click", () => {
     closeEscMenu();
     const idx = saveManager.getLatestIndex();
     if (idx >= 0) {
       const data = saveManager.load(idx);
-      if (data) {loadGameFromData(data);}
+      if (data) { loadGameFromData(data); }
     } else {
       overlayManager.showToast(i18n.t("NO_SAVE"), true);
     }
@@ -1209,24 +1211,24 @@ const exitReplay = (): void => {
 
   // ===== Slot Action Menu Listeners =====
   window.addEventListener("keydown", (e: KeyboardEvent) => {
-  // Global mute toggle (M) - works in ALL states
-  if (e.code === "KeyM") {
-    e.preventDefault();
-    const wasMuted = audioManager.muted;
-    audioManager.mute();
-    overlayManager.showToast(wasMuted ? i18n.t("MUTE_OFF") : i18n.t("MUTE_ON"));
-    // Visual: toggle volume slider between blue (active) and gray (muted)
-    if (volumeSlider) {
-      volumeSlider.classList.toggle("muted", !wasMuted);
+    // Global mute toggle (M) - works in ALL states
+    if (e.code === "KeyM") {
+      e.preventDefault();
+      const wasMuted = audioManager.muted;
+      audioManager.mute();
+      overlayManager.showToast(wasMuted ? i18n.t("MUTE_OFF") : i18n.t("MUTE_ON"));
+      // Visual: toggle volume slider between blue (active) and gray (muted)
+      if (volumeSlider) {
+        volumeSlider.classList.toggle("muted", !wasMuted);
+      }
+      // Sync the volume-value text with mute state
+      if (volumeValueText) {
+        volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : i18n.t("MUTE_ON");
+      }
+      return;
     }
-    // Sync the volume-value text with mute state
-    if (volumeValueText) {
-      volumeValueText.textContent = wasMuted ? (parseInt(volumeSlider?.value ?? "70") + "%") : i18n.t("MUTE_ON");
-    }
-    return;
-  }
 
-// Theme toggle works regardless of game state
+    // Theme toggle works regardless of game state
     if (e.key === "t" || e.key === "T") {
       e.preventDefault();
       currentTheme = currentTheme.name === "dark" ? LIGHT_THEME : DARK_THEME;
@@ -1273,7 +1275,7 @@ const exitReplay = (): void => {
           const idx = saveManager.getLatestIndex();
           if (idx >= 0) {
             const data = saveManager.load(idx);
-            if (data) {loadGameFromData(data);}
+            if (data) { loadGameFromData(data); }
           } else {
             overlayManager.showToast(i18n.t("NO_SAVE"), true);
           }
@@ -1282,41 +1284,41 @@ const exitReplay = (): void => {
         break;
 
       case AppState.GUIDE_FROM_GAME:
-      case AppState.PAUSED:{
-          e.preventDefault();
-          e.stopPropagation();
-          switch (e.code) {
-            case "Escape":
-              if (gameStore.appState === AppState.GUIDE_FROM_GAME) {
-                backToGame();
-              } else {
-                closeEscMenu();
-              }
-              break;
-            case "KeyR":closeEscMenu();confirmRestart();break;
-            case "KeyS":closeEscMenu();saveGame();break;
-            case "KeyL":{
-                closeEscMenu();
-                const idx = saveManager.getLatestIndex();
-                if (idx >= 0) {
-                  const data = saveManager.load(idx);
-                  if (data) {loadGameFromData(data);}
-                } else {
-                  overlayManager.showToast(i18n.t("NO_SAVE"), true);
-                }
-                break;
-              }
-            case "KeyG":
+      case AppState.PAUSED: {
+        e.preventDefault();
+        e.stopPropagation();
+        switch (e.code) {
+          case "Escape":
+            if (gameStore.appState === AppState.GUIDE_FROM_GAME) {
+              backToGame();
+            } else {
               closeEscMenu();
-              gameStore.appState = AppState.GUIDE_FROM_GAME;
-              guideScreen?.classList.remove("hidden");
-              audioManager.playBGM("guide");
-              updateGuideButtons();
-              break;
-            case "KeyB":closeEscMenu();returnToTitle();break;
+            }
+            break;
+          case "KeyR": closeEscMenu(); confirmRestart(); break;
+          case "KeyS": closeEscMenu(); saveGame(); break;
+          case "KeyL": {
+            closeEscMenu();
+            const idx = saveManager.getLatestIndex();
+            if (idx >= 0) {
+              const data = saveManager.load(idx);
+              if (data) { loadGameFromData(data); }
+            } else {
+              overlayManager.showToast(i18n.t("NO_SAVE"), true);
+            }
+            break;
           }
-          return;
+          case "KeyG":
+            closeEscMenu();
+            gameStore.appState = AppState.GUIDE_FROM_GAME;
+            guideScreen?.classList.remove("hidden");
+            audioManager.playBGM("guide");
+            updateGuideButtons();
+            break;
+          case "KeyB": closeEscMenu(); returnToTitle(); break;
         }
+        return;
+      }
 
       case AppState.PLAYING:
         // Prevent arrow keys from scrolling the page
@@ -1324,42 +1326,42 @@ const exitReplay = (): void => {
           e.preventDefault();
         }
         switch (e.key) {
-          case "a":case "A":
+          case "a": case "A":
             e.preventDefault();
             focusZ = (focusZ - 1 + LAYER_COUNT) % LAYER_COUNT;
             eventBus.emit(Events.LAYER_CHANGED, focusZ);
             leftPanel.renderAllPieces(rightPanel.board, focusZ);
             break;
-          case "d":case "D":
+          case "d": case "D":
             e.preventDefault();
             focusZ = (focusZ + 1) % LAYER_COUNT;
             eventBus.emit(Events.LAYER_CHANGED, focusZ);
             leftPanel.renderAllPieces(rightPanel.board, focusZ);
             break;
-          case "q":case "Q":e.preventDefault();leftPanel.rotateY(1);break;
-          case "e":case "E":e.preventDefault();leftPanel.rotateY(-1);break;
-          case "f":case "F":e.preventDefault();rightPanel.toggleMirror();break;
-          case "w":case "W":e.preventDefault();leftPanel.zoom(1);break;
-          case "s":case "S":e.preventDefault();leftPanel.zoom(-1);break;
-          case "z":case "Z":
+          case "q": case "Q": e.preventDefault(); leftPanel.rotateY(1); break;
+          case "e": case "E": e.preventDefault(); leftPanel.rotateY(-1); break;
+          case "f": case "F": e.preventDefault(); rightPanel.toggleMirror(); break;
+          case "w": case "W": e.preventDefault(); leftPanel.zoom(1); break;
+          case "s": case "S": e.preventDefault(); leftPanel.zoom(-1); break;
+          case "z": case "Z":
             e.preventDefault();
             console.log("KeyZ pressed");
             leftPanel.adjustLayerSpacing(-0.5);
             break;
-          case "c":case "C":
+          case "c": case "C":
             e.preventDefault();
             console.log("KeyC pressed");
             leftPanel.adjustLayerSpacing(0.5);
             break;
-          case "r":case "R":e.preventDefault();openEscMenu();break;
-          case "Escape":e.preventDefault();openEscMenu();break;
-          case "x":case "X":e.preventDefault();leftPanel.toggleLayerSpacing();break;
-          case "h":case "H":
+          case "r": case "R": e.preventDefault(); openEscMenu(); break;
+          case "Escape": e.preventDefault(); openEscMenu(); break;
+          case "x": case "X": e.preventDefault(); leftPanel.toggleLayerSpacing(); break;
+          case "h": case "H":
             e.preventDefault();
-            {const mode = rightPanel.cycleAuxMode();leftPanel.setAuxMode(mode);}
+            { const mode = rightPanel.cycleAuxMode(); leftPanel.setAuxMode(mode); }
             break;
 
-          case "v":case "V":
+          case "v": case "V":
             e.preventDefault();
             isColorblindMode = !isColorblindMode;
             eventBus.emit(Events.COLORBLIND_MODE_TOGGLED, isColorblindMode);
@@ -1470,7 +1472,7 @@ const exitReplay = (): void => {
 
   const onPlayerColorChange = (): void => {
     if (blackRadio && blackRadio.checked) playerColor = 1; else
-    if (whiteRadio && whiteRadio.checked) playerColor = 2;
+      if (whiteRadio && whiteRadio.checked) playerColor = 2;
     console.log("[UI] Player color changed to:", playerColor === 1 ? "Black" : "White");
     // If game is running and it is now the AI's turn, trigger immediately
     if (gameStore.appState === AppState.PLAYING && isPvEMode) {
@@ -1486,13 +1488,30 @@ const exitReplay = (): void => {
 
   // I18n: inject all data-i18n text into DOM
   const injectUITexts = (): void => {
+    // 1. 处理普通文本
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const key = el.getAttribute("data-i18n");
-      if (key) el.textContent = i18n.t(key as any);
+      if (key) {
+        const text = i18n.t(key as any);
+        if (text) {
+          el.textContent = text;
+        } else {
+          console.warn(`[i18n] Missing translation for key: ${key}`);
+        }
+      }
     });
+
+    // 2. 处理 placeholder
     document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
       const key = el.getAttribute("data-i18n-placeholder");
-      if (key) (el as HTMLInputElement).placeholder = i18n.t(key as any);
+      if (key) {
+        const text = i18n.t(key as any);
+        if (text) {
+          (el as HTMLInputElement).placeholder = text;
+        } else {
+          console.warn(`[i18n] Missing translation for placeholder key: ${key}`);
+        }
+      }
     });
   };
 

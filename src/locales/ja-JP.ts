@@ -19,6 +19,7 @@ const jaJP = {
   QUICK_SAVE_LABEL: "クイックセーブ",
   SAVE_SLOT_LABEL: "スロット {0}",
   SLOT_MOVES: "{0} 手",
+  INPUT_DIALOG_PLACEHOLDER: "ここにデータを貼り付け",
 
   // Buttons & menus
   BTN_START_GAME: "ゲーム開始",

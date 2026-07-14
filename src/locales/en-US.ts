@@ -19,6 +19,9 @@ const enUS = {
   QUICK_SAVE_LABEL: "Quick Save",
   SAVE_SLOT_LABEL: "Slot {0}",
   SLOT_MOVES: "{0} moves",
+    INPUT_DIALOG_TITLE: "Import Save",
+  INPUT_DIALOG_MSG: "Please paste Base64 save data:",
+  INPUT_DIALOG_PLACEHOLDER: "Paste data here...",
 
   // Buttons & menus
   BTN_START_GAME: "Start Game",
