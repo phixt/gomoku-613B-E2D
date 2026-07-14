@@ -57,6 +57,14 @@ const zhHant = {
   MUTE_ON: "已靜音",
   MUTE_OFF: "已取消靜音",
 
+  LEGEND_BASE: "對戰模式",
+  LEGEND_REPLAY: "覆盤模式",
+  LEGEND_PAUSE: "暫停/選單",
+  LEGEND_BASE_REPLAY: "對戰+覆盤",
+  LEGEND_BASE_PAUSE: "對戰+暫停",
+  LEGEND_GLOBAL: "全域（三種模式）",
+
+
   // Shortcut key descriptions
   KEY_Q: "旋轉 3D 視角",
   KEY_W: "推拉 3D 視角",
@@ -68,7 +76,14 @@ const zhHant = {
   KEY_R: "暫停/選單",
   KEY_X: "重設層間距",
   KEY_V: "切換色弱模式 (藍/黃)",
-  KEY_M: "切換人機模式",
+  KEY_M: "全域靜音/取消靜音",
+  KEY_ESC: "暫停 / 呼叫選單 或 關閉選單/返回",
+  KEY_REPLAY_PREV_NEXT: "上一步 / 下一步",
+  KEY_SAVE_PAUSE: "存檔（暫停下）",
+  KEY_LOAD_ANY: "讀檔（開始/暫停頁面均可）",
+  KEY_GUIDE: "進入快捷鍵說明（指南頁）",
+  KEY_BACK_TITLE: "返回標題（暫停介面）",
+
 
   // Colorblind mode
   COLORBLIND_ON: "色弱模式已開啟 (藍/黃)",
@@ -148,6 +163,10 @@ const zhHant = {
 
   SLOT_RULE_GOMOKU: "標準",
   SLOT_RULE_SWAP2: "Swap2",
+
+  LEVEL_TUTORIAL: "9x9 教程關",
+  LEVEL_RESIDUAL: "13x13 殘局挑戰",
+  LEVEL_CUSTOM: "自訂 {0}x{1}x{2}",
 
 } as const;
 

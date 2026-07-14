@@ -75,7 +75,7 @@ const enUS = {
   KEY_H: "Toggle Guide Lines",
   KEY_R: "Restart Match",
   KEY_T: "Toggle Light/Dark Theme",
-  KEY_M: "Global Mute",
+  KEY_M: "Global mute/unmute",
   KEY_ESC: "Pause/Menu or Close/Back",
   KEY_REPLAY_PREV_NEXT: "Previous / Next Step",
   KEY_SAVE_PAUSE: "Save (in Pause)",
@@ -162,6 +162,10 @@ const enUS = {
 
   SLOT_RULE_GOMOKU: "Standard",
   SLOT_RULE_SWAP2: "Swap2",
+
+  LEVEL_TUTORIAL: "9x9 Tutorial Level",
+  LEVEL_RESIDUAL: "13x13 Endgame Challenge",
+  LEVEL_CUSTOM: "Custom {0}x{1}x{2}",
 
 } as const;
 

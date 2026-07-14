@@ -464,7 +464,7 @@ async function main(): Promise<void> {
       const rules = (ruleSelect?.value || "standard") as "gomoku" | "swap2";
       const customConfig = {
         id: "custom_sandbox",
-        name: "Custom " + size + "x" + size + "x" + layers,
+        name: i18n.t('LEVEL_CUSTOM', size, size, layers),
         boardSize: size,
         layers: layers,
         winLength: winLen,

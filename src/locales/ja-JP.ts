@@ -56,6 +56,13 @@ const jaJP = {
   MUTE_ON: "ミュート中",
   MUTE_OFF: "ミュート解除",
 
+  LEGEND_BASE: "対戦モード",
+  LEGEND_REPLAY: "リプレイモード",
+  LEGEND_PAUSE: "一時停止/メニュー",
+  LEGEND_BASE_REPLAY: "対戦+リプレイ",
+  LEGEND_BASE_PAUSE: "対戦+一時停止",
+  LEGEND_GLOBAL: "グローバル（3モード共通）",
+
   // Shortcut key descriptions
   KEY_Q: "3D 視点を回転",
   KEY_W: "3D 視点をズーム",
@@ -67,7 +74,13 @@ const jaJP = {
   KEY_R: "一時停止 / メニュー",
   KEY_X: "レイヤー間隔をリセット",
   KEY_V: "色弱モード切り替え (青/黄)",
-  KEY_M: "ミュート切り替え",
+  KEY_M: "グローバルミュート / ミュート解除",
+  KEY_ESC: "一時停止 / メニュー表示 または メニュー閉じる/戻る",
+  KEY_REPLAY_PREV_NEXT: "前のステップ / 次のステップ",
+  KEY_SAVE_PAUSE: "セーブ（一時停止中）",
+  KEY_LOAD_ANY: "ロード（開始/一時停止ページどちらでも可）",
+  KEY_GUIDE: "ショートカットキー説明へ（ガイドページ）",
+  KEY_BACK_TITLE: "タイトルに戻る（一時停止画面）",
 
   // Colorblind mode
   COLORBLIND_ON: "色弱モード ON (青/黄)",
@@ -147,6 +160,10 @@ const jaJP = {
 
   SLOT_RULE_GOMOKU: "標準",
   SLOT_RULE_SWAP2: "Swap2",
+
+  LEVEL_TUTORIAL: "9x9 チュートリアル",
+  LEVEL_RESIDUAL: "13x13 終盤チャレンジ",
+  LEVEL_CUSTOM: "カスタム {0}x{1}x{2}",
 
 } as const;
 

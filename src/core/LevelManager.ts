@@ -10,7 +10,7 @@ export interface LevelConfig {
 const LEVELS: Record<string, LevelConfig> = {
     tutorial: {
         id: 'tutorial',
-        name: '9x9 Tutorial',
+        name: '9x9 LEVEL_TUTORIAL',
         boardSize: 9,
         layers: 1,
         initialMoves: [],
@@ -18,7 +18,7 @@ const LEVELS: Record<string, LevelConfig> = {
     },
     residual: {
         id: 'residual',
-        name: '13x13 Residual',
+        name: '13x13 LLEVEL_RESIDUAL',
         boardSize: 13,
         layers: 6,
         winLength: 5,

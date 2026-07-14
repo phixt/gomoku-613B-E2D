@@ -75,7 +75,7 @@ const zhCN = {
   KEY_H: "开关辅助线",
   KEY_R: "重新开始对局",
   KEY_T: "切换亮/暗主题",
-  KEY_M: "全局静音",
+  KEY_M: "全局静音/取消静音",
   KEY_ESC: "暂停 / 呼出菜单 或 关闭菜单/返回",
   KEY_REPLAY_PREV_NEXT: "上一步 / 下一步",
   KEY_SAVE_PAUSE: "存档（暂停下）",
@@ -165,6 +165,7 @@ const zhCN = {
 
   LEVEL_TUTORIAL: "9x9 教程关",
   LEVEL_RESIDUAL: "13x13 残局挑战",
+  LEVEL_CUSTOM: "自定义 {0}x{1}x{2}"
 
 } as const;
 
