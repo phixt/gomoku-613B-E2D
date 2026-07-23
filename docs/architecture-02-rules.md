@@ -129,7 +129,7 @@ of the chosen rules:
 INTERFACE IRuleEngine:
     checkWin(x, y, z, player, board)               -> Boolean
     isLegalMove(x, y, z, player, history, board)   -> Boolean
-    getNextTurnState(history, currentPlayer)        -> TurnState
+    getNextTurnState(history, currentPlayer, levelConfig)        -> TurnState
 ```
 
 ### 2.2 TurnState
