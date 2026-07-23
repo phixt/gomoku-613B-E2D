@@ -17,39 +17,90 @@ All camera parameters are computed from four inputs:
 
 ---
 
-## 2. Coordinate System & Board Geometry
+## 2. Logical‑to‑World Coordinate Mapping (Critical)
 
-### 2.1 Board Bounding Dimensions
+### 2.1 Coordinate Systems
+
+The game logic uses a different coordinate convention than the rendering
+world space. This mapping MUST be applied before any camera calculation.
+
+| Phase 1 Logical Axis | Meaning      | World Axis | Meaning     |
+|----------------------|--------------|------------|-------------|
+| `x`                  | column       | `X`        | column      |
+| `y`                  | row          | `Z`        | forward     |
+| `z`                  | layer        | `Y`        | up (height) |
+
+**Visual comparison:**
+
+```
+ LOGICAL (game logic)         WORLD (rendering)
+      z (layer)                    Y (up)
+      |                            |
+      |   (x,y,z)                  |   (X,Y,Z)
+      |  /                         |  /
+      | /                          | /
+      |/                           |/
+      +-------> y (row)            +-------> Z (forward)
+     /                            /
+    /                            /
+   v                            v
+  x (column)                   X (column)
+```
+
+### 2.2 LogicalToWorld Function
+
+```
+FUNCTION LogicalToWorld(logicalX, logicalY, logicalZ):
+    // logicalX = column  -> worldX = column (unchanged)
+    // logicalY = row     -> worldZ = forward
+    // logicalZ = layer   -> worldY = up (height)
+    worldX := logicalX
+    worldY := logicalZ * layerSpacing
+    worldZ := logicalY
+    RETURN (worldX, worldY, worldZ)
+```
+
+**Inverse:**
+
+```
+FUNCTION WorldToLogical(worldX, worldY, worldZ):
+    logicalX := worldX
+    logicalY := worldZ
+    logicalZ := round(worldY / layerSpacing)
+    RETURN (logicalX, logicalY, logicalZ)
+```
+
+### 2.3 Board Bounding Dimensions (in World Space)
 
 The board occupies world space from `(0, 0, 0)` to
-`(boardSize - 1, boardSize - 1, (layers - 1) * layerSpacing)`:
+`(boardSize - 1, (layers - 1) * layerSpacing, boardSize - 1)`:
 
 ```
-boardSpanX = boardSize - 1
-boardSpanY = boardSize - 1
-boardSpanZ = (layers - 1) * layerSpacing
+boardSpan_X = boardSize - 1                   // columns (logical x)
+boardSpan_Y = (layers - 1) * layerSpacing     // height  (logical z * spacing)
+boardSpan_Z = boardSize - 1                   // depth   (logical y)
 ```
 
-### 2.2 Board Center (Camera Look‑At Target)
+### 2.4 Board Center (Camera Look‑At Target)
 
-The camera always targets the geometric center of the bounding box:
+The camera always targets the geometric center of the bounding box
+in **world space**:
 
 ```
-center.x = (boardSize - 1) / 2
-center.y = (layers - 1) * layerSpacing / 2
-center.z = (boardSize - 1) / 2
+center_X = (boardSize - 1) / 2
+center_Y = (layers - 1) * layerSpacing / 2
+center_Z = (boardSize - 1) / 2
 ```
 
-### 2.3 Bounding Diagonal
+### 2.5 Bounding Diagonal
 
-The longest diagonal through the board's bounding box provides the reference
-for distance and visual normalization:
+The longest diagonal through the world‑space bounding box:
 
 ```
 FUNCTION computeDiagonal(boardSize, layers, layerSpacing):
     w := boardSize - 1
     h := (layers - 1) * layerSpacing
-    RETURN sqrt(w*w + w*w + h*h)
+    RETURN sqrt(w*w + w*w + h*h)   // X^2 + Z^2 + Y^2
 ```
 
 For the default 13x13x6 board with spacing 3.5:
@@ -58,6 +109,20 @@ For the default 13x13x6 board with spacing 3.5:
 w = 12, h = 5 * 3.5 = 17.5
 diagonal = sqrt(144 + 144 + 306.25) = sqrt(594.25) ~ 24.38
 ```
+
+### 2.6 Converting Piece Positions for Rendering
+
+Every piece stored at logical `(x, y, z)` in the board array must be
+placed at world position via `LogicalToWorld`:
+
+```
+FUNCTION placePieceMesh(pieceMesh, logicalX, logicalY, logicalZ, layerSpacing):
+    (wx, wy, wz) := LogicalToWorld(logicalX, logicalY, logicalZ)
+    pieceMesh.position := (wx, wy, wz)
+```
+
+Similarly, grid lines, connector lines, and all auxiliary geometry follow
+the same mapping.
 
 ---
 
@@ -217,9 +282,10 @@ FUNCTION computeCameraPosition(center, distance, pitch, yaw):
     pitchRad := toRadians(pitch)
     yawRad   := toRadians(yaw)
 
-    position.x := center.x + distance * cos(pitchRad) * cos(yawRad)
-    position.y := center.y + distance * sin(pitchRad)
-    position.z := center.z + distance * cos(pitchRad) * sin(yawRad)
+    // World-space spherical to Cartesian (Y is up)
+    position_X := center_X + distance * cos(pitchRad) * cos(yawRad)
+    position_Y := center_Y + distance * sin(pitchRad)
+    position_Z := center_Z + distance * cos(pitchRad) * sin(yawRad)
 
     RETURN position
 ```
@@ -258,20 +324,26 @@ along the radial direction toward/away from the look‑at target:
 ```
 FUNCTION applyZoom(currentPosition, center, delta):
     // delta > 0 zooms in; delta < 0 zooms out
-    dir := currentPosition - center
-    currentDist := length(dir)
+    dir_X := currentPosition.x - center_X
+    dir_Y := currentPosition.y - center_Y
+    dir_Z := currentPosition.z - center_Z
+    currentDist := sqrt(dir_X*dir_X + dir_Y*dir_Y + dir_Z*dir_Z)
 
     // Normalize and scale by delta and current distance
     // (provides proportional feel: faster zoom when farther away)
     IF currentDist < EPSILON THEN RETURN
 
-    dirNormalized := dir / currentDist
+    dirNormalized_X := dir_X / currentDist
+    dirNormalized_Y := dir_Y / currentDist
+    dirNormalized_Z := dir_Z / currentDist
     step := delta * ZOOM_SPEED * currentDist
 
     newDist := currentDist - step
     newDist := clamp(newDist, MIN_DISTANCE, MAX_DISTANCE)
 
-    newPosition := center + dirNormalized * newDist
+    newPosition.x := center_X + dirNormalized_X * newDist
+    newPosition.y := center_Y + dirNormalized_Y * newDist
+    newPosition.z := center_Z + dirNormalized_Z * newDist
     RETURN newPosition
 
 CONST ZOOM_SPEED    = 0.15
@@ -299,16 +371,17 @@ through the board center:
 ```
 FUNCTION applyRotation(currentPosition, center, deltaYaw):
     // deltaYaw in degrees; positive = orbit right
-    dir := currentPosition - center
+    dir_X := currentPosition.x - center_X
+    dir_Z := currentPosition.z - center_Z
 
-    // Project to XZ plane
-    radiusXZ := sqrt(dir.x^2 + dir.z^2)
+    // Project to XZ plane (horizontal orbit around Y axis)
+    radiusXZ := sqrt(dir_X*dir_X + dir_Z*dir_Z)
 
-    currentYaw := atan2(dir.z, dir.x)
+    currentYaw := atan2(dir_Z, dir_X)
     newYaw := currentYaw + toRadians(deltaYaw)
 
-    newPosition.x := center.x + radiusXZ * cos(newYaw)
-    newPosition.z := center.z + radiusXZ * sin(newYaw)
+    newPosition.x := center_X + radiusXZ * cos(newYaw)
+    newPosition.z := center_Z + radiusXZ * sin(newYaw)
     newPosition.y := currentPosition.y   // pitch unchanged
 
     RETURN newPosition
@@ -325,14 +398,18 @@ FUNCTION zoomToAnchor(currentPosition, anchorPoint, delta):
     currentDist := length(dir)
     IF currentDist < EPSILON THEN RETURN currentPosition
 
-    dirNormalized := dir / currentDist
+    dirNormalized_X := dir_X / currentDist
+    dirNormalized_Y := dir_Y / currentDist
+    dirNormalized_Z := dir_Z / currentDist
     step := delta * ZOOM_SPEED * currentDist
 
     newDist := currentDist - step
     newDist := clamp(newDist, MIN_DISTANCE, MAX_DISTANCE)
 
     ratio := (currentDist - newDist) / currentDist
-    newPosition := currentPosition + dir * ratio
+    newPosition.x := currentPosition.x + dir_X * ratio
+    newPosition.y := currentPosition.y + dir_Y * ratio
+    newPosition.z := currentPosition.z + dir_Z * ratio
 
     RETURN newPosition
 ```
@@ -432,18 +509,19 @@ FUNCTION renderPieces(board, piecesGroup):
     ghostBlack   := []
     ghostWhite   := []
 
-    FOR EACH cell (x, y, z) IN board:
-        state := Get(board, x, y, z)
+    FOR EACH cell (lx, ly, lz) IN board:
+        state := Get(board, lx, ly, lz)
         IF state = CELL_EMPTY THEN CONTINUE
 
-        opacity := computeOpacity(z)   // full for nearby, reduced for distant
+        (wx, wy, wz) := LogicalToWorld(lx, ly, lz)
+        opacity := computeOpacity(wy)   // full for nearby Y, reduced for distant Y
 
         IF state = CELL_BLACK THEN
-            IF opacity = 1.0 THEN opaqueBlack.ADD((x, y, z))
-            ELSE ghostBlack.ADD((x, y, z))
+            IF opacity = 1.0 THEN opaqueBlack.ADD((wx, wy, wz))
+            ELSE ghostBlack.ADD((wx, wy, wz))
         ELSE
-            IF opacity = 1.0 THEN opaqueWhite.ADD((x, y, z))
-            ELSE ghostWhite.ADD((x, y, z))
+            IF opacity = 1.0 THEN opaqueWhite.ADD((wx, wy, wz))
+            ELSE ghostWhite.ADD((wx, wy, wz))
 
     // 4 draw calls at most (for 2 colors x 2 opacity levels)
     drawInstanced(opaqueBlack,  pieceGeo, blackOpaqueMat)
@@ -455,17 +533,16 @@ FUNCTION renderPieces(board, piecesGroup):
 **Opacity function** — continuous, not discrete:
 
 ```
-FUNCTION computeOpacity(zPosition):
-    // Opacity falls off with distance from the camera's look-at center
-    // Smooth falloff: closest layers to the look-at center are fully opaque
-    deltaY := abs(zPosition - center.y)
+FUNCTION computeOpacity(worldY):
+    // Opacity falls off continuously with vertical distance from
+    // the camera's look-at center. Pieces near the center Y are
+    // fully opaque; pieces at the top/bottom edges fade smoothly.
+    deltaY := abs(worldY - center_Y)
     maxDelta := (layers - 1) * layerSpacing / 2
 
     IF maxDelta < EPSILON THEN RETURN 1.0
 
     normalized := deltaY / maxDelta
-
-    // Full opacity at center; smoothly reduces toward edges
     RETURN lerp(GHOST_OPACITY_MIN, 1.0, 1 - normalized)
 
 CONST GHOST_OPACITY_MIN = 0.25
@@ -505,10 +582,11 @@ FUNCTION buildMergedGridGeometry(boardSize, layers, layerSpacing):
 INPUT: boardSize, layers, layerSpacing, aspectRatio, yaw
 
 STEP 1 — Board Geometry:
-    spanX   := boardSize - 1
-    spanZ   := (layers - 1) * layerSpacing
-    center  := (spanX/2, spanZ/2, spanX/2)
-    diag    := sqrt(spanX^2 + spanX^2 + spanZ^2)
+    span_X  := boardSize - 1
+    span_Y  := (layers - 1) * layerSpacing
+    span_Z  := boardSize - 1
+    center  := (span_X/2, span_Y/2, span_Z/2)
+    diag    := sqrt(span_X^2 + span_Z^2 + span_Y^2)
 
 STEP 2 — Normalized Aspect:
     normAsp := clamp((spanZ / max(spanX, 1)) * 2.5, 0, 1)
@@ -524,17 +602,18 @@ STEP 5 — Distance:
     dist := (targetDiag / 2) / sin(min(fovRad, fovHRad) / 2) * 1.3
 
 STEP 6 — Camera Position:
-    pos.x := center.x + dist * cos(pitchRad) * cos(yawRad)
-    pos.y := center.y + dist * sin(pitchRad)
-    pos.z := center.z + dist * cos(pitchRad) * sin(yawRad)
+    // World-space spherical to Cartesian (Y is up)
+    pos_X := center_X + dist * cos(pitchRad) * cos(yawRad)
+    pos_Y := center_Y + dist * sin(pitchRad)
+    pos_Z := center_Z + dist * cos(pitchRad) * sin(yawRad)
 
 STEP 7 — Clipping:
     near := max(0.1, dist * 0.01)
     far  := dist * 10.0
 
 STEP 8 — Apply:
-    camera.position := pos
-    camera.lookAt(center)
+    camera.position := (pos_X, pos_Y, pos_Z)
+    camera.lookAt(center_X, center_Y, center_Z)
     camera.up       := (0, 1, 0)
     camera.fov      := fov
     camera.near     := near
@@ -543,6 +622,118 @@ STEP 8 — Apply:
 ```
 
 ---
+
+
+
+---
+
+## 9. Transparency Sorting (Draw Order)
+
+### 9.1 Problem
+
+Ghost (semi-transparent) pieces must be rendered after opaque pieces and
+sorted back?to?front relative to the camera to avoid alpha?blending
+artifacts (incorrect occlusion, z?fighting in transparent regions).
+
+### 9.2 Sort?by?Distance Algorithm
+
+Before issuing draw calls, sort all transparent instances by their distance
+from the camera position (farthest first):
+
+```
+FUNCTION sortTransparentInstances(instances, cameraPosition):
+    // Sort descending by distance: farthest drawn first
+    SORT instances BY computeDistToCamera(instance, cameraPosition) DESCENDING
+    RETURN instances
+
+FUNCTION computeDistToCamera(instance, cameraPos):
+    dx := instance.worldX - cameraPos.x
+    dy := instance.worldY - cameraPos.y
+    dz := instance.worldZ - cameraPos.z
+    RETURN dx*dx + dy*dy + dz*dz   // squared distance (avoids sqrt)
+```
+
+### 9.3 Correct Draw Order
+
+```
+FUNCTION renderAllPieces(board, cameraPosition, layerSpacing):
+    opaqueInstances  := []
+    ghostInstances   := []
+
+    // Bucket pieces by opacity (see section 8.2)
+    FOR EACH piece IN board:
+        (wx, wy, wz) := LogicalToWorld(piece.lx, piece.ly, piece.lz)
+        opacity := computeOpacity(wy)
+        IF opacity >= 1.0 - EPSILON THEN
+            opaqueInstances.ADD((wx, wy, wz, piece.color))
+        ELSE
+            ghostInstances.ADD((wx, wy, wz, piece.color, opacity))
+
+    // Step 1: Draw all opaque pieces first (order irrelevant)
+    drawInstanced(opaqueInstances, pieceGeo, opaqueMat)
+
+    // Step 2: Sort ghost pieces far?to?near
+    ghostInstances := sortTransparentInstances(ghostInstances, cameraPosition)
+
+    // Step 3: Draw ghost pieces in sorted order
+    drawInstanced(ghostInstances, pieceGeo, ghostMat)
+```
+
+### 9.4 When to Re?sort
+
+Ghost instances must be re?sorted whenever the camera position changes:
+
+| Trigger                | Action                    |
+|------------------------|---------------------------|
+| Camera orbit (rotate)  | Re?sort ghost instances    |
+| Camera zoom            | Re?sort ghost instances    |
+| Board resize / reload  | Full rebuild + re?sort     |
+| New piece placed       | Append + re?sort           |
+
+---
+
+## 10. Save/Load Camera Initialization
+
+### 10.1 Deprecated Field: focusZ
+
+Old save files (version < 2.0.0) may contain a `focusZ` field. This field
+is **ignored** by the continuous camera system. The camera state is always
+computed from the board's dimensions, not from discrete layer indices.
+
+### 10.2 Loading Procedure
+
+When loading a saved game, compute the initial camera state from scratch:
+
+```
+FUNCTION initCameraFromSave(saveData, viewportAspectRatio):
+    boardSize    := saveData.boardSize
+    layers       := saveData.layers
+    layerSpacing := saveData.layerSpacing   // or default 3.5 if missing
+
+    // Compute fresh camera state (ignore any old camera fields)
+    yaw := DEFAULT_YAW    // 45 degrees ? diagonal view
+    return computeCameraState(boardSize, layers, layerSpacing,
+                               viewportAspectRatio, yaw)
+
+CONST DEFAULT_YAW = 45
+```
+
+### 10.3 What is NOT Restored
+
+| Deprecated Field      | Why Ignored                             |
+|-----------------------|-----------------------------------------|
+| `focusZ`              | Continuous system has no discrete focus |
+| Any camera position   | Recomputed from board dimensions        |
+| Any camera rotation   | Default yaw = 45 degrees                |
+
+### 10.4 What IS Restored from Saves
+
+| Field           | Usage                                              |
+|-----------------|----------------------------------------------------|
+| `boardSize`     | Bounding box width/depth                           |
+| `layers`        | Bounding box height                                |
+| `layerSpacing`  | Layer separation (user preference)                  |
+| `isDarkTheme`   | Affects background color, not camera                |
 
 ## Appendix A: Constant Reference
 
@@ -581,4 +772,5 @@ STEP 8 — Apply:
 | `computeClipPlanes`            | 7       | Near/far planes scaled to current distance           |
 | `needsRecompute`               | 8.1     | Cache invalidation check                             |
 | `computeOpacity`               | 8.2     | Continuous piece opacity from Z position             |
+
 

@@ -201,7 +201,16 @@ IMPLEMENTS IRuleEngine AS SwapEngine:
     FUNCTION isLegalMove(x, y, z, player, history, board):
         RETURN Get(board, x, y, z) = CELL_EMPTY
 
-    FUNCTION getNextTurnState(history, currentPlayer):
+    FUNCTION getNextTurnState(history, currentPlayer, levelConfig):
+        // Guard: Swap2 only applies to a completely fresh game.
+        // If the level has pre-placed pieces, skip the swap phase.
+        IF levelConfig.initialMoves.length > 0 THEN
+            RETURN TurnState(
+                nextPlayer  := opponent(currentPlayer),
+                isSwapPhase := false,
+                message     := ""
+            )
+
         IF history.length = 1 THEN
             // After Black's first move, White decides: swap or pass
             RETURN TurnState(
@@ -216,6 +225,13 @@ IMPLEMENTS IRuleEngine AS SwapEngine:
                 message     := ""
             )
 ```
+
+**Important guard condition:**
+
+The swap phase is only triggered when `initialMoves.length = 0`
+(i.e., no pre-placed pieces). Puzzle levels and tutorial levels with
+pre-configured board states never enter the swap phase regardless of
+the rule engine selected.
 
 **Color-flipping (Swap action):**
 
@@ -293,7 +309,10 @@ IMPLEMENTS IRuleEngine AS Connect6Engine:
 
 ### 3.1 Mathematical Model
 
-The Swap2 rule introduces a single decision point after the first move:
+The Swap2 rule introduces a single decision point after the first move,
+but only when the game starts from an empty board. If the level configuration
+has pre-placed pieces (`initialMoves.length > 0`), the swap phase is skipped
+entirely ? the game is already in progress.
 
 Let the initial move history be `history = [move[0]]` where `move[0].player = BLACK`.
 
@@ -588,6 +607,7 @@ FUNCTION collectLayerPatterns3D(board, layerZ):
 5. turnState := getNextTurnState(history, currentPlayer)
 
 6. IF turnState.isSwapPhase THEN
+       // Guard clause: only trigger if the game started from empty board
        present swap decision UI
        WAIT for user choice
        IF swap chosen THEN applySwap(history, board)
