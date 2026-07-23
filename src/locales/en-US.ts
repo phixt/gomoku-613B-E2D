@@ -19,7 +19,7 @@ const enUS = {
   QUICK_SAVE_LABEL: "Quick Save",
   SAVE_SLOT_LABEL: "Slot {0}",
   SLOT_MOVES: "{0} moves",
-    INPUT_DIALOG_TITLE: "Import Save",
+  INPUT_DIALOG_TITLE: "Import Save",
   INPUT_DIALOG_MSG: "Please paste Base64 save data:",
   INPUT_DIALOG_PLACEHOLDER: "Paste data here...",
 
@@ -89,9 +89,6 @@ const enUS = {
   // Colorblind mode
   COLORBLIND_ON: "Colorblind Mode: ON (Blue/Yellow)",
   COLORBLIND_OFF: "Colorblind Mode: OFF (Red/Green)",
-
-  // Misc
-  PASTE_PLACEHOLDER: "Paste Base64 save data",
 
   // Replay
   BTN_REPLAY: "Replay",
