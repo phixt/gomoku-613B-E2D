@@ -96,14 +96,14 @@ const BGM_PATTERNS: Record<BGMTrack, BGMPattern> = {
     progression: ["Cmaj7", "Gadd9", "Am7", "Fmaj7"],
     chordDuration: 2.8,
     layers: {
-      bass:     { waveform: "triangle", gain: 0.10, octaveOffset: -1 },
-      chord:    { waveform: "sawtooth", gain: 0.055, octaveOffset: 0 },
+      bass:     { waveform: "triangle", gain: 0.16, octaveOffset: -1 },
+      chord:    { waveform: "sawtooth", gain: 0.065, octaveOffset: 0 },
       arpeggio: { waveform: "sine",     gain: 0.045, octaveOffset: 1 },
     },
     noteStyle: "pad",
     baseGain: 0.7,
     useReverb: true,
-    reverbMix: 0.25,
+    reverbMix: 0.30,
     vibratoDepth: 0.8,
     voiceCount: 4,
     lfoHz: 0.4,
@@ -114,14 +114,14 @@ const BGM_PATTERNS: Record<BGMTrack, BGMPattern> = {
     progression: ["Am7", "Fmaj7", "Cadd9", "G7"],
     chordDuration: 0.9,
     layers: {
-      bass:     { waveform: "triangle", gain: 0.10, octaveOffset: -1 },
-      chord:    { waveform: "square",   gain: 0.06, octaveOffset: 0 },
-      arpeggio: { waveform: "square",   gain: 0.025, octaveOffset: 1 },
+      bass:     { waveform: "triangle", gain: 0.16, octaveOffset: -1 },
+      chord:    { waveform: "sawtooth", gain: 0.08, octaveOffset: 0 },
+      arpeggio: { waveform: "square",   gain: 0.03, octaveOffset: 1 },
     },
     noteStyle: "staccato",
     baseGain: 0.55,
     useReverb: true,
-    reverbMix: 0.15,
+    reverbMix: 0.22,
     useDelay: true,
     delayMix: 0.18,
     vibratoDepth: 0,
@@ -133,14 +133,14 @@ const BGM_PATTERNS: Record<BGMTrack, BGMPattern> = {
     progression: ["Cadd9", "Fadd9", "Cadd9", "G7"],
     chordDuration: 1.8,
     layers: {
-      bass:  { waveform: "sine",     gain: 0.07, octaveOffset: -1 },
-      chord: { waveform: "sine",     gain: 0.05, octaveOffset: 0 },
-      pad:   { waveform: "triangle", gain: 0.04, octaveOffset: 1 },
+      bass:  { waveform: "triangle", gain: 0.12, octaveOffset: -1 },
+      chord: { waveform: "triangle", gain: 0.06, octaveOffset: 0 },
+      pad:   { waveform: "triangle", gain: 0.05, octaveOffset: 1 },
     },
     noteStyle: "sustain",
     baseGain: 0.5,
     useReverb: true,
-    reverbMix: 0.2,
+    reverbMix: 0.28,
     vibratoDepth: 0,
     voiceCount: 3,
     attackOverride: 0.3,
@@ -150,16 +150,16 @@ const BGM_PATTERNS: Record<BGMTrack, BGMPattern> = {
     progression: ["G", "Gsus", "G", "Gsus"],
     chordDuration: 3.5,
     layers: {
-      bass:  { waveform: "sine", gain: 0.04, octaveOffset: -1 },
-      chord: { waveform: "sine", gain: 0.03, octaveOffset: 0 },
+      bass:  { waveform: "triangle", gain: 0.08, octaveOffset: -1 },
+      chord: { waveform: "triangle", gain: 0.04, octaveOffset: 0 },
     },
     noteStyle: "sustain",
-    baseGain: 0.3,
+    baseGain: 0.35,
     useReverb: true,
-    reverbMix: 0.4,
+    reverbMix: 0.45,
     vibratoDepth: 0.4,
     voiceCount: 3,
-    filterCutoffMult: 0.4,
+    filterCutoffMult: 0.7,
     tremoloHz: 2.0,
   },
 };
@@ -176,7 +176,7 @@ interface SceneConfig {
 
 const SCENE_PRESETS: Record<ScenePreset, SceneConfig> = {
   normal: { lpfFreq: 20000, lpfQ: 1.0, reverbWet: 0.25 },
-  pause:  { lpfFreq: 700,   lpfQ: 2.5, reverbWet: 0.50, delayTime: 0.3, delayFeedback: 0.3, delayMix: 0.15 },
+  pause:  { lpfFreq: 900,   lpfQ: 2.5, reverbWet: 0.50, delayTime: 0.3, delayFeedback: 0.3, delayMix: 0.15 },
   menu:   { lpfFreq: 5000,  lpfQ: 0.8, reverbWet: 0.35 },
 };
 
@@ -503,13 +503,13 @@ class AudioManager {
 
     // ADSR on filter cutoff: attack opens, decay drops, sustain holds, release closes
     voiceFilter.frequency.setValueAtTime(baseFilterFreq * 0.05, start);
-    voiceFilter.frequency.linearRampToValueAtTime(freq * 1.5 * cutMult, start + attack);
+    voiceFilter.frequency.linearRampToValueAtTime(freq * 2.5 * cutMult, start + attack);
 
     const decayStart = start + attack + 0.08;
-    voiceFilter.frequency.linearRampToValueAtTime(freq * 0.8 * cutMult, decayStart);
+    voiceFilter.frequency.linearRampToValueAtTime(freq * 1.8 * cutMult, decayStart);
 
     const sustainStart = start + attack + 0.15;
-    voiceFilter.frequency.setValueAtTime(freq * 0.6 * cutMult, sustainStart);
+    voiceFilter.frequency.setValueAtTime(Math.max(freq * 1.5 * cutMult, 400 * cutMult), sustainStart);
 
     voiceFilter.frequency.linearRampToValueAtTime(baseFilterFreq * 0.05 * cutMult, start + duration);
 
