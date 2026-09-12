@@ -27,3 +27,5 @@ src-tauri/target/
 .vite/
 *.py
 non-english-texts.json
+.reasonix
+releases/

@@ -1,7 +1,7 @@
 {
   "productName": "GomokuE2D",
   "identifier": "com.phixt.gomoku-613b-e2d",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
